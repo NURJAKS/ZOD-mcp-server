@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "nia-mcp-server": {
+      "command": "node",
+      "args": [
+        "./bin/cli.mjs",
+        "--stdio"
+      ]
+    }
+  }
+}
