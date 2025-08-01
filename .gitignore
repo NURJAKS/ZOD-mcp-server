@@ -149,3 +149,56 @@ search-cache/
 docs-cache/
 scraped-content/
 documentation-cache/
+
+# ===== ADDITIONAL MCP SERVER PATTERNS =====
+# MCP server specific files
+.mcp-server/
+mcp-server.log
+mcp-server-debug.log
+
+# ===== DEVELOPMENT TOOLS =====
+# Vite dev server
+.vite/
+
+# ===== ENVIRONMENT VARIABLES =====
+# Additional env files
+.env.*.local
+.env.development
+.env.test
+.env.production
+
+# ===== LOG FILES =====
+# Application logs
+app.log
+error.log
+access.log
+
+# ===== CACHE DIRECTORIES =====
+# Node.js cache
+.npm/
+.eslintcache
+
+# ===== TEMPORARY BUILD FILES =====
+# TypeScript incremental compilation
+*.tsbuildinfo
+
+# ===== IDE SPECIFIC =====
+# Cursor IDE
+.cursor/
+.cursorrules
+
+# ===== OS SPECIFIC =====
+# Linux
+*~
+
+# ===== PROJECT SPECIFIC =====
+# MCP server data directories
+data/cache/
+data/temp/
+data/logs/
+
+# ===== SECURITY FILES =====
+# Additional security patterns
+*.env
+secrets/
+.secrets/

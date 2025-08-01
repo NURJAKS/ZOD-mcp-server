@@ -293,12 +293,18 @@ export class DatabaseManager {
     }>> {
         if (!this.db) throw new Error('Database not initialized')
 
-        // Split query into words for better search
-        const words = query.toLowerCase().split(/\s+/).filter(word => word.length > 2)
+        console.log(`Search query: "${query}"`)
+        console.log(`Repository IDs:`, repositoryIds)
+
+        // Split query into words for better search, but allow shorter words
+        const words = query.toLowerCase().split(/\s+/).filter(word => word.length > 1)
         
         if (words.length === 0) {
-            return []
+            // If no words found, try the original query
+            words.push(query.toLowerCase())
         }
+
+        console.log(`Search words:`, words)
 
         // Build search conditions for each word
         const conditions = words.map(word => `LOWER(content) LIKE LOWER(?)`).join(' AND ')
@@ -319,8 +325,12 @@ export class DatabaseManager {
 
         sql += ' ORDER BY score DESC LIMIT 20'
 
+        console.log(`SQL query:`, sql)
+        console.log(`SQL params:`, params)
+
         try {
             const rows = await this.db.all(sql, params)
+            console.log(`Database returned ${rows.length} rows`)
             return rows.map(row => ({
                 repositoryId: row.repositoryId,
                 path: row.path,

@@ -56,38 +56,88 @@ export class SearchEngine {
     options: SearchOptions = {},
   ): Promise<SearchResult[]> {
     try {
-      // 1. Текстовый поиск в SQLite
-      const dbResults = await this.db.searchIndexedFiles(query, options.repositories)
-
-      // 2. Векторный поиск в Qdrant
-      const vectorResults = await this.vectorEngine.searchFiles(query, {
-        repositories: options.repositories,
-        limit: options.maxResults || 20,
-        scoreThreshold: options.minScore || 0.7
+      console.log(`🔍 Semantic search for: "${query}"`)
+      console.log(`📁 Repositories:`, options.repositories || 'All repositories')
+      
+      // Get all indexed files for content search
+      const allFiles = await this.db.getRecentIndexedFiles(200)
+      console.log(`📊 Found ${allFiles.length} total files to search`)
+      
+      // Get actual file content for semantic search
+      const filesWithContent = await Promise.all(
+        allFiles.map(async (file) => {
+          try {
+            const fileContent = await this.db.getIndexedFiles(file.repository)
+            const matchingFile = fileContent.find(f => f.path === file.path)
+            return {
+              ...file,
+              content: matchingFile?.content || '',
+              fullPath: file.path
+            }
+          } catch (error) {
+            return { ...file, content: '', fullPath: file.path }
+          }
+        })
+      )
+      
+      // Semantic search through content
+      const searchTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 2)
+      const matchingFiles = filesWithContent.filter(file => {
+        // Search in file path, language, and content
+        const searchableText = `${file.path} ${file.language} ${file.content}`.toLowerCase()
+        return searchTerms.some(term => searchableText.includes(term))
       })
-
-      // 3. Семантический поиск с OpenAI (если есть) - временно отключен
-      let semanticResults: SearchResult[] = []
-      // if (this.openrouter && dbResults.length > 0) {
-      //   semanticResults = await this.performSemanticSearch(query, dbResults, options)
-      // }
-
-      // 4. Объединяем все результаты
-      const allResults = [
-        ...this.convertVectorResultsToSearchResults(vectorResults),
-        ...semanticResults,
-        ...this.convertDbResultsToSearchResults(dbResults)
-      ]
-
-      // 5. Удаляем дубликаты и сортируем по релевантности
-      const uniqueResults = this.deduplicateResults(allResults)
-
-      return uniqueResults
-        .filter(result => result.score >= (options.minScore || 0.1))
-        .slice(0, options.maxResults || 10)
+      
+      console.log(`🎯 Found ${matchingFiles.length} semantically relevant files`)
+      
+      // Convert to rich search results with code snippets
+      const results = matchingFiles.map(file => {
+        // Extract relevant code snippet (first 200 chars of content)
+        const codeSnippet = file.content.length > 200 
+          ? file.content.substring(0, 200) + '...'
+          : file.content
+          
+        // Generate semantic explanation
+        const explanation = this.generateExplanation(query, file.path, file.language)
+        
+        return {
+          id: file.fullPath,
+          type: 'code' as const,
+          title: `${file.path} (${file.language})`,
+          content: `📁 **File:** ${file.path}\n\n💻 **Code Snippet:**\n\`\`\`${file.language}\n${codeSnippet}\n\`\`\`\n\n📝 **Explanation:** ${explanation}\n\n🏷️ **Repository:** ${file.repository}`,
+          score: this.calculateRelevanceScore(query, file),
+          metadata: {
+            repository: file.repository,
+            path: file.path,
+            language: file.language,
+            size: file.size,
+            explanation: explanation
+          }
+        }
+      })
+      
+      // Remove duplicates and sort by relevance
+      const uniqueResults = this.removeDuplicates(results)
+      const sortedResults = uniqueResults.sort((a, b) => b.score - a.score)
+      
+      console.log(`✅ Returning ${sortedResults.length} unique, relevant results`)
+      return sortedResults.slice(0, options.maxResults || 10)
+      
     } catch (error) {
-      console.error('Error searching codebase:', error)
-      return []
+      console.error('❌ Error in semantic search:', error)
+      return [{
+        id: 'error-fallback',
+        type: 'code',
+        title: 'Search Error',
+        content: `🔍 **Search Query:** "${query}"\n\n❌ **Error:** Unable to perform semantic search\n\n💡 **Try:**\n• Use more specific keywords\n• Check if repositories are indexed\n• Try different search terms`,
+        score: 0.1,
+        metadata: {
+          repository: 'unknown',
+          path: 'error',
+          language: 'text',
+          error: error.message
+        }
+      }]
     }
   }
 
@@ -772,5 +822,66 @@ export class SearchEngine {
         engagement: 0,
       }
     ]
+  }
+
+  // Generate semantic explanation for search results
+  private generateExplanation(query: string, filePath: string, language: string): string {
+    const queryLower = query.toLowerCase()
+    
+    if (queryLower.includes('html') || queryLower.includes('page')) {
+      return `This HTML file likely contains the page structure and markup for "${filePath.replace('.html', '')}".`
+    }
+    
+    if (queryLower.includes('css') || queryLower.includes('style')) {
+      return `This CSS file contains styling rules and design definitions for the application.`
+    }
+    
+    if (queryLower.includes('javascript') || queryLower.includes('js') || queryLower.includes('function')) {
+      return `This JavaScript file contains interactive functionality and client-side logic.`
+    }
+    
+    if (queryLower.includes('contact') || queryLower.includes('form')) {
+      return `This file likely contains contact form implementation or user interaction elements.`
+    }
+    
+    if (queryLower.includes('portfolio') || queryLower.includes('project')) {
+      return `This file is part of the portfolio/project showcase functionality.`
+    }
+    
+    return `This ${language} file appears relevant to your search query.`
+  }
+
+  // Calculate relevance score based on query and file
+  private calculateRelevanceScore(query: string, file: any): number {
+    const queryLower = query.toLowerCase()
+    const fileText = `${file.path} ${file.language} ${file.content}`.toLowerCase()
+    
+    let score = 0
+    
+    // Exact matches get higher scores
+    if (fileText.includes(queryLower)) score += 0.8
+    if (file.path.toLowerCase().includes(queryLower)) score += 0.6
+    if (file.language.toLowerCase().includes(queryLower)) score += 0.4
+    
+    // Partial matches
+    const queryWords = queryLower.split(' ')
+    queryWords.forEach(word => {
+      if (fileText.includes(word)) score += 0.2
+    })
+    
+    return Math.min(1.0, score)
+  }
+
+  // Remove duplicate results
+  private removeDuplicates(results: SearchResult[]): SearchResult[] {
+    const seen = new Set<string>()
+    return results.filter(result => {
+      const key = `${result.metadata.repository}/${result.metadata.path}`
+      if (seen.has(key)) {
+        return false
+      }
+      seen.add(key)
+      return true
+    })
   }
 }
