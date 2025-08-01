@@ -76,6 +76,7 @@ mcp-debug.log
 *.sqlite
 *.sqlite3
 data/*.db
+data/nia.db
 # Vector database files
 qdrant-data/
 vector-cache/
@@ -85,6 +86,9 @@ test-*.js
 test-*.mjs
 test-*.cjs
 test-*.ts
+test-monitoring.js
+test-repository-status.js
+test-indexing.js
 
 # ===== CURSOR/EDITOR SPECIFIC =====
 .cursor/
@@ -202,3 +206,23 @@ data/logs/
 *.env
 secrets/
 .secrets/
+
+# ===== ADDITIONAL PATTERNS =====
+# Development scripts
+setup-github-token.js
+setup.sh
+setup-mcp.sh
+mcp-manager.sh
+
+# ===== CACHE AND TEMP DIRECTORIES =====
+# Additional cache patterns
+.cache/
+.temp/
+.tmp/
+
+# ===== DEVELOPMENT FILES =====
+# Additional development files
+*.dev.js
+*.dev.ts
+*.local.js
+*.local.ts
