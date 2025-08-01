@@ -7,8 +7,6 @@ import { runMain as _runMain, defineCommand } from 'citty'
 import { version } from '../package.json'
 import { createServer, startServer, stopServer } from './server'
 import { registerDocumentationTools } from './tools/documentation'
-import { registerMyCustomTool } from './tools/myCustomTool'
-import { registerMyTool } from './tools/mytool'
 import { registerProjectTools } from './tools/project'
 import { registerRepositoryTools } from './tools/repository'
 import { registerWebSearchTools } from './tools/web-search'
@@ -86,8 +84,6 @@ const cli = defineCommand({
 // Функция для безопасной регистрации инструментов
 async function registerToolsSafely(mcp: any, debug: boolean = false) {
   const tools = [
-    { name: 'MyTool', register: registerMyTool },
-    { name: 'MyCustomTool', register: registerMyCustomTool },
     { name: 'RepositoryTools', register: registerRepositoryTools },
     { name: 'DocumentationTools', register: registerDocumentationTools },
     { name: 'WebSearchTools', register: registerWebSearchTools },
@@ -96,7 +92,8 @@ async function registerToolsSafely(mcp: any, debug: boolean = false) {
 
   for (const tool of tools) {
     try {
-      if (debug)
+      // Suppress console output for stdio transport
+      if (debug && process.argv.includes('--stdio') === false)
         console.log(`📦 Registering ${tool.name}...`)
 
       // Добавляем таймаут для регистрации инструментов
@@ -107,11 +104,13 @@ async function registerToolsSafely(mcp: any, debug: boolean = false) {
         ),
       ])
 
-      if (debug)
+      if (debug && process.argv.includes('--stdio') === false)
         console.log(`✅ ${tool.name} registered`)
     }
     catch (error) {
-      console.error(`❌ Failed to register ${tool.name}:`, error)
+      // Only log errors if not in stdio mode
+      if (!process.argv.includes('--stdio'))
+        console.error(`❌ Failed to register ${tool.name}:`, error)
       // Продолжаем регистрацию других инструментов
     }
   }
@@ -289,7 +288,7 @@ async function checkStatus() {
   console.log(`📁 Local config: ${localExists ? '✅ Found' : '❌ Missing'}`)
 
   // Check if command is available
-  const { execSync } = require('node:child_process')
+  const { execSync } = await import('node:child_process')
   let commandAvailable = false
   try {
     execSync('which nia-mcp', { stdio: 'ignore' })
@@ -347,3 +346,9 @@ function showHelp() {
 }
 
 export const runMain = () => _runMain(cli)
+
+// Export classes for direct use
+export { RepositoryIndexer } from './core/indexer'
+export { DocumentationIndexer } from './core/indexer'
+export { SearchEngine } from './core/search'
+export { DatabaseManager } from './core/database'

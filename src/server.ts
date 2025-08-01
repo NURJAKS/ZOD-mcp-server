@@ -28,10 +28,29 @@ export async function startServer(
 ): Promise<void> {
   try {
     if (options.type === 'stdio') {
-      console.log('🚀 Starting MCP server with stdio transport...')
+      // Completely suppress console output for stdio transport to avoid breaking JSON-RPC
+      const originalConsoleLog = console.log
+      const originalConsoleError = console.error
+      const originalConsoleWarn = console.warn
+      const originalConsoleDebug = console.debug
+      const originalConsoleInfo = console.info
+      
+      // Override console methods to suppress output during stdio
+      console.log = () => {}
+      console.error = () => {}
+      console.warn = () => {}
+      console.debug = () => {}
+      console.info = () => {}
+      
       const transport = new StdioServerTransport()
       await server.connect(transport)
-      console.log('✅ MCP server started successfully')
+      
+      // Restore console methods after connection
+      console.log = originalConsoleLog
+      console.error = originalConsoleError
+      console.warn = originalConsoleWarn
+      console.debug = originalConsoleDebug
+      console.info = originalConsoleInfo
       return
     }
 

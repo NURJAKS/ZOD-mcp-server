@@ -57,6 +57,11 @@ temp/
 # ===== MCP SPECIFIC =====
 .mcp/
 mcp-cache/
+# NIA MCP Server specific
+.cursor/mcp.json
+NIA_SETUP.md
+*.mcp.log
+mcp-debug.log
 
 # ===== PACKAGE MANAGERS =====
 .yarn/
@@ -71,6 +76,9 @@ mcp-cache/
 *.sqlite
 *.sqlite3
 data/*.db
+# Vector database files
+qdrant-data/
+vector-cache/
 
 # ===== TEST FILES =====
 test-*.js
@@ -102,6 +110,11 @@ bundle-analyzer-report.html
 *.crt
 *.p12
 *.pfx
+# API Keys and tokens
+GITHUB_TOKEN
+OPENROUTER_API_KEY
+QDRANT_API_KEY
+NIA_API_KEY
 
 # ===== BACKUP FILES =====
 *.bak
@@ -112,3 +125,27 @@ bundle-analyzer-report.html
 # package-lock.json is intentionally not ignored
 yarn.lock
 pnpm-lock.yaml
+
+# ===== MONITORING & DEBUGGING =====
+monitor.js
+dashboard.js
+test-*.js
+*.monitor.log
+*.dashboard.log
+
+# ===== ANALYSIS FILES =====
+ISSUE_ANALYSIS.md
+SOLUTION_ANALYSIS.md
+PORTFOLIO_ANALYSIS.md
+MONITORING_GUIDE.md
+GITHUB_TOKEN_SETUP.md
+
+# ===== VECTOR SEARCH CACHE =====
+embeddings-cache/
+vector-index/
+search-cache/
+
+# ===== DOCUMENTATION CACHE =====
+docs-cache/
+scraped-content/
+documentation-cache/

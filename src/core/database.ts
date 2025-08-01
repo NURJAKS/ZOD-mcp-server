@@ -293,13 +293,24 @@ export class DatabaseManager {
     }>> {
         if (!this.db) throw new Error('Database not initialized')
 
+        // Split query into words for better search
+        const words = query.toLowerCase().split(/\s+/).filter(word => word.length > 2)
+        
+        if (words.length === 0) {
+            return []
+        }
+
+        // Build search conditions for each word
+        const conditions = words.map(word => `LOWER(content) LIKE LOWER(?)`).join(' AND ')
+        const params = words.map(word => `%${word}%`)
+
         let sql = `
       SELECT repositoryId, path, content, language, 
              (LENGTH(content) - LENGTH(REPLACE(LOWER(content), LOWER(?), ''))) / LENGTH(?) as score
       FROM indexed_files 
-      WHERE LOWER(content) LIKE LOWER(?)
+      WHERE ${conditions}
     `
-        const params = [query, query, `%${query}%`]
+        params.push(query, query)
 
         if (repositoryIds && repositoryIds.length > 0) {
             sql += ' AND repositoryId IN (' + repositoryIds.map(() => '?').join(',') + ')'
@@ -308,14 +319,19 @@ export class DatabaseManager {
 
         sql += ' ORDER BY score DESC LIMIT 20'
 
-        const rows = await this.db.all(sql, params)
-        return rows.map(row => ({
-            repositoryId: row.repositoryId,
-            path: row.path,
-            content: row.content,
-            language: row.language,
-            score: row.score,
-        }))
+        try {
+            const rows = await this.db.all(sql, params)
+            return rows.map(row => ({
+                repositoryId: row.repositoryId,
+                path: row.path,
+                content: row.content,
+                language: row.language,
+                score: Math.min(1.0, row.score || 0),
+            }))
+        } catch (error) {
+            console.error('Database search error:', error)
+            return []
+        }
     }
 
     // Методы для работы с индексированными страницами документации
@@ -360,28 +376,67 @@ export class DatabaseManager {
     }>> {
         if (!this.db) throw new Error('Database not initialized')
 
-        let sql = `
-      SELECT documentationId, url, title, content, 
-             (LENGTH(content) - LENGTH(REPLACE(LOWER(content), LOWER(?), ''))) / LENGTH(?) as score
-      FROM indexed_pages 
-      WHERE LOWER(content) LIKE LOWER(?)
-    `
-        const params = [query, query, `%${query}%`]
+        const whereClause = documentationIds && documentationIds.length > 0
+            ? `WHERE documentationId IN (${documentationIds.map(() => '?').join(',')})`
+            : ''
 
-        if (documentationIds && documentationIds.length > 0) {
-            sql += ' AND documentationId IN (' + documentationIds.map(() => '?').join(',') + ')'
-            params.push(...documentationIds)
-        }
+        const queryParams = documentationIds || []
 
-        sql += ' ORDER BY score DESC LIMIT 20'
+        const results = await this.db.all(`
+            SELECT 
+                documentationId,
+                url,
+                title,
+                content,
+                CASE 
+                    WHEN content LIKE ? THEN 100
+                    WHEN title LIKE ? THEN 80
+                    WHEN content LIKE ? THEN 60
+                    ELSE 0
+                END as score
+            FROM indexedPages
+            ${whereClause}
+            HAVING score > 0
+            ORDER BY score DESC
+            LIMIT 50
+        `, [`%${query}%`, `%${query}%`, `%${query}%`, ...queryParams])
 
-        const rows = await this.db.all(sql, params)
-        return rows.map(row => ({
+        return results.map(row => ({
             documentationId: row.documentationId,
             url: row.url,
             title: row.title,
             content: row.content,
-            score: row.score,
+            score: row.score
+        }))
+    }
+
+    async getRecentIndexedFiles(limit: number = 20): Promise<Array<{
+        repository: string
+        path: string
+        language: string
+        size: number
+        timestamp: string
+    }>> {
+        if (!this.db) throw new Error('Database not initialized')
+
+        const results = await this.db.all(`
+            SELECT 
+                repositoryId as repository,
+                path,
+                language,
+                size,
+                lastIndexed as timestamp
+            FROM indexed_files
+            ORDER BY timestamp DESC
+            LIMIT ?
+        `, [limit])
+
+        return results.map(row => ({
+            repository: row.repository,
+            path: row.path,
+            language: row.language,
+            size: row.size,
+            timestamp: row.timestamp
         }))
     }
 

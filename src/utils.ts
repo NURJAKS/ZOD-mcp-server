@@ -34,3 +34,30 @@ export function getPackageJson(): PackageJson | null {
 export function registerTools(context: McpToolContext, tools: Tools[]): void {
   tools.forEach(register => register(context))
 }
+
+/**
+ * Conditionally log messages only when not in stdio mode
+ * to avoid breaking JSON-RPC protocol
+ */
+export function safeLog(message: string, type: 'log' | 'error' | 'warn' = 'log') {
+  // Don't log during stdio transport to avoid breaking JSON-RPC
+  if (process.argv.includes('--stdio')) {
+    return
+  }
+  
+  // Also check if we're in stdio mode by checking if stdin/stdout are being used for JSON-RPC
+  if (process.stdin.isTTY === false && process.stdout.isTTY === false) {
+    return
+  }
+  
+  switch (type) {
+    case 'error':
+      console.error(message)
+      break
+    case 'warn':
+      console.warn(message)
+      break
+    default:
+      console.log(message)
+  }
+}

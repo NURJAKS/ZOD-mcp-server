@@ -2,25 +2,30 @@ import type { McpToolContext } from '../types'
 import { z } from 'zod'
 import { DocumentationIndexer } from '../core/indexer'
 import { SearchEngine } from '../core/search'
+import { safeLog } from '../utils'
+import { DatabaseManager } from '../core/database'
 
 // Создаем глобальные экземпляры
 let documentationIndexer: DocumentationIndexer | null = null
 let searchEngine: SearchEngine | null = null
+let db: DatabaseManager | null = null
 
 // Инициализируем компоненты асинхронно
 async function initializeComponents() {
   try {
+    db = new DatabaseManager()
     documentationIndexer = new DocumentationIndexer()
     searchEngine = new SearchEngine()
 
     await Promise.all([
+      db.initialize(),
       documentationIndexer.initialize(),
       searchEngine.initialize(),
     ])
 
-    console.log('✅ Documentation components initialized successfully')
+    safeLog('✅ Documentation components initialized successfully')
   } catch (error) {
-    console.error('❌ Failed to initialize documentation components:', error)
+    safeLog(`❌ Failed to initialize documentation components: ${error}`, 'error')
   }
 }
 
@@ -292,6 +297,171 @@ export function registerDocumentationTools({ mcp }: McpToolContext): void {
           content: [{
             type: 'text',
             text: `❌ Error searching documentation: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          }],
+        }
+      }
+    },
+  )
+
+  // Advanced documentation analysis tool
+  mcp.tool(
+    'analyze_documentation',
+    'Perform comprehensive analysis of documentation including content quality, structure, and SEO insights',
+    {
+      source_id: z.string().describe('Documentation source ID to analyze'),
+      analysis_type: z.enum(['full', 'content', 'structure', 'seo', 'accessibility']).default('full').describe('Type of analysis to perform'),
+    },
+    async ({ source_id, analysis_type }) => {
+      try {
+        if (!source_id || source_id.trim() === '') {
+          return {
+            content: [{
+              type: 'text',
+              text: `❌ Please provide a valid documentation source ID.\n\nUse list_documentation to see available sources.`,
+            }],
+          }
+        }
+
+        if (!documentationIndexer || !db) {
+          return {
+            content: [{
+              type: 'text',
+              text: `❌ Documentation components not initialized. Please try again.`,
+            }],
+          }
+        }
+
+        // Get documentation record
+        const record = await documentationIndexer.checkDocumentationStatus(source_id)
+        if (!record) {
+          return {
+            content: [{
+              type: 'text',
+              text: `❌ Documentation source not found: ${source_id}\n\nUse list_documentation to see available sources.`,
+            }],
+          }
+        }
+
+        // Get documentation pages from database
+        const pages = await db.getIndexedPages(source_id)
+        
+        // Analyze content
+        const totalPages = pages.length
+        const totalContent = pages.reduce((sum, page) => sum + page.content.length, 0)
+        const avgContentLength = totalPages > 0 ? Math.round(totalContent / totalPages) : 0
+        
+        // Language detection (simple)
+        const englishWords = ['the', 'and', 'for', 'with', 'this', 'that', 'from', 'have', 'will', 'been']
+        const codePatterns = ['function', 'class', 'import', 'export', 'const', 'let', 'var', 'return', 'if', 'else']
+        
+        let englishContent = 0
+        let codeContent = 0
+        
+        pages.forEach(page => {
+          const words = page.content.toLowerCase().split(/\s+/)
+          englishContent += words.filter(word => englishWords.includes(word)).length
+          codeContent += words.filter(word => codePatterns.includes(word)).length
+        })
+
+        const contentQuality = {
+          total_pages: totalPages,
+          total_content_chars: totalContent,
+          avg_content_length: avgContentLength,
+          english_ratio: totalContent > 0 ? (englishContent / totalContent * 100).toFixed(1) : '0',
+          code_ratio: totalContent > 0 ? (codeContent / totalContent * 100).toFixed(1) : '0',
+          unique_urls: new Set(pages.map(p => p.url)).size,
+          avg_title_length: pages.length > 0 ? Math.round(pages.reduce((sum, p) => sum + p.title.length, 0) / pages.length) : 0
+        }
+
+        // Structure analysis
+        const structureAnalysis = {
+          has_index_page: pages.some(p => p.url.endsWith('/') || p.url.endsWith('/index.html')),
+          has_search: pages.some(p => p.content.toLowerCase().includes('search')),
+          has_navigation: pages.some(p => p.content.toLowerCase().includes('nav') || p.content.toLowerCase().includes('menu')),
+          has_toc: pages.some(p => p.content.toLowerCase().includes('table of contents') || p.content.toLowerCase().includes('toc')),
+          max_depth: Math.max(...pages.map(p => (p.url.match(/\//g) || []).length))
+        }
+
+        // SEO analysis
+        const seoAnalysis = {
+          has_meta_tags: pages.some(p => p.content.toLowerCase().includes('<meta')),
+          has_structured_data: pages.some(p => p.content.toLowerCase().includes('json-ld') || p.content.toLowerCase().includes('schema.org')),
+          has_social_tags: pages.some(p => p.content.toLowerCase().includes('og:') || p.content.toLowerCase().includes('twitter:')),
+          has_canonical: pages.some(p => p.content.toLowerCase().includes('canonical')),
+          avg_title_length: contentQuality.avg_title_length,
+          title_optimization: contentQuality.avg_title_length >= 30 && contentQuality.avg_title_length <= 60 ? 'Good' : 'Needs improvement'
+        }
+
+        // Accessibility analysis
+        const accessibilityAnalysis = {
+          has_alt_text: pages.some(p => p.content.toLowerCase().includes('alt=')),
+          has_aria_labels: pages.some(p => p.content.toLowerCase().includes('aria-')),
+          has_semantic_html: pages.some(p => p.content.toLowerCase().includes('<nav>') || p.content.toLowerCase().includes('<main>') || p.content.toLowerCase().includes('<article>')),
+          has_skip_links: pages.some(p => p.content.toLowerCase().includes('skip to main content')),
+          has_contrast_issues: pages.some(p => p.content.toLowerCase().includes('color: #') && p.content.toLowerCase().includes('background: #'))
+        }
+
+        let report = `🔍 **Documentation Analysis: ${record.displayName || record.name}**\n\n`
+        report += `📊 **Source Info:**\n`
+        report += `• URL: ${record.url}\n`
+        report += `• Status: ${record.status}\n`
+        report += `• Pages Indexed: ${record.indexedPages}\n`
+        report += `• Last Indexed: ${new Date(record.lastIndexed).toLocaleDateString()}\n\n`
+
+        if (analysis_type === 'full' || analysis_type === 'content') {
+          report += `📝 **Content Quality:**\n`
+          report += `• Total Pages: ${contentQuality.total_pages}\n`
+          report += `• Total Content: ${contentQuality.total_content_chars.toLocaleString()} characters\n`
+          report += `• Average Content Length: ${contentQuality.avg_content_length} characters\n`
+          report += `• English Content Ratio: ${contentQuality.english_ratio}%\n`
+          report += `• Code Content Ratio: ${contentQuality.code_ratio}%\n`
+          report += `• Unique URLs: ${contentQuality.unique_urls}\n`
+          report += `• Average Title Length: ${contentQuality.avg_title_length} characters\n\n`
+        }
+
+        if (analysis_type === 'full' || analysis_type === 'structure') {
+          report += `🏗️ **Structure Analysis:**\n`
+          report += `• Has Index Page: ${structureAnalysis.has_index_page ? '✅' : '❌'}\n`
+          report += `• Has Search: ${structureAnalysis.has_search ? '✅' : '❌'}\n`
+          report += `• Has Navigation: ${structureAnalysis.has_navigation ? '✅' : '❌'}\n`
+          report += `• Has Table of Contents: ${structureAnalysis.has_toc ? '✅' : '❌'}\n`
+          report += `• Max URL Depth: ${structureAnalysis.max_depth} levels\n\n`
+        }
+
+        if (analysis_type === 'full' || analysis_type === 'seo') {
+          report += `🔍 **SEO Analysis:**\n`
+          report += `• Meta Tags: ${seoAnalysis.has_meta_tags ? '✅' : '❌'}\n`
+          report += `• Structured Data: ${seoAnalysis.has_structured_data ? '✅' : '❌'}\n`
+          report += `• Social Tags: ${seoAnalysis.has_social_tags ? '✅' : '❌'}\n`
+          report += `• Canonical URLs: ${seoAnalysis.has_canonical ? '✅' : '❌'}\n`
+          report += `• Title Optimization: ${seoAnalysis.title_optimization}\n\n`
+        }
+
+        if (analysis_type === 'full' || analysis_type === 'accessibility') {
+          report += `♿ **Accessibility Analysis:**\n`
+          report += `• Alt Text: ${accessibilityAnalysis.has_alt_text ? '✅' : '❌'}\n`
+          report += `• ARIA Labels: ${accessibilityAnalysis.has_aria_labels ? '✅' : '❌'}\n`
+          report += `• Semantic HTML: ${accessibilityAnalysis.has_semantic_html ? '✅' : '❌'}\n`
+          report += `• Skip Links: ${accessibilityAnalysis.has_skip_links ? '✅' : '❌'}\n`
+          report += `• Contrast Issues: ${accessibilityAnalysis.has_contrast_issues ? '⚠️' : '✅'}\n\n`
+        }
+
+        report += `**Next Steps:**\n`
+        report += `• Use search_documentation to search this documentation\n`
+        report += `• Use analyze_documentation with specific analysis_type for focused insights\n`
+        report += `• Consider re-indexing if content has changed significantly`
+
+        return {
+          content: [{
+            type: 'text',
+            text: report,
+          }],
+        }
+      } catch (error) {
+        return {
+          content: [{
+            type: 'text',
+            text: `❌ Error analyzing documentation: ${error instanceof Error ? error.message : 'Unknown error'}`,
           }],
         }
       }

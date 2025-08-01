@@ -1,12 +1,14 @@
 import { QdrantClient } from '@qdrant/js-client-rest'
 import * as dotenv from 'dotenv'
+import { safeLog } from '../utils'
 
 // Динамический импорт OpenRouter для избежания проблем с типами
 let OpenRouter: any = null
 try {
     OpenRouter = require('openrouter-client')
 } catch (error) {
-    console.warn('OpenRouter client not available')
+    // Use safeLog to avoid breaking stdio communication
+    safeLog('OpenRouter client not available', 'warn')
 }
 
 export interface VectorSearchResult {
@@ -30,13 +32,18 @@ export interface EmbeddingResult {
 }
 
 export class VectorSearchEngine {
-    private qdrant: QdrantClient
+    private qdrant: QdrantClient | null = null
     private openrouter: any = null
     private isInitialized = false
 
     constructor() {
         const qdrantUrl = process.env.QDRANT_URL || 'http://localhost:6333'
-        this.qdrant = new QdrantClient({ url: qdrantUrl })
+        
+        // Configure Qdrant client with compatibility checks disabled to prevent console output
+        this.qdrant = new QdrantClient({ 
+            url: qdrantUrl,
+            checkCompatibility: false // Disable compatibility checks to prevent console warnings
+        })
 
         // OpenRouter временно отключен
         // const apiKey = process.env.OPENROUTER_API_KEY
@@ -47,29 +54,64 @@ export class VectorSearchEngine {
         //             baseURL: 'https://openrouter.ai/api/v1',
         //         })
         //     } catch (error) {
-        //         console.warn('Failed to initialize OpenRouter client:', error)
+        //         safeLog(`Failed to initialize OpenRouter client: ${error}`, 'warn')
         //     }
         // }
     }
 
     async initialize(): Promise<void> {
         try {
-            // Проверяем подключение к Qdrant
-            await this.qdrant.getCollections()
-            console.log('✅ Qdrant connection established')
+            // Initialize Qdrant if available
+            if (process.env.QDRANT_URL && process.env.QDRANT_API_KEY) {
+                try {
+                    this.qdrant = new QdrantClient({
+                        url: process.env.QDRANT_URL,
+                        apiKey: process.env.QDRANT_API_KEY,
+                    })
+                    
+                    // Test connection with timeout
+                    const testConnection = Promise.race([
+                        this.qdrant.getCollections(),
+                        new Promise((_, reject) => 
+                            setTimeout(() => reject(new Error('Qdrant connection timeout')), 5000)
+                        )
+                    ])
+                    
+                    await testConnection
+                    safeLog('✅ Qdrant vector database connected')
+                } catch (error) {
+                    safeLog(`⚠️ Qdrant connection failed, using local fallback: ${error}`, 'warn')
+                    this.qdrant = null
+                }
+            } else {
+                safeLog('ℹ️ Qdrant not configured, using local fallback')
+            }
 
-            // Создаем коллекции если их нет
-            await this.createCollections()
-
-            this.isInitialized = true
-            console.log('✅ Vector search engine initialized')
+            // Initialize OpenRouter if available
+            if (process.env.OPENROUTER_API_KEY) {
+                try {
+                    this.openrouter = new OpenRouter({
+                        apiKey: process.env.OPENROUTER_API_KEY,
+                    })
+                    safeLog('✅ OpenRouter client initialized')
+                } catch (error) {
+                    safeLog(`⚠️ OpenRouter initialization failed: ${error}`, 'warn')
+                    this.openrouter = null
+                }
+            } else {
+                safeLog('ℹ️ OpenRouter not configured, using hash-based embeddings')
+            }
         } catch (error) {
-            console.error('❌ Failed to initialize vector search engine:', error)
-            throw error
+            safeLog(`❌ Vector search initialization failed: ${error}`, 'error')
         }
     }
 
     private async createCollections(): Promise<void> {
+        if (!this.qdrant) {
+            safeLog('ℹ️ Qdrant not available, skipping collection creation')
+            return
+        }
+
         try {
             // Коллекция для файлов кода
             await this.qdrant.createCollection('files', {
@@ -78,7 +120,7 @@ export class VectorSearchEngine {
                     distance: 'Cosine'
                 }
             })
-            console.log('✅ Created files collection')
+            safeLog('✅ Created files collection')
 
             // Коллекция для страниц документации
             await this.qdrant.createCollection('pages', {
@@ -87,29 +129,52 @@ export class VectorSearchEngine {
                     distance: 'Cosine'
                 }
             })
-            console.log('✅ Created pages collection')
+            safeLog('✅ Created pages collection')
         } catch (error) {
             // Коллекции уже существуют
-            console.log('ℹ️ Collections already exist')
+            safeLog('ℹ️ Collections already exist')
         }
     }
 
     async generateEmbedding(text: string): Promise<number[]> {
-        // Временное решение: используем простые эмбеддинги
-        // В будущем можно подключить OpenRouter или другую модель
+        // Try to use OpenRouter for real embeddings if available
+        if (this.openrouter) {
+            try {
+                const response = await this.openrouter.embeddings.create({
+                    model: 'text-embedding-ada-002',
+                    input: text.substring(0, 8000), // Limit text length
+                })
+                
+                if (response.data && response.data[0] && response.data[0].embedding) {
+                    return response.data[0].embedding
+                }
+            } catch (error) {
+                safeLog(`Warning: Failed to generate embedding with OpenRouter: ${error}`, 'warn')
+            }
+        }
 
-        // Создаем простой эмбеддинг на основе текста
-        const words = text.toLowerCase().split(/\s+/).filter(word => word.length > 2)
+        // Fallback to improved hash-based embeddings
+        const words = text.toLowerCase()
+            .split(/\s+/)
+            .filter(word => word.length > 2)
+            .slice(0, 100) // Limit number of words
+        
         const embedding = new Array(1536).fill(0)
-
-        // Простое хеширование слов в эмбеддинг
+        
+        // Improved hash-based embedding with better distribution
         words.forEach((word, index) => {
-            const hash = word.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
-            const position = hash % 1536
-            embedding[position] = Math.min(embedding[position] + 1, 10) // Ограничиваем значение
+            // Use multiple hash functions for better distribution
+            const hash1 = word.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+            const hash2 = word.split('').reduce((acc, char, i) => acc + char.charCodeAt(0) * (i + 1), 0)
+            
+            const position1 = hash1 % 1536
+            const position2 = hash2 % 1536
+            
+            embedding[position1] = Math.min(embedding[position1] + 1, 5)
+            embedding[position2] = Math.min(embedding[position2] + 0.5, 5)
         })
 
-        // Нормализуем эмбеддинг
+        // Normalize embedding
         const magnitude = Math.sqrt(embedding.reduce((sum, val) => sum + val * val, 0))
         if (magnitude > 0) {
             for (let i = 0; i < embedding.length; i++) {
@@ -156,9 +221,9 @@ export class VectorSearchEngine {
                 }]
             })
 
-            console.log(`✅ Indexed file: ${metadata.path}`)
+            safeLog(`✅ Indexed file: ${metadata.path}`)
         } catch (error) {
-            console.error(`❌ Failed to index file ${metadata.path}:`, error)
+            safeLog(`❌ Failed to index file ${metadata.path}: ${error}`, 'error')
             throw error
         }
     }
@@ -195,9 +260,9 @@ export class VectorSearchEngine {
                 }]
             })
 
-            console.log(`✅ Indexed page: ${metadata.title}`)
+            safeLog(`✅ Indexed page: ${metadata.title}`)
         } catch (error) {
-            console.error(`❌ Failed to index page ${metadata.url}:`, error)
+            safeLog(`❌ Failed to index page ${metadata.url}: ${error}`, 'error')
             throw error
         }
     }
@@ -245,7 +310,7 @@ export class VectorSearchEngine {
                 payload: result.payload as any
             }))
         } catch (error) {
-            console.error('Error searching files:', error)
+            safeLog(`Error searching files: ${error}`, 'error')
             return []
         }
     }
@@ -288,7 +353,7 @@ export class VectorSearchEngine {
                 payload: result.payload as any
             }))
         } catch (error) {
-            console.error('Error searching pages:', error)
+            safeLog(`Error searching pages: ${error}`, 'error')
             return []
         }
     }
@@ -298,9 +363,9 @@ export class VectorSearchEngine {
             await this.qdrant.delete('files', {
                 points: [fileId]
             })
-            console.log(`✅ Deleted file: ${fileId}`)
+            safeLog(`✅ Deleted file: ${fileId}`)
         } catch (error) {
-            console.error(`❌ Failed to delete file ${fileId}:`, error)
+            safeLog(`❌ Failed to delete file ${fileId}:`, error, 'error')
         }
     }
 
@@ -309,9 +374,9 @@ export class VectorSearchEngine {
             await this.qdrant.delete('pages', {
                 points: [pageId]
             })
-            console.log(`✅ Deleted page: ${pageId}`)
+            safeLog(`✅ Deleted page: ${pageId}`)
         } catch (error) {
-            console.error(`❌ Failed to delete page ${pageId}:`, error)
+            safeLog(`❌ Failed to delete page ${pageId}:`, error, 'error')
         }
     }
 
@@ -324,9 +389,9 @@ export class VectorSearchEngine {
                     ]
                 }
             })
-            console.log(`✅ Deleted repository: ${repository}`)
+            safeLog(`✅ Deleted repository: ${repository}`)
         } catch (error) {
-            console.error(`❌ Failed to delete repository ${repository}:`, error)
+            safeLog(`❌ Failed to delete repository ${repository}:`, error, 'error')
         }
     }
 
@@ -339,9 +404,9 @@ export class VectorSearchEngine {
                     ]
                 }
             })
-            console.log(`✅ Deleted documentation: ${documentation}`)
+            safeLog(`✅ Deleted documentation: ${documentation}`)
         } catch (error) {
-            console.error(`❌ Failed to delete documentation ${documentation}:`, error)
+            safeLog(`❌ Failed to delete documentation ${documentation}:`, error, 'error')
         }
     }
 
@@ -358,7 +423,7 @@ export class VectorSearchEngine {
                 pages: pagesCollection.points_count || 0
             }
         } catch (error) {
-            console.error('Error getting stats:', error)
+            safeLog('Error getting stats:', error, 'error')
             return { files: 0, pages: 0 }
         }
     }

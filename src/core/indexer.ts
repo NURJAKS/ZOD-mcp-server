@@ -74,12 +74,12 @@ export class RepositoryIndexer {
 
   constructor() {
     const token = process.env.GITHUB_TOKEN
-    if (!token) {
-      console.warn('GITHUB_TOKEN not configured, some features may not work')
+    if (!token || token === 'your_github_token_here') {
+      console.warn('GITHUB_TOKEN not configured, using unauthenticated requests (limited to public repos)')
     }
 
     this.octokit = new Octokit({
-      auth: token,
+      auth: token && token !== 'your_github_token_here' ? token : undefined,
     })
 
     this.db = new DatabaseManager()
@@ -147,7 +147,24 @@ export class RepositoryIndexer {
     return this.db.updateRepositoryDisplayName(repository, newName)
   }
 
-  private parseGitHubUrl(url: string): { owner: string, repo: string } {
+  async searchCodebase(query: string, options: { repositories?: string[] } = {}): Promise<Array<{
+    repository: string
+    path: string
+    language: string
+    size: number
+    content: string
+  }>> {
+    const results = await this.db.searchIndexedFiles(query, options.repositories)
+    return results.map(result => ({
+      repository: result.repositoryId,
+      path: result.path,
+      language: result.language,
+      size: 0, // Size not available in search results
+      content: result.content
+    }))
+  }
+
+  parseGitHubUrl(url: string): { owner: string, repo: string } {
     const match = url.match(/github\.com\/([^/]+)\/([^/]+)/)
     if (!match) {
       throw new Error('Invalid GitHub URL')
@@ -157,8 +174,18 @@ export class RepositoryIndexer {
 
   private async performIndexing(record: RepositoryRecord, options: IndexingOptions): Promise<void> {
     try {
+      // Update initial progress
+      record.progress = 10
+      record.status = 'indexing'
+      await this.db.saveRepository(record)
+
       // Получаем дерево файлов из GitHub API
       const tree = await this.getRepositoryTree(record.owner, record.repo, record.branch)
+
+      // Update progress after getting tree
+      record.progress = 30
+      record.rawFiles = tree.length
+      await this.db.saveRepository(record)
 
       // Проверяем, пустой ли репозиторий
       if (tree.length === 0) {
@@ -181,16 +208,12 @@ export class RepositoryIndexer {
         record.progress = 100
         record.indexedFiles = 0
         record.totalFiles = 0
-        record.rawFiles = 0
-        record.excludedFiles = 0
         record.report = JSON.stringify(report)
-        record.lastIndexed = new Date()
-
         await this.db.saveRepository(record)
         return
       }
 
-      // Фильтруем файлы
+      // Обрабатываем файлы
       const { indexedFiles, excludedFiles } = await this.filterAndProcessFiles(
         tree,
         record.id,
@@ -199,7 +222,18 @@ export class RepositoryIndexer {
         options
       )
 
+      // Update progress after processing files
+      record.progress = 90
+      record.indexedFiles = indexedFiles.length
+      record.totalFiles = tree.length
+      record.excludedFiles = excludedFiles.length
+      await this.db.saveRepository(record)
+
       // Создаем отчет
+      const languageStats = this.calculateLanguageStats(indexedFiles)
+      const totalSize = indexedFiles.reduce((sum, file) => sum + file.size, 0)
+      const averageFileSize = indexedFiles.length > 0 ? totalSize / indexedFiles.length : 0
+
       const report: IndexingReport = {
         indexedFiles,
         excludedFiles,
@@ -207,30 +241,23 @@ export class RepositoryIndexer {
           totalScanned: tree.length,
           totalIndexed: indexedFiles.length,
           totalExcluded: excludedFiles.length,
-          languages: this.calculateLanguageStats(indexedFiles),
-          sizeIndexed: indexedFiles.reduce((sum, file) => sum + file.size, 0),
-          averageFileSize: 0,
+          languages: languageStats,
+          sizeIndexed: totalSize,
+          averageFileSize,
         },
-      }
-
-      if (indexedFiles.length > 0) {
-        report.summary.averageFileSize = Math.round(report.summary.sizeIndexed / indexedFiles.length)
       }
 
       // Обновляем запись в базе данных
       record.status = 'completed'
       record.progress = 100
-      record.indexedFiles = indexedFiles.length
-      record.totalFiles = indexedFiles.length
-      record.rawFiles = tree.length
-      record.excludedFiles = excludedFiles.length
       record.report = JSON.stringify(report)
-      record.lastIndexed = new Date()
-
       await this.db.saveRepository(record)
+
+      console.log(`✅ Indexing completed: ${record.id} - ${indexedFiles.length} files indexed`)
     } catch (error) {
+      console.error('Indexing failed:', error)
       record.status = 'failed'
-      record.error = error instanceof Error ? error.message : 'Unknown error'
+      record.error = error.message
       await this.db.saveRepository(record)
       throw error
     }
@@ -255,15 +282,18 @@ export class RepositoryIndexer {
         return []
       }
 
+      // Use the specified branch or default branch
+      const targetBranch = branch || repoInfo.data.default_branch
+
       // Получаем дерево файлов
       const response = await this.octokit.git.getTree({
         owner,
         repo,
-        tree_sha: branch,
+        tree_sha: targetBranch,
         recursive: 'true',
       })
 
-      return response.data.tree
+      const files = response.data.tree
         .filter(item => item.type === 'blob')
         .map(item => ({
           path: item.path!,
@@ -271,7 +301,19 @@ export class RepositoryIndexer {
           type: item.type!,
           sha: item.sha!,
         }))
+
+      // Add some debugging info
+      console.log(`Found ${files.length} files in repository ${owner}/${repo} (branch: ${targetBranch})`)
+
+      return files
     } catch (error) {
+      if (error.status === 429) {
+        // Rate limited - wait and retry
+        console.log('Rate limited by GitHub API, waiting 60 seconds...')
+        await this.delay(60000) // Wait 60 seconds
+        return this.getRepositoryTree(owner, repo, branch) // Retry once
+      }
+
       console.error('Error fetching repository tree:', error)
 
       // Проверяем, является ли ошибка связанной с пустым репозиторием
@@ -298,9 +340,26 @@ export class RepositoryIndexer {
     const excludedFiles: { path: string; reason: string; category: 'dependencies' | 'build' | 'system' | 'git' | 'other' }[] = []
     const maxFiles = options.maxFiles || 1000
 
-    for (const item of tree) {
+    // Get the current repository record for progress updates
+    const record = await this.db.getRepository(repositoryId)
+    if (!record) {
+      throw new Error('Repository record not found')
+    }
+
+    for (let i = 0; i < tree.length; i++) {
+      const item = tree[i]
+      
       if (indexedFiles.length >= maxFiles) {
         break
+      }
+
+      // Update progress every 10 files or at the end
+      if (i % 10 === 0 || i === tree.length - 1) {
+        const progress = Math.min(90, 50 + Math.round((i / tree.length) * 40))
+        record.progress = progress
+        record.indexedFiles = indexedFiles.length
+        record.totalFiles = tree.length
+        await this.db.saveRepository(record)
       }
 
       // Проверяем исключения
@@ -322,19 +381,16 @@ export class RepositoryIndexer {
         continue
       }
 
-      // Определяем язык программирования
-      const language = this.detectLanguage(item.path)
-      const lines = content.split('\n').length
-
+      // Создаем информацию о файле
       const fileInfo: FileInfo = {
         path: item.path,
         size: item.size,
-        language,
-        lines,
-        content,
+        language: this.detectLanguage(item.path),
+        lines: content.split('\n').length,
+        content: content,
       }
 
-      // Сохраняем в SQLite
+      // Сохраняем в базу данных
       await this.db.saveIndexedFile(repositoryId, {
         path: fileInfo.path,
         content: fileInfo.content,
@@ -343,21 +399,24 @@ export class RepositoryIndexer {
         lines: fileInfo.lines,
       })
 
-      // Индексируем в векторную БД
+      // Пытаемся индексировать в векторной базе (опционально)
       try {
-        await this.vectorEngine.indexFile(
-          `${repositoryId}:${item.path}`,
-          fileInfo.content,
-          {
-            path: fileInfo.path,
-            language: fileInfo.language,
-            repository: repositoryId,
-            size: fileInfo.size,
-            lines: fileInfo.lines,
-          }
-        )
+        if (this.vectorEngine) {
+          await this.vectorEngine.indexFile(
+            `${repositoryId}:${fileInfo.path}`,
+            fileInfo.content,
+            {
+              path: fileInfo.path,
+              language: fileInfo.language,
+              repository: repositoryId,
+              size: fileInfo.size,
+              lines: fileInfo.lines,
+            }
+          )
+        }
       } catch (error) {
-        console.warn(`Failed to index file in vector DB: ${item.path}`, error)
+        // Vector search is optional, don't fail the indexing
+        console.log(`Failed to index file in vector DB: ${fileInfo.path} Error: ${error.message}`)
       }
 
       indexedFiles.push(fileInfo)
@@ -367,25 +426,42 @@ export class RepositoryIndexer {
   }
 
   private async getFileContent(sha: string, size: number, owner: string, repo: string): Promise<string | null> {
-    // Пропускаем слишком большие файлы
-    const maxSize = parseInt(process.env.MAX_FILE_SIZE || '1024000')
-    if (size > maxSize) {
-      return null
-    }
-
     try {
+      // Skip large files
+      if (size > 1024 * 1024) { // 1MB limit
+        console.log(`Skipping large file: ${sha} (${size} bytes)`)
+        return null
+      }
+
+      // Add rate limiting delay
+      await this.delay(100) // 100ms delay between requests
+
       const response = await this.octokit.git.getBlob({
         owner,
         repo,
         file_sha: sha,
       })
 
-      const content = Buffer.from(response.data.content, 'base64').toString('utf-8')
-      return content
+      if (response.data.encoding === 'base64') {
+        return Buffer.from(response.data.content, 'base64').toString('utf-8')
+      }
+
+      return response.data.content
     } catch (error) {
+      if (error.status === 429) {
+        // Rate limited - wait and retry
+        console.log('Rate limited by GitHub API, waiting 60 seconds...')
+        await this.delay(60000) // Wait 60 seconds
+        return this.getFileContent(sha, size, owner, repo) // Retry once
+      }
+      
       console.error('Error fetching file content:', error)
       return null
     }
+  }
+
+  private async delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms))
   }
 
   private shouldExcludeFile(path: string): boolean {

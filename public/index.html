@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIA MCP Server Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            padding: 25px;
+            border-radius: 10px;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+        }
+        
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .status-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-left: 4px solid #28a745;
+        }
+        
+        .status-card.indexing {
+            border-left-color: #ffc107;
+        }
+        
+        .status-card.failed {
+            border-left-color: #dc3545;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+        }
+        
+        .repo-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .info-item {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .info-item strong {
+            display: block;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+        
+        .logs {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 5px;
+            border-radius: 3px;
+        }
+        
+        .log-entry.info { background: #2b6cb0; }
+        .log-entry.success { background: #38a169; }
+        .log-entry.warning { background: #d69e2e; }
+        .log-entry.error { background: #e53e3e; }
+        
+        .search-results {
+            margin-top: 20px;
+        }
+        
+        .result-item {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-left: 4px solid #667eea;
+        }
+        
+        .result-item h4 {
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+        
+        .result-item pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+        
+        .error {
+            background: #fee;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #c53030;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 NIA MCP Server Dashboard</h1>
+            <p>Monitor and control repository indexing in real-time</p>
+        </div>
+        
+        <div class="content">
+            <!-- Repository Status Section -->
+            <div class="section">
+                <h2>📊 Repository Status</h2>
+                <div id="status-container">
+                    <div class="loading">Loading repository status...</div>
+                </div>
+                <button class="btn" onclick="refreshStatus()">🔄 Refresh Status</button>
+            </div>
+            
+            <!-- Index Repository Section -->
+            <div class="section">
+                <h2>📥 Index New Repository</h2>
+                <form id="index-form">
+                    <div class="form-group">
+                        <label for="repo-url">Repository URL:</label>
+                        <input type="url" id="repo-url" placeholder="https://github.com/owner/repo" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="branch">Branch (optional):</label>
+                        <input type="text" id="branch" placeholder="main" value="main">
+                    </div>
+                    <button type="submit" class="btn">🚀 Start Indexing</button>
+                </form>
+                <div id="index-result"></div>
+            </div>
+            
+            <!-- Search Section -->
+            <div class="section">
+                <h2>🔍 Search Codebase</h2>
+                <form id="search-form">
+                    <div class="form-group">
+                        <label for="search-query">Search Query:</label>
+                        <input type="text" id="search-query" placeholder="Enter your search query..." required>
+                    </div>
+                    <button type="submit" class="btn">🔍 Search</button>
+                </form>
+                <div id="search-results"></div>
+            </div>
+            
+            <!-- Activity Logs Section -->
+            <div class="section">
+                <h2>📝 Recent Activity</h2>
+                <div id="logs-container">
+                    <div class="loading">Loading activity logs...</div>
+                </div>
+                <button class="btn" onclick="refreshLogs()">🔄 Refresh Logs</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API base URL
+        const API_BASE = '/api';
+        
+        // Utility functions
+        function showError(container, message) {
+            container.innerHTML = `<div class="error">❌ ${message}</div>`;
+        }
+        
+        function showLoading(container) {
+            container.innerHTML = '<div class="loading">⏳ Loading...</div>';
+        }
+        
+        // Format date
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleString();
+        }
+        
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // Get repository status
+        async function loadStatus() {
+            const container = document.getElementById('status-container');
+            try {
+                const response = await fetch(`${API_BASE}/status`);
+                const data = await response.json();
+                
+                if (data.repositories.length === 0) {
+                    container.innerHTML = '<div class="status-card">📂 No repositories indexed yet. Start by indexing a repository above.</div>';
+                    return;
+                }
+                
+                container.innerHTML = data.repositories.map(repo => `
+                    <div class="status-card ${repo.status}">
+                        <h3>📁 ${repo.displayName || repo.id}</h3>
+                        <p><strong>Status:</strong> ${repo.status}</p>
+                        <p><strong>Branch:</strong> ${repo.branch}</p>
+                        <p><strong>Last Updated:</strong> ${formatDate(repo.lastIndexed)}</p>
+                        
+                        ${repo.totalFiles > 0 ? `
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${repo.progress}%"></div>
+                            </div>
+                            <p><strong>Progress:</strong> ${repo.progress}%</p>
+                        ` : ''}
+                        
+                        <div class="repo-info">
+                            <div class="info-item">
+                                <strong>${repo.indexedFiles || 0}</strong>
+                                <span>Files Indexed</span>
+                            </div>
+                            <div class="info-item">
+                                <strong>${repo.totalFiles || 0}</strong>
+                                <span>Total Files</span>
+                            </div>
+                            ${repo.excludedFiles ? `
+                                <div class="info-item">
+                                    <strong>${repo.excludedFiles}</strong>
+                                    <span>Excluded</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        ${repo.error ? `<p class="error">Error: ${repo.error}</p>` : ''}
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                showError(container, `Failed to load status: ${error.message}`);
+            }
+        }
+        
+        // Index repository
+        document.getElementById('index-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const repoUrl = document.getElementById('repo-url').value;
+            const branch = document.getElementById('branch').value;
+            const resultContainer = document.getElementById('index-result');
+            
+            showLoading(resultContainer);
+            
+            try {
+                const response = await fetch(`${API_BASE}/index`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ repo_url: repoUrl, branch })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    showError(resultContainer, data.error);
+                } else {
+                    resultContainer.innerHTML = `
+                        <div class="status-card success">
+                            <h4>✅ Indexing Started</h4>
+                            <p><strong>Repository:</strong> ${data.result.owner}/${data.result.repo}</p>
+                            <p><strong>Status:</strong> ${data.result.status}</p>
+                            <p><strong>Progress:</strong> ${data.result.progress}%</p>
+                        </div>
+                    `;
+                    
+                    // Refresh status after a moment
+                    setTimeout(loadStatus, 2000);
+                }
+            } catch (error) {
+                showError(resultContainer, `Failed to start indexing: ${error.message}`);
+            }
+        });
+        
+        // Search codebase
+        document.getElementById('search-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const query = document.getElementById('search-query').value;
+            const resultsContainer = document.getElementById('search-results');
+            
+            showLoading(resultsContainer);
+            
+            try {
+                const response = await fetch(`${API_BASE}/search?query=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    showError(resultsContainer, data.error);
+                } else if (data.results && data.results.length > 0) {
+                    resultsContainer.innerHTML = `
+                        <h3>🔍 Search Results (${data.results.length})</h3>
+                        <div class="search-results">
+                            ${data.results.map(result => `
+                                <div class="result-item">
+                                    <h4>📄 ${result.path}</h4>
+                                    <p><strong>Repository:</strong> ${result.repository}</p>
+                                    <p><strong>Language:</strong> ${result.language}</p>
+                                    <p><strong>Size:</strong> ${formatFileSize(result.size)}</p>
+                                    <details>
+                                        <summary>View Content</summary>
+                                        <pre>${result.content}</pre>
+                                    </details>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                } else {
+                    resultsContainer.innerHTML = '<div class="status-card">🔍 No results found for your query.</div>';
+                }
+            } catch (error) {
+                showError(resultsContainer, `Failed to search: ${error.message}`);
+            }
+        });
+        
+        // Load activity logs
+        async function loadLogs() {
+            const container = document.getElementById('logs-container');
+            try {
+                const response = await fetch(`${API_BASE}/logs`);
+                const data = await response.json();
+                
+                if (data.logs && data.logs.length > 0) {
+                    container.innerHTML = `
+                        <div class="logs">
+                            ${data.logs.map(log => `
+                                <div class="log-entry info">
+                                    <strong>${formatDate(log.timestamp)}</strong> - ${log.path}
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = '<div class="status-card">📝 No recent activity found.</div>';
+                }
+            } catch (error) {
+                showError(container, `Failed to load logs: ${error.message}`);
+            }
+        }
+        
+        // Refresh functions
+        function refreshStatus() {
+            loadStatus();
+        }
+        
+        function refreshLogs() {
+            loadLogs();
+        }
+        
+        // Auto-refresh every 30 seconds
+        setInterval(loadStatus, 30000);
+        
+        // Initial load
+        loadStatus();
+        loadLogs();
+    </script>
+</body>
+</html> 

@@ -150,6 +150,154 @@ export class SearchEngine {
     }
   }
 
+  async searchNews(
+    query: string,
+    options: {
+      sources?: string[]
+      timeRange?: string
+      maxResults?: number
+    } = {}
+  ): Promise<Array<{
+    title: string
+    content: string
+    url: string
+    source: string
+    publishedAt: string
+  }>> {
+    try {
+      // Use NewsAPI or similar service
+      const apiKey = process.env.NEWS_API_KEY
+      if (!apiKey) {
+        return this.getMockNewsResults(query, options)
+      }
+
+      const response = await fetch(`https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&apiKey=${apiKey}&pageSize=${options.maxResults || 10}`)
+      
+      if (!response.ok) {
+        throw new Error(`News API error: ${response.status}`)
+      }
+
+      const data = await response.json()
+      
+      return (data.articles || []).map((article: any) => ({
+        title: article.title,
+        content: article.description || article.content || '',
+        url: article.url,
+        source: article.source.name,
+        publishedAt: article.publishedAt,
+      }))
+    } catch (error) {
+      console.error('Error in news search:', error)
+      return this.getMockNewsResults(query, options)
+    }
+  }
+
+  async searchAcademic(
+    query: string,
+    options: {
+      fields?: string[]
+      yearFrom?: number
+      yearTo?: number
+      maxResults?: number
+    } = {}
+  ): Promise<Array<{
+    title: string
+    authors: string[]
+    abstract: string
+    journal: string
+    year: number
+    citations: number
+    doi: string
+  }>> {
+    try {
+      // Use arXiv API for academic papers
+      const response = await fetch(`http://export.arxiv.org/api/query?search_query=all:${encodeURIComponent(query)}&max_results=${options.maxResults || 10}&sortBy=relevance&sortOrder=descending`)
+      
+      if (!response.ok) {
+        throw new Error(`ArXiv API error: ${response.status}`)
+      }
+
+      const data = await response.text()
+      const parser = new DOMParser()
+      const xmlDoc = parser.parseFromString(data, 'text/xml')
+      
+      const entries = xmlDoc.getElementsByTagName('entry')
+      const results: Array<{
+        title: string
+        authors: string[]
+        abstract: string
+        journal: string
+        year: number
+        citations: number
+        doi: string
+      }> = []
+      
+      for (let i = 0; i < entries.length; i++) {
+        const entry = entries[i]
+        const title = entry.getElementsByTagName('title')[0]?.textContent || ''
+        const summary = entry.getElementsByTagName('summary')[0]?.textContent || ''
+        const authors = Array.from(entry.getElementsByTagName('author')).map(author => author.getElementsByTagName('name')[0]?.textContent || '').filter(Boolean)
+        const published = entry.getElementsByTagName('published')[0]?.textContent || ''
+        const year = new Date(published).getFullYear()
+        const id = entry.getElementsByTagName('id')[0]?.textContent || ''
+        
+        results.push({
+          title: title.replace(/\s+/g, ' ').trim(),
+          authors,
+          abstract: summary.replace(/\s+/g, ' ').trim(),
+          journal: 'arXiv',
+          year,
+          citations: 0, // arXiv doesn't provide citation count
+          doi: id,
+        })
+      }
+      
+      return results
+    } catch (error) {
+      console.error('Error in academic search:', error)
+      return this.getMockAcademicResults(query, options)
+    }
+  }
+
+  async monitorSocial(
+    topic: string,
+    options: {
+      platforms?: string[]
+      timeRange?: string
+      maxResults?: number
+    } = {}
+  ): Promise<Array<{
+    platform: string
+    author: string
+    content: string
+    url: string
+    publishedAt: string
+    engagement: number
+  }>> {
+    try {
+      // Use Reddit API for social monitoring
+      const response = await fetch(`https://www.reddit.com/search.json?q=${encodeURIComponent(topic)}&limit=${options.maxResults || 15}&sort=hot`)
+      
+      if (!response.ok) {
+        throw new Error(`Reddit API error: ${response.status}`)
+      }
+
+      const data = await response.json()
+      
+      return (data.data?.children || []).map((post: any) => ({
+        platform: 'reddit',
+        author: post.data.author,
+        content: post.data.title + (post.data.selftext ? ': ' + post.data.selftext : ''),
+        url: `https://reddit.com${post.data.permalink}`,
+        publishedAt: new Date(post.data.created_utc * 1000).toISOString(),
+        engagement: post.data.score + post.data.num_comments,
+      }))
+    } catch (error) {
+      console.error('Error in social monitoring:', error)
+      return this.getMockSocialResults(topic, options)
+    }
+  }
+
   async deepResearch(
     query: string,
     outputFormat?: string,
@@ -159,31 +307,43 @@ export class SearchEngine {
     sources: string[]
     recommendations: string[]
   }> {
-    // OpenRouter временно отключен
-    return {
-      summary: 'Deep research temporarily disabled',
-      analysis: 'OpenRouter API is temporarily disabled for maintenance.',
-      sources: [],
-      recommendations: ['Use web search instead', 'Check back later'],
+    try {
+      if (!this.openrouter) {
+        // Fallback to web search when OpenRouter is not available
+        const webResults = await this.searchWeb(query, { numResults: 5 })
+        
+        const summary = `Research on "${query}" based on web search results.`
+        const analysis = webResults.length > 0 
+          ? `Found ${webResults.length} relevant sources. Key findings:\n\n${webResults.map((result, i) => `${i + 1}. ${result.title}\n   ${result.content.substring(0, 150)}...`).join('\n\n')}`
+          : 'No relevant sources found in web search.'
+        
+        const sources = webResults.map(result => result.url || '').filter(Boolean)
+        const recommendations = [
+          'Use nia_web_search for more specific queries',
+          'Index relevant repositories with index_repository',
+          'Search your indexed content with search_codebase'
+        ]
+
+        return {
+          summary,
+          analysis,
+          sources,
+          recommendations
+        }
+      }
+
+      // Perform multi-step research with OpenRouter
+      const research = await this.performDeepResearch(query, outputFormat)
+      return research
+    } catch (error) {
+      console.error('Error performing deep research:', error)
+      return {
+        summary: `Error performing research: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        analysis: 'Research could not be completed due to an error.',
+        sources: [],
+        recommendations: ['Check API configuration', 'Verify internet connection', 'Try web search instead'],
+      }
     }
-
-    // try {
-    //   if (!this.openrouter) {
-    //     throw new Error('OpenRouter API key not configured')
-    //   }
-
-    //   // Выполняем многоэтапное исследование
-    //   const research = await this.performDeepResearch(query, outputFormat)
-    //   return research
-    // } catch (error) {
-    //   console.error('Error performing deep research:', error)
-    //   return {
-    //     summary: `Error performing research: ${error}`,
-    //     analysis: 'Research could not be completed due to an error.',
-    //     sources: [],
-    //     recommendations: ['Check API configuration', 'Verify internet connection'],
-    //   }
-    // }
   }
 
   private async performSemanticSearch(
@@ -340,8 +500,29 @@ export class SearchEngine {
       findSimilarTo?: string
     }
   ): SearchResult[] {
-    // Возвращаем пустой массив вместо мок-данных
-    return []
+    // Provide helpful fallback results when API is not available
+    const fallbackResults = [
+      {
+        id: 'fallback-1',
+        type: 'web' as const,
+        title: 'Web Search API Not Configured',
+        content: `To enable web search functionality, please configure the SERPER_API_KEY environment variable. You can get a free API key from https://serper.dev`,
+        url: 'https://serper.dev',
+        score: 0.9,
+        metadata: { category: 'setup', position: 1 },
+      },
+      {
+        id: 'fallback-2',
+        type: 'web' as const,
+        title: 'Alternative Search Options',
+        content: `While web search is not available, you can still search your indexed repositories and documentation using search_codebase and search_documentation tools.`,
+        url: '',
+        score: 0.8,
+        metadata: { category: 'help', position: 2 },
+      }
+    ]
+
+    return fallbackResults.slice(0, options.numResults || 2)
   }
 
   private async performSemanticDocumentationSearch(
@@ -509,5 +690,87 @@ export class SearchEngine {
         vector: true
       },
     }))
+  }
+
+  private getMockNewsResults(
+    query: string,
+    options: {
+      sources?: string[]
+      timeRange?: string
+      maxResults?: number
+    }
+  ): Array<{
+    title: string
+    content: string
+    url: string
+    source: string
+    publishedAt: string
+  }> {
+    return [
+      {
+        title: `News API not configured for: ${query}`,
+        content: 'To enable real news search, configure NEWS_API_KEY environment variable. Get a free key from https://newsapi.org',
+        url: 'https://newsapi.org',
+        source: 'NewsAPI',
+        publishedAt: new Date().toISOString(),
+      }
+    ]
+  }
+
+  private getMockAcademicResults(
+    query: string,
+    options: {
+      fields?: string[]
+      yearFrom?: number
+      yearTo?: number
+      maxResults?: number
+    }
+  ): Array<{
+    title: string
+    authors: string[]
+    abstract: string
+    journal: string
+    year: number
+    citations: number
+    doi: string
+  }> {
+    return [
+      {
+        title: `Academic search not available for: ${query}`,
+        authors: ['System'],
+        abstract: 'Academic search is currently using fallback results. Consider implementing arXiv or Semantic Scholar API for real academic paper search.',
+        journal: 'System',
+        year: new Date().getFullYear(),
+        citations: 0,
+        doi: 'system://mock',
+      }
+    ]
+  }
+
+  private getMockSocialResults(
+    topic: string,
+    options: {
+      platforms?: string[]
+      timeRange?: string
+      maxResults?: number
+    }
+  ): Array<{
+    platform: string
+    author: string
+    content: string
+    url: string
+    publishedAt: string
+    engagement: number
+  }> {
+    return [
+      {
+        platform: 'system',
+        author: 'System',
+        content: `Social media monitoring not available for: ${topic}. Consider implementing Twitter API or Reddit API for real social media monitoring.`,
+        url: '',
+        publishedAt: new Date().toISOString(),
+        engagement: 0,
+      }
+    ]
   }
 }
