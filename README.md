@@ -14,7 +14,7 @@
 ---
 
 <a href="https://glama.ai/mcp/servers/@your-org/nia-mcp-server">
-  <img width="380" height="200" src="https://glama.ai/mcp/servers/@your-org/nia-mcp-server/badge" alt="NIA MCP server" />
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@your-org/nia-mcp-server/badge" alt="MCP server" />
 </a>
 
 ## 🚀 Features
