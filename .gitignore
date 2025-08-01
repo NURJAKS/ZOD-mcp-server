@@ -65,3 +65,50 @@ mcp-cache/
 
 # ===== DEVELOPMENT =====
 .local/
+
+# ===== DATABASE FILES =====
+*.db
+*.sqlite
+*.sqlite3
+data/*.db
+
+# ===== TEST FILES =====
+test-*.js
+test-*.mjs
+test-*.cjs
+test-*.ts
+
+# ===== CURSOR/EDITOR SPECIFIC =====
+.cursor/
+
+# ===== RUNTIME FILES =====
+*.pid
+*.seed
+*.pid.lock
+
+# ===== COVERAGE REPORTS =====
+lcov.info
+*.lcov
+
+# ===== BUNDLE ANALYZER =====
+bundle-analyzer-report.html
+
+# ===== DOCKER =====
+.dockerignore
+
+# ===== SECURITY =====
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# ===== BACKUP FILES =====
+*.bak
+*.backup
+*.old
+
+# ===== LOCK FILES (keep package-lock.json) =====
+# package-lock.json is intentionally not ignored
+yarn.lock
+pnpm-lock.yaml

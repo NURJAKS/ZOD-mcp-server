@@ -3,7 +3,7 @@
     "nia-mcp-server": {
       "command": "node",
       "args": [
-        "./bin/cli.mjs",
+        "/home/nurbekk/mcp-starter/bin/cli.mjs",
         "--stdio"
       ]
     }

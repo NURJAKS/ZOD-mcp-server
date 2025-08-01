@@ -1,13 +1,12 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 // Import mock internals at the top
 // Note: Vitest often handles hoisting, but dynamic import in loadModule might affect this.
 // We'll revisit using vi.mocked if these direct imports cause issues later.
 import { __mocks as restMocks } from '@chatmcp/sdk/server/rest.js'
-import { McpServer as MockMcpServer, __spies as mcpSpies } from '@modelcontextprotocol/sdk/server/mcp.js'
-import { __mocks as sseMocks } from '@modelcontextprotocol/sdk/server/sse.js'
+import { __spies as mcpSpies, McpServer as MockMcpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { __mocks as stdioMocks } from '@modelcontextprotocol/sdk/server/stdio.js'
 // Mock h3 internals needed for assertions
 import { __mocks as h3Mocks } from 'h3'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 // ---------------------------------------------------------------------------
 // Mocking external dependencies used by src/server.ts
@@ -154,7 +153,6 @@ vi.mock('h3', () => {
     },
   }
 })
-
 
 // ---------------------------------------------------------------------------
 // Actual tests start here – we import the module under test AFTER the mocks.
@@ -304,7 +302,6 @@ describe('startServer – SSE transport', () => {
   // - Simulate POST /messages (invalid session) -> check 400 status
   // - Simulate client disconnect -> check transport removed
 })
-
 
 /**
  * stopServer tests

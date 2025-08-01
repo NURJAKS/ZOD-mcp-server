@@ -2,7 +2,6 @@
   "name": "@your-org/nia-mcp-server",
   "type": "module",
   "version": "0.1.0",
-  "packageManager": "pnpm@9.14.4+sha512.c8180b3fbe4e4bca02c94234717896b5529740a6cbadf19fa78254270403ea2f27d4e1d46a08a0f56c89b63dc8ebfd3ee53326da720273794e6200fcf0d184ab",
   "description": "NIA MCP Server - Intelligent code indexing, search, and research platform",
   "contributors": [
     {
@@ -26,7 +25,7 @@
     "./cli": "./bin/cli.mjs"
   },
   "bin": {
-    "nia-mcp-server": "./bin/cli.mjs"
+    "nia-mcp": "./bin/cli.mjs"
   },
   "files": [
     "bin",
@@ -55,15 +54,27 @@
   "dependencies": {
     "@chatmcp/sdk": "^1.0.6",
     "@modelcontextprotocol/sdk": "^1.9.0",
+    "@octokit/rest": "^21.0.2",
+    "@qdrant/js-client-rest": "^1.15.0",
+    "axios": "^1.7.0",
+    "cheerio": "^1.0.0-rc.12",
     "citty": "^0.1.6",
+    "dotenv": "^16.5.0",
     "h3": "^1.15.1",
+    "node-cron": "^3.0.3",
     "ofetch": "^1.4.1",
+    "openrouter-client": "^1.5.1",
+    "puppeteer": "^23.0.0",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7",
+    "turndown": "^7.1.2",
     "zod": "^3.24.3"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^4.12.0",
+    "@types/cheerio": "^0.22.35",
     "@types/node": "^22.14.1",
-    "dotenv": "^16.5.0",
+    "@types/node-cron": "^3.0.11",
     "esbuild": "^0.25.2",
     "nodemon": "^3.1.9",
     "tsx": "^4.19.3",
