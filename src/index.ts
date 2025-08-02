@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import 'dotenv/config'
 import type { McpToolContext } from './types'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'

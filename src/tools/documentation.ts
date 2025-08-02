@@ -303,15 +303,14 @@ export function registerDocumentationTools({ mcp }: McpToolContext): void {
     },
   )
 
-  // Advanced documentation analysis tool
+  // Simple documentation analysis tool
   mcp.tool(
     'analyze_documentation',
-    'Perform comprehensive analysis of documentation including content quality, structure, and SEO insights',
+    'Analyze documentation content quality and structure',
     {
       source_id: z.string().describe('Documentation source ID to analyze'),
-      analysis_type: z.enum(['full', 'content', 'structure', 'seo', 'accessibility']).default('full').describe('Type of analysis to perform'),
     },
-    async ({ source_id, analysis_type }) => {
+    async ({ source_id }) => {
       try {
         if (!source_id || source_id.trim() === '') {
           return {
@@ -382,25 +381,6 @@ export function registerDocumentationTools({ mcp }: McpToolContext): void {
           max_depth: Math.max(...pages.map(p => (p.url.match(/\//g) || []).length))
         }
 
-        // SEO analysis
-        const seoAnalysis = {
-          has_meta_tags: pages.some(p => p.content.toLowerCase().includes('<meta')),
-          has_structured_data: pages.some(p => p.content.toLowerCase().includes('json-ld') || p.content.toLowerCase().includes('schema.org')),
-          has_social_tags: pages.some(p => p.content.toLowerCase().includes('og:') || p.content.toLowerCase().includes('twitter:')),
-          has_canonical: pages.some(p => p.content.toLowerCase().includes('canonical')),
-          avg_title_length: contentQuality.avg_title_length,
-          title_optimization: contentQuality.avg_title_length >= 30 && contentQuality.avg_title_length <= 60 ? 'Good' : 'Needs improvement'
-        }
-
-        // Accessibility analysis
-        const accessibilityAnalysis = {
-          has_alt_text: pages.some(p => p.content.toLowerCase().includes('alt=')),
-          has_aria_labels: pages.some(p => p.content.toLowerCase().includes('aria-')),
-          has_semantic_html: pages.some(p => p.content.toLowerCase().includes('<nav>') || p.content.toLowerCase().includes('<main>') || p.content.toLowerCase().includes('<article>')),
-          has_skip_links: pages.some(p => p.content.toLowerCase().includes('skip to main content')),
-          has_contrast_issues: pages.some(p => p.content.toLowerCase().includes('color: #') && p.content.toLowerCase().includes('background: #'))
-        }
-
         let report = `🔍 **Documentation Analysis: ${record.displayName || record.name}**\n\n`
         report += `📊 **Source Info:**\n`
         report += `• URL: ${record.url}\n`
@@ -408,47 +388,24 @@ export function registerDocumentationTools({ mcp }: McpToolContext): void {
         report += `• Pages Indexed: ${record.indexedPages}\n`
         report += `• Last Indexed: ${new Date(record.lastIndexed).toLocaleDateString()}\n\n`
 
-        if (analysis_type === 'full' || analysis_type === 'content') {
-          report += `📝 **Content Quality:**\n`
-          report += `• Total Pages: ${contentQuality.total_pages}\n`
-          report += `• Total Content: ${contentQuality.total_content_chars.toLocaleString()} characters\n`
-          report += `• Average Content Length: ${contentQuality.avg_content_length} characters\n`
-          report += `• English Content Ratio: ${contentQuality.english_ratio}%\n`
-          report += `• Code Content Ratio: ${contentQuality.code_ratio}%\n`
-          report += `• Unique URLs: ${contentQuality.unique_urls}\n`
-          report += `• Average Title Length: ${contentQuality.avg_title_length} characters\n\n`
-        }
+        report += `📝 **Content Quality:**\n`
+        report += `• Total Pages: ${contentQuality.total_pages}\n`
+        report += `• Total Content: ${contentQuality.total_content_chars.toLocaleString()} characters\n`
+        report += `• Average Content Length: ${contentQuality.avg_content_length} characters\n`
+        report += `• English Content Ratio: ${contentQuality.english_ratio}%\n`
+        report += `• Code Content Ratio: ${contentQuality.code_ratio}%\n`
+        report += `• Unique URLs: ${contentQuality.unique_urls}\n`
+        report += `• Average Title Length: ${contentQuality.avg_title_length} characters\n\n`
 
-        if (analysis_type === 'full' || analysis_type === 'structure') {
-          report += `🏗️ **Structure Analysis:**\n`
-          report += `• Has Index Page: ${structureAnalysis.has_index_page ? '✅' : '❌'}\n`
-          report += `• Has Search: ${structureAnalysis.has_search ? '✅' : '❌'}\n`
-          report += `• Has Navigation: ${structureAnalysis.has_navigation ? '✅' : '❌'}\n`
-          report += `• Has Table of Contents: ${structureAnalysis.has_toc ? '✅' : '❌'}\n`
-          report += `• Max URL Depth: ${structureAnalysis.max_depth} levels\n\n`
-        }
-
-        if (analysis_type === 'full' || analysis_type === 'seo') {
-          report += `🔍 **SEO Analysis:**\n`
-          report += `• Meta Tags: ${seoAnalysis.has_meta_tags ? '✅' : '❌'}\n`
-          report += `• Structured Data: ${seoAnalysis.has_structured_data ? '✅' : '❌'}\n`
-          report += `• Social Tags: ${seoAnalysis.has_social_tags ? '✅' : '❌'}\n`
-          report += `• Canonical URLs: ${seoAnalysis.has_canonical ? '✅' : '❌'}\n`
-          report += `• Title Optimization: ${seoAnalysis.title_optimization}\n\n`
-        }
-
-        if (analysis_type === 'full' || analysis_type === 'accessibility') {
-          report += `♿ **Accessibility Analysis:**\n`
-          report += `• Alt Text: ${accessibilityAnalysis.has_alt_text ? '✅' : '❌'}\n`
-          report += `• ARIA Labels: ${accessibilityAnalysis.has_aria_labels ? '✅' : '❌'}\n`
-          report += `• Semantic HTML: ${accessibilityAnalysis.has_semantic_html ? '✅' : '❌'}\n`
-          report += `• Skip Links: ${accessibilityAnalysis.has_skip_links ? '✅' : '❌'}\n`
-          report += `• Contrast Issues: ${accessibilityAnalysis.has_contrast_issues ? '⚠️' : '✅'}\n\n`
-        }
+        report += `🏗️ **Structure Analysis:**\n`
+        report += `• Has Index Page: ${structureAnalysis.has_index_page ? '✅' : '❌'}\n`
+        report += `• Has Search: ${structureAnalysis.has_search ? '✅' : '❌'}\n`
+        report += `• Has Navigation: ${structureAnalysis.has_navigation ? '✅' : '❌'}\n`
+        report += `• Has Table of Contents: ${structureAnalysis.has_toc ? '✅' : '❌'}\n`
+        report += `• Max URL Depth: ${structureAnalysis.max_depth} levels\n\n`
 
         report += `**Next Steps:**\n`
         report += `• Use search_documentation to search this documentation\n`
-        report += `• Use analyze_documentation with specific analysis_type for focused insights\n`
         report += `• Consider re-indexing if content has changed significantly`
 
         return {

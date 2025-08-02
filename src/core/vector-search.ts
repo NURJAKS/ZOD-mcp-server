@@ -36,6 +36,10 @@ export class VectorSearchEngine {
     private openrouter: any = null
     private isInitialized = false
 
+    public get isReady(): boolean {
+        return this.isInitialized
+    }
+
     constructor() {
         const qdrantUrl = process.env.QDRANT_URL || 'http://localhost:6333'
         
@@ -87,11 +91,17 @@ export class VectorSearchEngine {
                 safeLog('ℹ️ Qdrant not configured, using local fallback')
             }
 
+            // Create collections if they don't exist
+            if (this.qdrant) {
+                await this.createCollections()
+            }
+            
             // Initialize OpenRouter if available
             if (process.env.OPENROUTER_API_KEY) {
                 try {
                     this.openrouter = new OpenRouter({
                         apiKey: process.env.OPENROUTER_API_KEY,
+                        baseURL: 'https://openrouter.ai/api/v1',
                     })
                     safeLog('✅ OpenRouter client initialized')
                 } catch (error) {
@@ -101,7 +111,7 @@ export class VectorSearchEngine {
             } else {
                 safeLog('ℹ️ OpenRouter not configured, using hash-based embeddings')
             }
-
+            
             // Mark as initialized regardless of external services
             this.isInitialized = true
             safeLog('✅ Vector search engine initialized successfully')

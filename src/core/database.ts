@@ -404,12 +404,16 @@ export class DatabaseManager {
                     WHEN content LIKE ? THEN 60
                     ELSE 0
                 END as score
-            FROM indexedPages
+            FROM indexed_pages
             ${whereClause}
-            HAVING score > 0
+            WHERE (
+                content LIKE ? OR 
+                title LIKE ? OR 
+                content LIKE ?
+            )
             ORDER BY score DESC
             LIMIT 50
-        `, [`%${query}%`, `%${query}%`, `%${query}%`, ...queryParams])
+        `, [`%${query}%`, `%${query}%`, `%${query}%`, ...queryParams, `%${query}%`, `%${query}%`, `%${query}%`])
 
         return results.map(row => ({
             documentationId: row.documentationId,

@@ -30,20 +30,44 @@ export class SearchEngine {
   constructor() {
     this.db = new DatabaseManager()
     this.vectorEngine = new VectorSearchEngine()
+    
+    // Initialize OpenRouter for AI-powered search
+    const apiKey = process.env.OPENROUTER_API_KEY
+    console.log('🔧 OpenRouter initialization debug:')
+    console.log('  - API Key exists:', !!apiKey)
+    console.log('  - API Key length:', apiKey?.length || 0)
+    
+    if (apiKey) {
+      this.initializeOpenRouterSync(apiKey)
+    } else {
+      console.log('❌ No OpenRouter API key found in environment')
+    }
+  }
 
-    // OpenRouter временно отключен
-    // const apiKey = process.env.OPENROUTER_API_KEY
-    // if (apiKey) {
-    //   try {
-    //     const OpenRouter = require('openrouter-client')
-    //     this.openrouter = new OpenRouter({
-    //       apiKey,
-    //       baseURL: 'https://openrouter.ai/api/v1',
-    //     })
-    //   } catch (error) {
-    //     console.log('OpenRouter client not available')
-    //   }
-    // }
+  private initializeOpenRouterSync(apiKey: string) {
+    try {
+      // Use require for synchronous initialization
+      const { OpenRouter } = require('openrouter-client')
+      console.log('  - OpenRouter module loaded successfully')
+      
+      this.openrouter = new OpenRouter(apiKey)
+      console.log('✅ OpenRouter client initialized for semantic search')
+    } catch (error) {
+      console.log('❌ OpenRouter client not available:', error.message)
+    }
+  }
+
+  private async initializeOpenRouter(apiKey: string) {
+    try {
+      // Use dynamic import for ES module compatibility
+      const { OpenRouter } = await import('openrouter-client')
+      console.log('  - OpenRouter module loaded successfully')
+      
+      this.openrouter = new OpenRouter(apiKey)
+      console.log('✅ OpenRouter client initialized for semantic search')
+    } catch (error) {
+      console.log('❌ OpenRouter client not available:', error.message)
+    }
   }
 
   async initialize(): Promise<void> {
@@ -149,12 +173,19 @@ export class SearchEngine {
       // 1. Текстовый поиск в SQLite
       const dbResults = await this.db.searchIndexedPages(query, options.sources)
 
-      // 2. Векторный поиск в Qdrant
-      const vectorResults = await this.vectorEngine.searchPages(query, {
-        documentation: options.sources,
-        limit: options.maxResults || 20,
-        scoreThreshold: options.minScore || 0.7
-      })
+      // 2. Векторный поиск в Qdrant (если доступен)
+      let vectorResults: any[] = []
+      try {
+        if (this.vectorEngine && this.vectorEngine.isReady) {
+          vectorResults = await this.vectorEngine.searchPages(query, {
+            documentation: options.sources,
+            limit: options.maxResults || 20,
+            scoreThreshold: options.minScore || 0.7
+          })
+        }
+      } catch (error) {
+        console.log('Vector search not available, using database search only')
+      }
 
       // 3. Семантический поиск с OpenAI (если есть) - временно отключен
       let semanticResults: SearchResult[] = []
