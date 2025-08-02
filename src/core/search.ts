@@ -46,12 +46,14 @@ export class SearchEngine {
 
   private initializeOpenRouterSync(apiKey: string) {
     try {
-      // Use require for synchronous initialization
-      const { OpenRouter } = require('openrouter-client')
-      console.log('  - OpenRouter module loaded successfully')
-      
-      this.openrouter = new OpenRouter(apiKey)
-      console.log('✅ OpenRouter client initialized for semantic search')
+      // Use dynamic import for ES module compatibility
+      import('openrouter-client').then(({ OpenRouter }) => {
+        console.log('  - OpenRouter module loaded successfully')
+        this.openrouter = new OpenRouter(apiKey)
+        console.log('✅ OpenRouter client initialized for semantic search')
+      }).catch(error => {
+        console.log('❌ OpenRouter client not available:', error.message)
+      })
     } catch (error) {
       console.log('❌ OpenRouter client not available:', error.message)
     }

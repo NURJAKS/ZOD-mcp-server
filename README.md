@@ -1,352 +1,384 @@
-# MCP Server
+# NIA MCP Server
 
-![MCP Server](/public/banner.png)
+🚀 **Intelligent Code Indexing, Search, and Research Platform**
 
-<div align="center">
-  <strong>Intelligent Code Indexing, Search, and Research Platform</strong><br />
-  <a href="https://twitter.com/kregenrek">
-    <img src="https://img.shields.io/twitter/follow/kregenrek?style=social" alt="Follow @kregenrek on Twitter">
-  </a>
-</div>
+A powerful MCP (Model Context Protocol) server that provides intelligent code indexing, search, and research capabilities for Cursor IDE and other MCP-compatible clients.
 
-**MCP Server** - это интеллектуальная платформа для индексации, поиска и анализа кодовых баз и документации с использованием AI. Аналог Nia MCP сервера с полным набором инструментов для работы с репозиториями, документацией и веб-исследованиями.
+## ✨ Features
 
----
-
-<a href="https://glama.ai/mcp/servers/@your-org/nia-mcp-server">
-  <img width="380" height="200" src="https://glama.ai/mcp/servers/@your-org/nia-mcp-server/badge" alt="MCP server" />
-</a>
-
-## 🚀 Features
-
-### 📂 **Repository Management**
-- **`index_repository`** - Индексация GitHub репозиториев для интеллектуального поиска
-- **`list_repositories`** - Список всех индексированных репозиториев со статусом
-- **`check_repository_status`** - Мониторинг прогресса индексации
-- **`delete_repository`** - Удаление индексированных репозиториев
-- **`rename_repository`** - Переименование репозиториев для лучшей организации
-- **`search_codebase`** - Поиск по коду с использованием естественного языка
+### 🔍 **Repository Management**
+- **Index GitHub repositories** for intelligent code search
+- **Search codebases** using natural language queries
+- **Monitor indexing progress** with real-time status updates
+- **Manage multiple repositories** with easy organization
 
 ### 📚 **Documentation Management**
-- **`index_documentation`** - Индексация веб-сайтов и документации
-- **`list_documentation`** - Список всех индексированных источников документации
-- **`check_documentation_status`** - Мониторинг индексации документации
-- **`delete_documentation`** - Удаление индексированной документации
-- **`rename_documentation`** - Переименование источников документации
-- **`search_documentation`** - Поиск по документации с использованием естественного языка
+- **Index web documentation** and websites
+- **Search documentation** with semantic understanding
+- **Crawl and extract** content from documentation sites
+- **Organize documentation** sources efficiently
 
-### 🔍 **Web Search & Research**
-- **`nia_web_search`** - AI-поиск репозиториев, документации и контента
-- **`nia_deep_research_agent`** - Глубокое многоэтапное исследование и анализ
+### 🌐 **Web Search & Research**
+- **AI-powered web search** for repositories and content
+- **Deep research capabilities** with multi-step analysis
+- **Academic paper search** and analysis
+- **Social media monitoring** and trend analysis
 
 ### ⚙️ **Project Initialization**
-- **`initialize_project`** - Настройка NIA-совместимых проектов с IDE-конфигурациями
-- Поддержка Cursor, VS Code, Claude, Windsurf, Cline и других IDE
-- Автоматическое создание IDE-специфичных правил и конфигураций
+- **Setup IDE configurations** for multiple editors
+- **Automated project setup** with best practices
+- **Cross-project compatibility** with global configuration
 
 ## 🏗️ Architecture
 
 ```
-🧠 Core (Ядро)
-├── 📂 src/core/indexer.ts - Индексация репозиториев и документации
-├── 🔍 src/core/search.ts - Поисковая система
-└── 🧬 src/core/embeddings.ts - Работа с эмбеддингами (планируется)
-
-🧩 MCP Server
-├── 📡 src/server.ts - Управление командами и API
-├── 🛠️ src/tools/ - Все MCP инструменты
-└── 🔧 src/index.ts - CLI интерфейс
-
-🛢️ Storage (Хранилища)
-├── 📊 src/storage/vector.ts - Векторная БД (планируется)
-└── 💾 src/storage/cache.ts - Кэширование (планируется)
-
-🕸️ Web Tools
-├── 🌐 src/tools/web-search.ts - Веб-поиск и исследования
-└── 🤖 src/agents/research.ts - Исследовательские агенты (планируется)
+src/
+├── core/           # Core system components
+│   ├── indexer.ts  # Repository and documentation indexing
+│   ├── search.ts   # Search engine with AI capabilities
+│   ├── database.ts # SQLite database management
+│   └── vector-search.ts # Vector search with Qdrant
+├── tools/          # MCP tools and integrations
+│   ├── repository.ts # Repository management tools
+│   ├── documentation.ts # Documentation tools
+│   ├── web-search.ts # Web search and research tools
+│   └── project.ts  # Project initialization tools
+├── server.ts       # MCP server implementation
+└── index.ts        # CLI interface
 ```
 
-## 🛠️ Available Tools
-
-### Repository Management Tools
-
-#### `index_repository`
-Индексация GitHub репозитория для интеллектуального поиска кода.
-
-**Параметры:**
-- `repo_url` (str): GitHub repository URL (например, https://github.com/owner/repo)
-- `branch` (str, optional): Ветка для индексации (по умолчанию main)
-
-**Использование:** После начала индексации используйте `check_repository_status` для мониторинга прогресса.
-
-#### `list_repositories`
-Список всех индексированных репозиториев со статусом.
-
-**Параметры:** Нет
-
-**Возвращает:** Список репозиториев со статусом, веткой и информацией об индексации.
-
-#### `check_repository_status`
-Проверка статуса индексации репозитория.
-
-**Параметры:**
-- `repository` (str): Репозиторий в формате owner/repo
-
-**Возвращает:** Текущий статус, прогресс и детали индексации.
-
-#### `delete_repository`
-Удаление индексированного репозитория.
-
-**Параметры:**
-- `repository` (str): Репозиторий в формате owner/repo
-
-**Возвращает:** Подтверждение удаления.
-
-#### `rename_repository`
-Переименование индексированного репозитория для лучшей организации.
-
-**Параметры:**
-- `repository` (str): Репозиторий в формате owner/repo
-- `new_name` (str): Новое отображаемое имя (1-100 символов)
-
-**Возвращает:** Подтверждение операции переименования.
-
-#### `search_codebase`
-Поиск по индексированным репозиториям с использованием естественного языка.
-
-**Параметры:**
-- `query` (str): Запрос поиска на естественном языке
-- `repositories` (List[str], optional): Список репозиториев для поиска
-- `include_sources` (bool, default=True): Включать ли исходный код в результаты
-
-**Возвращает:** Результаты поиска с соответствующими фрагментами кода и объяснениями.
-
-### Documentation Management Tools
-
-#### `index_documentation`
-Индексация документации или веб-сайта для интеллектуального поиска.
-
-**Параметры:**
-- `url` (str): URL документационного сайта для индексации
-- `url_patterns` (List[str], optional): URL паттерны для включения в краулинг
-- `max_age` (int, optional): Максимальный возраст кэшированного контента в секундах
-- `only_main_content` (bool, default=True): Извлекать только основной контент
-
-#### `list_documentation`
-Список всех индексированных источников документации.
-
-**Параметры:** Нет
-
-**Возвращает:** Список источников документации со статусом и метаданными.
-
-#### `check_documentation_status`
-Проверка статуса индексации источника документации.
-
-**Параметры:**
-- `source_id` (str): ID источника документации
-
-**Возвращает:** Текущий статус, прогресс и детали индексации.
-
-#### `delete_documentation`
-Удаление индексированного источника документации.
-
-**Параметры:**
-- `source_id` (str): ID источника документации для удаления
-
-**Возвращает:** Подтверждение удаления.
-
-#### `rename_documentation`
-Переименование источника документации для лучшей организации.
-
-**Параметры:**
-- `source_id` (str): ID источника документации
-- `new_name` (str): Новое отображаемое имя (1-100 символов)
-
-**Возвращает:** Подтверждение операции переименования.
-
-#### `search_documentation`
-Поиск по индексированной документации с использованием естественного языка.
-
-**Параметры:**
-- `query` (str): Запрос поиска на естественном языке
-- `sources` (List[str], optional): Список ID источников документации для поиска
-- `include_sources` (bool, default=True): Включать ли ссылки на источники в результаты
-
-**Возвращает:** Результаты поиска с соответствующими выдержками документации.
-
-### Web Search & Research Tools
-
-#### `nia_web_search`
-Поиск репозиториев, документации и другого контента с использованием AI-поиска.
-
-**Случаи использования:**
-- Поиск конкретных репозиториев/документации/контента
-- Поиск примеров или реализаций
-- Поиск доступного контента по теме
-- Простые, прямые поиски, требующие быстрых результатов
-- Поиск похожего контента по известному URL
-
-**Параметры:**
-- `query` (str): Запрос поиска на естественном языке
-- `num_results` (int, default=5): Количество результатов для возврата (макс: 10)
-- `category` (str, optional): Фильтр по категории ("github", "company", "research paper", "news", "tweet", "pdf")
-- `days_back` (int, optional): Показывать только результаты за последние N дней
-- `find_similar_to` (str, optional): URL для поиска похожего контента
-
-**Возвращает:** Результаты поиска с действенными следующими шагами.
-
-#### `nia_deep_research_agent`
-Выполнение глубокого, многоэтапного исследования темы с использованием продвинутых AI-возможностей исследования.
-
-**Случаи использования:**
-- Сравнение нескольких вариантов ("сравнить X vs Y vs Z")
-- Анализ плюсов и минусов
-- Вопросы с "лучший", "топ", "что лучше"
-- Необходимость структурированного анализа или синтеза
-- Сложные вопросы, требующие множественных источников
-- Вопросы о трендах, паттернах или разработках
-- Запросы на комплексные обзоры
-
-**Параметры:**
-- `query` (str): Исследовательский вопрос
-- `output_format` (str, optional): Подсказка структуры (например, "comparison table", "pros and cons list")
-
-**Возвращает:** Комплексные результаты исследования с цитированием.
-
-### Project Initialization Tools
-
-#### `initialize_project`
-Инициализация NIA-совместимого проекта с IDE-специфичными правилами и конфигурациями.
-
-**Параметры:**
-- `project_root` (str): Абсолютный путь к корневой директории проекта
-- `profiles` (List[str], optional): Список IDE профилей для настройки (по умолчанию: ["cursor"])
-
-**Поддерживаемые профили:** cursor, vscode, claude, windsurf, cline, codex, zed, jetbrains, neovim, sublime
-
-**Примеры:**
-- Базовый: `initialize_project("/path/to/project")`
-- Множественные IDE: `initialize_project("/path/to/project", profiles=["cursor", "vscode"])`
-- Специфичная IDE: `initialize_project("/path/to/project", profiles=["windsurf"])`
-
-## 🚀 Getting Started
+## 🚀 Quick Start
 
 ### Prerequisites
-
-- [Node.js](https://nodejs.org/) (>=18.0.0)
-- MCP-совместимый клиент (например, [Cursor](https://cursor.com/))
+- **Node.js** >= 18.0.0
+- **Cursor IDE** (or other MCP-compatible client)
+- **Git** for repository access
 
 ### Installation
 
+1. **Clone the repository**
 ```bash
-# Клонировать репозиторий
-git clone https://github.com/your-org/nia-mcp-server.git
-cd nia-mcp-server
+git clone https://github.com/NURJAKS/MCP-server.git
+cd MCP-server
+```
 
-# Установить зависимости
+2. **Install dependencies**
+```bash
 npm install
+```
 
-# Собрать проект
+3. **Build the project**
+```bash
 npm run build
 ```
 
-### Usage
-
-#### Local Development
-
+4. **Setup environment variables**
 ```bash
-# Запуск с stdio транспортом
-npm run dev-stdio
-
-# Запуск с HTTP транспортом
-npm run dev-http
-
-# Запуск с SSE транспортом (устаревший)
-npm run dev-sse
+cp env.example .env
+# Edit .env with your API keys (optional)
 ```
 
-#### Cursor Configuration
-
-Добавьте в `.cursor/mcp.json`:
-
-```json
+5. **Configure Cursor IDE**
+```bash
+# Global configuration (works in all projects)
+mkdir -p ~/.cursor
+cat > ~/.cursor/mcp.json << EOF
 {
   "mcpServers": {
     "nia-mcp-server": {
       "command": "node",
-      "args": ["./bin/cli.mjs", "--stdio"]
+      "args": ["$(pwd)/bin/cli.mjs", "--stdio"]
     }
   }
 }
+EOF
 ```
 
-#### Published Package
+### Usage
+
+#### **Start the Server**
+
+**stdio transport (recommended for Cursor IDE):**
+```bash
+node bin/cli.mjs --stdio
+```
+
+**HTTP transport:**
+```bash
+node bin/cli.mjs --http --port 3000
+```
+
+**Development mode:**
+```bash
+npm run dev-stdio
+```
+
+#### **Available Commands**
 
 ```bash
-# Установить глобально
-npm install -g @your-org/nia-mcp-server
+# Check server status
+node bin/cli.mjs --status
 
-# Запустить
-nia-mcp-server --stdio
+# Get help
+node bin/cli.mjs --help
+
+# Setup MCP configuration
+node bin/cli.mjs --setup [API_KEY]
 ```
 
-## 🔧 Development
+## 🛠️ Available Tools
+
+### Repository Management
+- `index_repository(repo_url)` - Index GitHub repositories
+- `list_repositories()` - List all indexed repositories
+- `check_repository_status(repository)` - Check indexing progress
+- `delete_repository(repository)` - Remove indexed repository
+- `search_codebase(query)` - Search indexed codebases
+
+### Documentation Management
+- `index_documentation(url)` - Index web documentation
+- `list_documentation()` - List indexed documentation
+- `check_documentation_status(source_id)` - Check indexing status
+- `delete_documentation(source_id)` - Remove documentation
+- `search_documentation(query)` - Search documentation
+
+### Web Search & Research
+- `nia_web_search(query)` - AI-powered web search
+- `nia_deep_research_agent(query)` - Deep research analysis
+
+### Project Setup
+- `initialize_project(project_root)` - Setup project configurations
+
+## 🔧 Configuration
+
+### Environment Variables
+
+Create a `.env` file with your API keys:
+
+```env
+# GitHub API (optional - for private repos)
+GITHUB_TOKEN=your_github_token_here
+
+# OpenRouter API (optional - for AI search)
+OPENROUTER_API_KEY=your_openrouter_api_key_here
+
+# Qdrant Vector Database (optional)
+QDRANT_URL=http://localhost:6333
+QDRANT_API_KEY=your_qdrant_api_key_here
+
+# Database
+DATABASE_URL=sqlite://./data/nia.db
+
+# Rate Limiting
+GITHUB_RATE_LIMIT=5000
+OPENROUTER_RATE_LIMIT=100
+```
+
+### API Keys Setup
+
+**GitHub Token (Optional):**
+1. Go to GitHub Settings → Developer settings → Personal access tokens
+2. Generate a new token with `repo` and `read:org` scopes
+3. Add to `.env` file
+
+**OpenRouter API Key (Optional):**
+1. Sign up at [OpenRouter.ai](https://openrouter.ai)
+2. Get your API key from the dashboard
+3. Add to `.env` file
+
+## 📖 Usage Examples
+
+### Index a Repository
+```javascript
+// Index a public repository
+index_repository("https://github.com/NURJAKS/Todo-list")
+
+// Check indexing status
+check_repository_status("NURJAKS/Todo-list")
+
+// Search the codebase
+search_codebase("authentication login")
+```
+
+### Index Documentation
+```javascript
+// Index documentation website
+index_documentation("https://docs.example.com")
+
+// Search documentation
+search_documentation("API authentication")
+```
+
+### Web Research
+```javascript
+// Search for repositories
+nia_web_search("React authentication libraries")
+
+// Deep research
+nia_deep_research_agent("Compare Next.js vs Nuxt.js for e-commerce")
+```
+
+## 🌍 Cross-Project Usage
+
+The MCP server works globally across all projects:
+
+1. **Global Configuration**: Uses `~/.cursor/mcp.json`
+2. **Works in any project**: No per-project setup needed
+3. **Shared data**: All indexed repositories and documentation are shared
+
+### Setup for New Projects
+```bash
+# The server works automatically in any project
+# Just restart Cursor IDE to load the global config
+```
+
+## 🔍 Troubleshooting
+
+### Common Issues
+
+**1. MCP Server shows red in Cursor IDE**
+```bash
+# Check if server is running
+node bin/cli.mjs --status
+
+# Restart Cursor IDE
+# Check global config exists
+ls ~/.cursor/mcp.json
+```
+
+**2. Tools not available**
+```bash
+# Rebuild the project
+npm run build
+
+# Check tool registration
+node bin/cli.mjs --debug --stdio
+```
+
+**3. API rate limits**
+```bash
+# Check your API keys in .env
+# Reduce rate limits in .env
+GITHUB_RATE_LIMIT=1000
+OPENROUTER_RATE_LIMIT=50
+```
+
+**4. Database issues**
+```bash
+# Reset database
+rm -rf data/
+mkdir data/
+npm run build
+```
+
+### Debug Mode
+```bash
+# Run with debug output
+node bin/cli.mjs --debug --stdio
+
+# Check logs
+tail -f *.log
+```
+
+## 🧪 Development
 
 ### Project Structure
-
 ```
-src/
-├── core/           # Ядро системы
-│   ├── indexer.ts  # Индексация репозиториев/документации
-│   └── search.ts   # Поисковая система
-├── tools/          # MCP инструменты
-│   ├── repository.ts # Управление репозиториями
-│   ├── documentation.ts # Управление документацией
-│   ├── web-search.ts # Веб-поиск
-│   └── project.ts  # Инициализация проектов
-├── server.ts       # MCP сервер
-├── index.ts        # CLI интерфейс
-└── types.ts        # TypeScript типы
+MCP-server/
+├── src/              # Source code
+│   ├── core/         # Core functionality
+│   ├── tools/        # MCP tools
+│   ├── server.ts     # MCP server
+│   └── index.ts      # CLI interface
+├── bin/              # Built executables
+├── data/             # Database and cache
+├── tests/            # Test files
+└── docs/             # Documentation
 ```
 
-### Available Scripts
-
+### Development Commands
 ```bash
-npm run build          # Собрать проект
-npm run dev            # Разработка с nodemon
-npm run dev-stdio      # Разработка с stdio транспортом
-npm run dev-http       # Разработка с HTTP транспортом
-npm run inspect        # Запустить MCP Inspector
-npm run test           # Запустить тесты
-npm run lint           # Проверить код
-npm run lint:fix       # Исправить проблемы с кодом
+# Build project
+npm run build
+
+# Development mode
+npm run dev-stdio
+
+# Run tests
+npm test
+
+# Lint code
+npm run lint
+
+# Type checking
+npm run typecheck
 ```
 
-## 📋 Tool Selection Guide
+### Adding New Tools
+1. Create tool file in `src/tools/`
+2. Export registration function
+3. Add to `registerToolsSafely()` in `src/index.ts`
+4. Rebuild project
 
-### Используйте `nia_web_search` для:
-- "Найти RAG библиотеки" → Простой поиск
-- "Что трендится в Rust?" → Быстрое обнаружение
-- "Показать репозитории как LangChain" → Поиск по сходству
+## 📊 Performance
 
-### Используйте `nia_deep_research_agent` для:
-- "Сравнить RAG vs GraphRAG подходы" → Сравнительный анализ
-- "Какие лучшие векторные БД для продакшена?" → Требуется оценка
-- "Проанализировать плюсы и минусы разных LLM фреймворков" → Структурированный анализ
+### Indexing Performance
+- **Small repos** (< 100 files): ~30 seconds
+- **Medium repos** (100-1000 files): ~2-5 minutes
+- **Large repos** (> 1000 files): ~10-30 minutes
+
+### Search Performance
+- **Database search**: < 100ms
+- **Vector search**: < 500ms
+- **Web search**: 2-5 seconds
+
+### Memory Usage
+- **Idle**: ~50MB
+- **Indexing**: ~200-500MB
+- **Search**: ~100-200MB
 
 ## 🤝 Contributing
 
-1. Fork репозиторий
-2. Создайте feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit изменения (`git commit -m 'Add amazing feature'`)
-4. Push в branch (`git push origin feature/amazing-feature`)
-5. Откройте Pull Request
+1. **Fork the repository**
+2. **Create a feature branch**
+```bash
+git checkout -b feature/amazing-feature
+```
+3. **Make your changes**
+4. **Test thoroughly**
+```bash
+npm test
+npm run build
+```
+5. **Commit your changes**
+```bash
+git commit -m 'Add amazing feature'
+```
+6. **Push to branch**
+```bash
+git push origin feature/amazing-feature
+```
+7. **Open a Pull Request**
 
 ## 📄 License
 
-Этот проект лицензирован под MIT License - см. файл [LICENSE](LICENSE) для деталей.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+- **GitHub Issues**: [Report bugs](https://github.com/NURJAKS/MCP-server/issues)
+- **Documentation**: [Full docs](https://docs.trynia.ai)
+- **Discord**: [Community support](https://discord.gg/trynia)
+
+## 🙏 Acknowledgments
+
+- Built with [Model Context Protocol](https://modelcontextprotocol.io/)
+- Powered by [Cursor IDE](https://cursor.sh/)
+- Vector search with [Qdrant](https://qdrant.tech/)
+- AI capabilities with [OpenRouter](https://openrouter.ai/)
 
 ---
 
-## 🎓 Courses
-- Learn to build software with AI: [instructa.ai](https://www.instructa.ai)
+**Made with ❤️ by the NIA Team**
+
+*Version: 0.1.0*

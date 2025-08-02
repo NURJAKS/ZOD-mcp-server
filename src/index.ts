@@ -49,6 +49,7 @@ const cli = defineCommand({
     }
 
     const mode = args.http ? 'http' : args.sse ? 'sse' : 'stdio'
+    console.log(`🚀 Starting MCP server in ${mode} mode...`)
     const mcp = createServer({ name: 'nia-mcp-server', version })
 
     process.on('SIGTERM', () => stopServer(mcp))
@@ -69,6 +70,7 @@ const cli = defineCommand({
       process.exit(1)
     }
 
+    console.log(`🔄 Starting server with ${mode} transport...`)
     if (mode === 'http') {
       await startServer(mcp, { type: 'http', port: Number(args.port), endpoint: args.endpoint })
     }
@@ -97,6 +99,10 @@ async function registerToolsSafely(mcp: any, debug: boolean = false) {
       if (debug && process.argv.includes('--stdio') === false)
         console.log(`📦 Registering ${tool.name}...`)
 
+      // Add debug output for HTTP transport
+      if (process.argv.includes('--http'))
+        console.log(`📦 Registering ${tool.name}...`)
+
       // Добавляем таймаут для регистрации инструментов
       await Promise.race([
         tool.register({ mcp } as McpToolContext),
@@ -106,6 +112,10 @@ async function registerToolsSafely(mcp: any, debug: boolean = false) {
       ])
 
       if (debug && process.argv.includes('--stdio') === false)
+        console.log(`✅ ${tool.name} registered`)
+      
+      // Add debug output for HTTP transport
+      if (process.argv.includes('--http'))
         console.log(`✅ ${tool.name} registered`)
     }
     catch (error) {
@@ -346,7 +356,20 @@ function showHelp() {
   console.log('🐛 Issues: https://github.com/your-org/nia-mcp-server')
 }
 
-export const runMain = () => _runMain(cli)
+export const runMain = () => {
+  try {
+    console.log('🔧 Starting CLI...')
+    _runMain(cli)
+  } catch (error) {
+    console.error('❌ CLI Error:', error)
+    process.exit(1)
+  }
+}
+
+// Execute CLI if this file is run directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+  runMain()
+}
 
 // Export classes for direct use
 export { RepositoryIndexer } from './core/indexer'

@@ -43,7 +43,7 @@ export class VectorSearchEngine {
     constructor() {
         const qdrantUrl = process.env.QDRANT_URL || 'http://localhost:6333'
         
-        // Configure Qdrant client with compatibility checks disabled to prevent console output
+        // Configure Qdrant client with compatibility checks disabled to prevent console warnings
         this.qdrant = new QdrantClient({ 
             url: qdrantUrl,
             checkCompatibility: false // Disable compatibility checks to prevent console warnings
@@ -65,12 +65,13 @@ export class VectorSearchEngine {
 
     async initialize(): Promise<void> {
         try {
-            // Initialize Qdrant if available
-            if (process.env.QDRANT_URL && process.env.QDRANT_API_KEY) {
+            // Initialize Qdrant if available (only if not already initialized)
+            if (process.env.QDRANT_URL && process.env.QDRANT_API_KEY && !this.qdrant) {
                 try {
                     this.qdrant = new QdrantClient({
                         url: process.env.QDRANT_URL,
                         apiKey: process.env.QDRANT_API_KEY,
+                        checkCompatibility: false // Disable compatibility checks
                     })
                     
                     // Test connection with timeout
@@ -87,7 +88,7 @@ export class VectorSearchEngine {
                     safeLog(`⚠️ Qdrant connection failed, using local fallback: ${error}`, 'warn')
                     this.qdrant = null
                 }
-            } else {
+            } else if (!this.qdrant) {
                 safeLog('ℹ️ Qdrant not configured, using local fallback')
             }
 
