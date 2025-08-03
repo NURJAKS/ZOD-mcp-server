@@ -12,6 +12,9 @@ build/
 *.mjs
 *.cjs
 *.tsbuildinfo
+out/
+.next/
+.nuxt/
 
 # ===== ENVIRONMENT =====
 .env
@@ -27,6 +30,8 @@ build/
 *.swp
 *.swo
 *~
+.cursor/
+.face
 
 # ===== OS FILES =====
 .DS_Store
@@ -44,6 +49,9 @@ logs/
 .parcel-cache/
 .eslintcache
 .stylelintcache
+cache/
+.temp/
+temp/
 
 # ===== TESTING =====
 coverage/
@@ -90,9 +98,9 @@ test-*.ts
 test-monitoring.js
 test-repository-status.js
 test-indexing.js
-
-# ===== CURSOR/EDITOR SPECIFIC =====
-.cursor/
+test-cli.js
+test-storage-tool.js
+test-tools.js
 
 # ===== RUNTIME FILES =====
 *.pid
@@ -136,3 +144,17 @@ dist/
 out/
 .next/
 .nuxt/
+
+# ===== PROJECT SPECIFIC =====
+# Root level data directory
+../data/
+# MCP server specific build artifacts
+bin/cli.mjs
+# Configuration files that might contain secrets
+config.json
+# Docker volumes
+docker-volumes/
+# Redis dump files
+dump.rdb
+# Qdrant data
+qdrant_storage/
