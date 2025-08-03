@@ -66,11 +66,14 @@ temp/
 # ===== MCP SPECIFIC =====
 .mcp/
 mcp-cache/
-# NIA MCP Server specific
+# ZOD MCP Server specific
 .cursor/mcp.json
-NIA_SETUP.md
+ZOD_SETUP.md
 *.mcp.log
 mcp-debug.log
+# MCP Inspector cache
+.mcp-inspector/
+inspector-cache/
 
 # ===== PACKAGE MANAGERS =====
 .yarn/
@@ -85,10 +88,13 @@ mcp-debug.log
 *.sqlite
 *.sqlite3
 data/*.db
-data/nia.db
+data/zod.db
 # Vector database files
 qdrant-data/
 vector-cache/
+# ZOD specific data
+zod-data/
+zod-cache/
 
 # ===== TEST FILES =====
 test-*.js
@@ -158,3 +164,10 @@ docker-volumes/
 dump.rdb
 # Qdrant data
 qdrant_storage/
+# ZOD MCP Server specific
+zod-server.log
+zod-debug.log
+# Development scripts
+dev-*.sh
+setup-*.sh
+fix-*.sh
