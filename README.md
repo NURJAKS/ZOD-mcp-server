@@ -7,10 +7,12 @@ A powerful MCP (Model Context Protocol) server that provides intelligent code in
 ## ✨ Features
 
 ### 🔍 **Repository Management**
+- **Unified repository tool** for all repository operations
 - **Index GitHub repositories** for intelligent code search
 - **Search codebases** using natural language queries
 - **Monitor indexing progress** with real-time status updates
 - **Manage multiple repositories** with easy organization
+- **Delete and rename** repositories as needed
 
 ### 📚 **Documentation Management**
 - **Index web documentation** and websites
@@ -29,6 +31,12 @@ A powerful MCP (Model Context Protocol) server that provides intelligent code in
 - **Automated project setup** with best practices
 - **Cross-project compatibility** with global configuration
 
+### 🗄️ **Advanced Storage Systems**
+- **Redis Cache** for session data and search results
+- **Neo4j Graph Database** for code relationships and dependencies
+- **MinIO Object Storage** for large documents and files
+- **Qdrant Vector Database** for embeddings and semantic search
+
 ## 🏗️ Architecture
 
 ```
@@ -37,12 +45,16 @@ src/
 │   ├── indexer.ts  # Repository and documentation indexing
 │   ├── search.ts   # Search engine with AI capabilities
 │   ├── database.ts # SQLite database management
-│   └── vector-search.ts # Vector search with Qdrant
+│   ├── vector-search.ts # Vector search with Qdrant
+│   ├── cache.ts    # Redis cache management
+│   ├── graph.ts    # Neo4j graph database
+│   └── storage.ts  # MinIO object storage
 ├── tools/          # MCP tools and integrations
 │   ├── repository.ts # Repository management tools
 │   ├── documentation.ts # Documentation tools
 │   ├── web-search.ts # Web search and research tools
-│   └── project.ts  # Project initialization tools
+│   ├── project.ts  # Project initialization tools
+│   └── storage.ts  # Storage management tools
 ├── server.ts       # MCP server implementation
 └── index.ts        # CLI interface
 ```
@@ -53,6 +65,7 @@ src/
 - **Node.js** >= 18.0.0
 - **Cursor IDE** (or other MCP-compatible client)
 - **Git** for repository access
+- **Docker & Docker Compose** (for storage services)
 
 ### Installation
 
@@ -72,13 +85,22 @@ npm install
 npm run build
 ```
 
-4. **Setup environment variables**
+4. **Setup storage services (optional but recommended)**
+```bash
+# Start all storage services with Docker
+./setup-storage.sh
+
+# Or manually start services
+docker-compose up -d
+```
+
+5. **Setup environment variables**
 ```bash
 cp env.example .env
 # Edit .env with your API keys (optional)
 ```
 
-5. **Configure Cursor IDE**
+6. **Configure Cursor IDE**
 ```bash
 # Global configuration (works in all projects)
 mkdir -p ~/.cursor
@@ -145,6 +167,9 @@ node bin/cli.mjs --setup [API_KEY]
 ### Web Search & Research
 - `nia_web_search(query)` - AI-powered web search
 - `nia_deep_research_agent(query)` - Deep research analysis
+
+### Storage Management
+- `get_storage_stats()` - Get comprehensive storage statistics for monitoring and debugging
 
 ### Project Setup
 - `initialize_project(project_root)` - Setup project configurations
