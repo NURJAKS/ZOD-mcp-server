@@ -37,22 +37,24 @@ async function initializeComponents() {
 // Запускаем инициализацию
 initializeComponents()
 
-
-
 export function registerRepositoryTools({ mcp }: McpToolContext): void {
-  // Unified repository tool that handles all repository operations
+  // Single Unified Repository Tools Plugin
+  // This single tool handles all repository management operations
+
   mcp.tool(
-    'repository',
-    'Manage GitHub repositories for intelligent code search and analysis',
+    'repository_tools',
+    'Unified repository management tool with 6 functions: index, list, check status, delete, rename, and search repositories',
     {
-      action: z.enum(['index', 'list', 'check_status', 'delete', 'rename', 'search']).describe('Repository action to perform'),
-      repo_url: z.string().optional().describe('GitHub repository URL (e.g., https://github.com/owner/repo)'),
-      branch: z.string().optional().describe('Branch to index (defaults to main branch)'),
-      new_name: z.string().optional().describe('New name for repository (for rename action)'),
-      query: z.string().optional().describe('Search query (for search action)'),
-      repositories: z.array(z.string()).optional().describe('List of repositories (for list action)'),
+      action: z.enum(['index', 'list', 'check_status', 'delete', 'rename', 'search']).describe('Action to perform'),
+      repo_url: z.string().optional().describe('GitHub repository URL (required for index action)'),
+      branch: z.string().optional().describe('Branch to index (defaults to main branch, used with index action)'),
+      repository: z.string().optional().describe('Repository in owner/repo format (used with check_status, delete, rename actions)'),
+      new_name: z.string().optional().describe('New display name for rename action (1-100 characters)'),
+      query: z.string().optional().describe('Search query for search action'),
+      repositories: z.array(z.string()).optional().describe('List of repositories to search (owner/repo format, used with search action)'),
+      include_sources: z.boolean().optional().default(true).describe('Whether to include source code in search results'),
     },
-    async ({ action, repo_url, branch, new_name, query, repositories }) => {
+    async ({ action, repo_url, branch, repository, new_name, query, repositories, include_sources }) => {
       try {
         if (!repositoryIndexer) {
           throw new Error('Repository indexer not initialized')
@@ -61,41 +63,35 @@ export function registerRepositoryTools({ mcp }: McpToolContext): void {
         switch (action) {
           case 'index':
             return await handleIndexRepository(repo_url, branch)
+          
           case 'list':
             return await handleListRepositories()
+          
           case 'check_status':
-            return await handleCheckRepositoryStatus(repo_url)
+            return await handleCheckRepositoryStatus(repository)
+          
           case 'delete':
-            return await handleDeleteRepository(repo_url)
+            return await handleDeleteRepository(repository)
+          
           case 'rename':
-            return await handleRenameRepository(repo_url, new_name)
+            return await handleRenameRepository(repository, new_name)
+          
           case 'search':
-            return await handleSearchCodebase(query)
+            return await handleSearchCodebase(query, repositories, include_sources)
+          
           default:
             return {
               content: [{
-                type: 'text',
-                text: `❌ Invalid action. Available actions: index, list, check_status, delete, rename, search\n\n`
-                  + `📋 **Repository Management Tool**\n\n`
-                  + `**Available Actions:**\n`
-                  + `• \`index\` - Index a GitHub repository for search\n`
-                  + `• \`list\` - List all indexed repositories\n`
-                  + `• \`check_status\` - Check indexing status of a repository\n`
-                  + `• \`delete\` - Delete an indexed repository\n`
-                  + `• \`rename\` - Rename an indexed repository\n`
-                  + `• \`search\` - Search code in indexed repositories\n\n`
-                  + `**Examples:**\n`
-                  + `• \`repository("index", "https://github.com/owner/repo")\`\n`
-                  + `• \`repository("list")\`\n`
-                  + `• \`repository("search", query="function login")\``,
+                type: 'text' as const,
+                text: `❌ Invalid action: ${action}\n\nAvailable actions: index, list, check_status, delete, rename, search`,
               }],
             }
         }
       } catch (error) {
         return {
           content: [{
-            type: 'text',
-            text: `❌ Repository operation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            type: 'text' as const,
+            text: `❌ Repository tools error: ${error instanceof Error ? error.message : 'Unknown error'}`,
           }],
         }
       }
@@ -103,13 +99,13 @@ export function registerRepositoryTools({ mcp }: McpToolContext): void {
   )
 }
 
-// Internal handlers for each repository operation
+// Helper functions for each action
 async function handleIndexRepository(repo_url?: string, branch?: string) {
   if (!repo_url?.trim()) {
     return {
       content: [{
-        type: 'text',
-        text: `❌ Please provide a repository URL.\n\nExample: repository("index", "https://github.com/NURJAKS/Todo-list")`,
+        type: 'text' as const,
+        text: `❌ Please provide a repository URL.\n\nExample: repository_tools(action="index", repo_url="https://github.com/NURJAKS/Todo-list")`,
       }],
     }
   }
@@ -117,7 +113,7 @@ async function handleIndexRepository(repo_url?: string, branch?: string) {
   if (!repo_url.includes('github.com/')) {
     return {
       content: [{
-        type: 'text',
+        type: 'text' as const,
         text: `❌ Invalid GitHub URL format.\n\nPlease use: https://github.com/owner/repo\nExample: https://github.com/NURJAKS/Todo-list`,
       }],
     }
@@ -130,7 +126,7 @@ async function handleIndexRepository(repo_url?: string, branch?: string) {
     if (existingStatus.status === 'indexing') {
       return {
         content: [{
-          type: 'text',
+          type: 'text' as const,
           text: `🔄 Repository "${owner}/${repo}" is already being indexed.\n\n`
             + `Status: ${existingStatus.status}\n`
             + `Progress: ${existingStatus.progress}%\n`
@@ -138,226 +134,171 @@ async function handleIndexRepository(repo_url?: string, branch?: string) {
             + `Last Indexed: ${existingStatus.lastIndexed.toLocaleString()}`,
         }],
       }
-    } else if (existingStatus.status === 'completed') {
+    }
+    
+    if (existingStatus.status === 'completed') {
       return {
         content: [{
-          type: 'text',
-          text: `✅ Repository "${owner}/${repo}" is already indexed and ready to use!\n\n`
+          type: 'text' as const,
+          text: `✅ Repository "${owner}/${repo}" is already indexed.\n\n`
             + `Status: ${existingStatus.status}\n`
-            + `Files Indexed: ${existingStatus.indexedFiles}/${existingStatus.totalFiles}\n`
+            + `Branch: ${existingStatus.branch}\n`
+            + `Files Indexed: ${existingStatus.indexedFiles}\n`
             + `Last Indexed: ${existingStatus.lastIndexed.toLocaleString()}\n\n`
-            + `💡 You can now search the repository using:\n`
-            + `repository("search", query="your search terms")`,
+            + `💡 Ready to search! Use: repository_tools(action="search", query="your query")`,
         }],
       }
     }
   }
 
-  try {
-    const result = await repositoryIndexer!.indexRepository(repo_url, { branch })
-    return {
-      content: [{
-        type: 'text',
-        text: `🚀 Started indexing repository "${owner}/${repo}"\n\n`
-          + `Repository: ${repo_url}\n`
-          + `Branch: ${branch || 'main'}\n`
-          + `Status: Indexing started\n\n`
-          + `💡 Use repository("check_status", "${owner}/${repo}") to monitor progress.`,
-      }],
-    }
-  } catch (error) {
-    return {
-      content: [{
-        type: 'text',
-        text: `❌ Failed to start indexing: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      }],
-    }
-  }
+  // Start indexing
+  const result = await repositoryIndexer!.indexRepository(repo_url, {
+    branch: branch || 'main',
+  })
 
+  return {
+    content: [{
+      type: 'text' as const,
+      text: `🚀 Repository Index Started\n\n`
+        + `**Repository**: \`${result.id}\`\n`
+        + `**Status**: 🔄 Indexing started\n`
+        + `**Branch**: ${result.branch}\n`
+        + `**URL**: https://github.com/${result.owner}/${result.repo}\n\n`
+        + `**Next Steps:**\n`
+        + `- Use \`repository_tools(action="check_status", repository="${owner}/${repo}")\` to monitor indexing progress\n`
+        + `- Once complete, you'll be able to search and analyze the codebase`,
+    }],
+  }
+}
 
 async function handleListRepositories() {
-  try {
-    if (!repositoryIndexer) {
-      throw new Error('Repository indexer not initialized')
-    }
-    const repositories = await repositoryIndexer.listRepositories()
+  const repositories = await repositoryIndexer!.listRepositories()
 
-    if (repositories.length === 0) {
-      return {
-        content: [{
-          type: 'text',
-          text: '📂 No indexed repositories found.\n\nUse repository("index", "https://github.com/owner/repo") to start indexing a GitHub repository.',
-        }],
-      }
-    }
-
-    const repoList = repositories.map((repo) => {
-      let fileInfo = 'Files: Processing...'
-      let statusIcon = '🔄'
-
-      // Set status icon
-      if (repo.status === 'completed') {
-        statusIcon = '✅'
-      } else if (repo.status === 'failed') {
-        statusIcon = '❌'
-      }
-
-      if (repo.totalFiles > 0) {
-        const percentage = Math.round((repo.indexedFiles / repo.totalFiles) * 100)
-        fileInfo = `Files: ${repo.indexedFiles}/${repo.totalFiles} (${percentage}%)`
-
-        // Add filtering information if available
-        if (repo.rawFiles && repo.excludedFiles) {
-          fileInfo += ` | Excluded: ${repo.excludedFiles} files`
-        }
-      }
-
-      const displayName = repo.displayName || repo.id
-      const lastIndexed = repo.lastIndexed.toLocaleString()
-      
-      return `${statusIcon} **${displayName}** (${repo.branch})\n`
-        + `   Status: ${repo.status} | Progress: ${repo.progress}%\n`
-        + `   ${fileInfo}\n`
-        + `   Last indexed: ${lastIndexed}`
-    }).join('\n\n')
-
+  if (repositories.length === 0) {
     return {
       content: [{
-        type: 'text',
-        text: `📂 Indexed Repositories (${repositories.length}):\n\n${repoList}`,
+        type: 'text' as const,
+        text: `📚 No indexed repositories found.\n\nUse repository_tools(action="index", repo_url="https://github.com/owner/repo") to start indexing a repository.`,
       }],
     }
   }
-  catch (error) {
+
+  const repoList = repositories.map(repo => {
+    const statusIcon = repo.status === 'completed' ? '✅' : repo.status === 'indexing' ? '🔄' : '❌'
+    const progressText = repo.status === 'indexing' ? ` | Progress: ${repo.progress}%` : ''
+    const filesText = repo.status === 'completed' ? ` | Files: ${repo.indexedFiles}` : ` | Files: ${repo.indexedFiles}/${repo.totalFiles}`
+    
+    return `${statusIcon} **${repo.displayName || repo.id}**\n`
+      + `   Branch: ${repo.branch}\n`
+      + `   Status: ${repo.status}${progressText}${filesText}\n`
+      + `   Last Indexed: ${repo.lastIndexed.toLocaleString()}`
+  }).join('\n\n')
+
+  return {
+    content: [{
+      type: 'text' as const,
+      text: `📚 **Indexed Repositories** (${repositories.length})\n\n${repoList}\n\n💡 Use repository_tools(action="check_status", repository="owner/repo") to get detailed status.`,
+    }],
+  }
+}
+
+async function handleCheckRepositoryStatus(repository?: string) {
+  if (!repository?.trim()) {
     return {
       content: [{
-        type: 'text',
-        text: `❌ Error listing repositories: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        type: 'text' as const,
+        text: `❌ Please provide a repository name.\n\nExample: repository_tools(action="check_status", repository="NURJAKS/Todo-list")`,
+      }],
+    }
+  }
+
+  const status = await repositoryIndexer!.checkRepositoryStatus(repository)
+
+  if (!status) {
+    return {
+      content: [{
+        type: 'text' as const,
+        text: `❌ Repository "${repository}" not found.\n\nUse repository_tools(action="list") to see available repositories.`,
+      }],
+    }
+  }
+
+  // If indexing is completed and there's a detailed report
+  if (status.status === 'completed' && status.report) {
+    const report = JSON.parse(status.report)
+    const languages = Object.entries(report.summary.languages)
+      .map(([lang, count]) => `${lang} (${count})`)
+      .join(', ')
+
+    return {
+      content: [{
+        type: 'text' as const,
+        text: `✅ Repository Status: ${status.displayName || status.id}\n\n`
+          + `📊 Summary:\n`
+          + `• Status: ${status.status}\n`
+          + `• Branch: ${status.branch}\n`
+          + `• Total scanned: ${report.summary.totalScanned} files\n`
+          + `• Indexed: ${report.summary.totalIndexed} files (${Math.round((report.summary.totalIndexed / report.summary.totalScanned) * 100)}%)\n`
+          + `• Excluded: ${report.summary.totalExcluded} files (${Math.round((report.summary.totalExcluded / report.summary.totalScanned) * 100)}%)\n`
+          + `• Languages: ${languages}\n`
+          + `• Size indexed: ${Math.round(report.summary.sizeIndexed / 1024)} KB\n`
+          + `• Last indexed: ${status.lastIndexed.toLocaleString()}\n\n`
+          + `💡 Ready to search! Use: repository_tools(action="search", query="your query")`,
+      }],
+    }
+  }
+
+  // If indexing is in progress
+  const statusText = `🔄 Repository Status: ${status.displayName || status.id}\n\n`
+    + `Status: ${status.status}\n`
+    + `Branch: ${status.branch}\n`
+    + `Progress: ${status.progress}%\n`
+    + `Files Indexed: ${status.indexedFiles}/${status.totalFiles}\n`
+    + `Last Indexed: ${status.lastIndexed.toLocaleString()}\n${status.error ? `Error: ${status.error}` : ''}`
+
+  return {
+    content: [{
+      type: 'text' as const,
+      text: statusText,
+    }],
+  }
+}
+
+async function handleDeleteRepository(repository?: string) {
+  if (!repository?.trim()) {
+    return {
+      content: [{
+        type: 'text' as const,
+        text: `❌ Please provide a repository name.\n\nExample: repository_tools(action="delete", repository="NURJAKS/Todo-list")`,
+      }],
+    }
+  }
+
+  const deleted = await repositoryIndexer!.deleteRepository(repository)
+
+  if (deleted) {
+    return {
+      content: [{
+        type: 'text' as const,
+        text: `✅ Repository "${repository}" has been deleted from the index.`,
+      }],
+    }
+  } else {
+    return {
+      content: [{
+        type: 'text' as const,
+        text: `❌ Repository "${repository}" not found or could not be deleted.`,
       }],
     }
   }
 }
 
-async function handleCheckRepositoryStatus(repo_url?: string) {
-  if (!repo_url?.trim()) {
+async function handleRenameRepository(repository?: string, new_name?: string) {
+  if (!repository?.trim()) {
     return {
       content: [{
-        type: 'text',
-        text: `❌ Please provide a repository URL.\n\nExample: repository("check_status", "https://github.com/owner/repo")`,
-      }],
-    }
-  }
-
-  try {
-    const { owner, repo } = repositoryIndexer!.parseGitHubUrl(repo_url)
-    const status = await repositoryIndexer!.checkRepositoryStatus(`${owner}/${repo}`)
-
-    if (!status) {
-      return {
-        content: [{
-          type: 'text',
-          text: `❌ Repository "${owner}/${repo}" not found.\n\nUse repository("list") to see available repositories.`,
-        }],
-      }
-    }
-
-    // Если индексация завершена и есть детальный отчет
-    if (status.status === 'completed' && status.report) {
-      const report = JSON.parse(status.report)
-      const languages = Object.entries(report.summary.languages)
-        .map(([lang, count]) => `${lang} (${count})`)
-        .join(', ')
-
-      return {
-        content: [{
-          type: 'text',
-          text: `✅ Repository Status: ${status.displayName || status.id}\n\n`
-            + `📊 Summary:\n`
-            + `• Status: ${status.status}\n`
-            + `• Branch: ${status.branch}\n`
-            + `• Total scanned: ${report.summary.totalScanned} files\n`
-            + `• Indexed: ${report.summary.totalIndexed} files (${Math.round((report.summary.totalIndexed / report.summary.totalScanned) * 100)}%)\n`
-            + `• Excluded: ${report.summary.totalExcluded} files (${Math.round((report.summary.totalExcluded / report.summary.totalScanned) * 100)}%)\n`
-            + `• Languages: ${languages}\n`
-            + `• Size indexed: ${Math.round(report.summary.sizeIndexed / 1024)} KB\n`
-            + `• Last indexed: ${status.lastIndexed.toLocaleString()}\n\n`
-            + `💡 Ready to search! Use: repository("search", query="your query")`,
-        }],
-      }
-    }
-
-    // Если индексация в процессе
-    const statusText = `🔄 Repository Status: ${status.displayName || status.id}\n\n`
-      + `Status: ${status.status}\n`
-      + `Branch: ${status.branch}\n`
-      + `Progress: ${status.progress}%\n`
-      + `Files Indexed: ${status.indexedFiles}/${status.totalFiles}\n`
-      + `Last Indexed: ${status.lastIndexed.toLocaleString()}\n${status.error ? `Error: ${status.error}` : ''}`
-
-    return {
-      content: [{
-        type: 'text',
-        text: statusText,
-      }],
-    }
-  }
-  catch (error) {
-    return {
-      content: [{
-        type: 'text',
-        text: `❌ Error checking repository status: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      }],
-    }
-  }
-}
-
-async function handleDeleteRepository(repo_url?: string) {
-  if (!repo_url?.trim()) {
-    return {
-      content: [{
-        type: 'text',
-        text: `❌ Please provide a repository URL.\n\nExample: repository("delete", "https://github.com/owner/repo")`,
-      }],
-    }
-  }
-
-  try {
-    const { owner, repo } = repositoryIndexer!.parseGitHubUrl(repo_url)
-    const deleted = await repositoryIndexer!.deleteRepository(`${owner}/${repo}`)
-
-    if (deleted) {
-      return {
-        content: [{
-          type: 'text',
-          text: `✅ Repository "${owner}/${repo}" has been deleted from the index.`,
-        }],
-      }
-    }
-    else {
-      return {
-        content: [{
-          type: 'text',
-          text: `❌ Repository "${owner}/${repo}" not found in the index.`,
-        }],
-      }
-    }
-  }
-  catch (error) {
-    return {
-      content: [{
-        type: 'text',
-        text: `❌ Error deleting repository: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      }],
-    }
-  }
-}
-
-async function handleRenameRepository(repo_url?: string, new_name?: string) {
-  if (!repo_url?.trim()) {
-    return {
-      content: [{
-        type: 'text',
-        text: `❌ Please provide a repository URL.\n\nExample: repository("rename", "https://github.com/owner/repo", "new-name")`,
+        type: 'text' as const,
+        text: `❌ Please provide a repository name.\n\nExample: repository_tools(action="rename", repository="NURJAKS/Todo-list", new_name="My Todo App")`,
       }],
     }
   }
@@ -365,111 +306,71 @@ async function handleRenameRepository(repo_url?: string, new_name?: string) {
   if (!new_name?.trim()) {
     return {
       content: [{
-        type: 'text',
-        text: `❌ Please provide a new name.\n\nExample: repository("rename", "https://github.com/owner/repo", "new-name")`,
+        type: 'text' as const,
+        text: `❌ Please provide a new name.\n\nExample: repository_tools(action="rename", repository="NURJAKS/Todo-list", new_name="My Todo App")`,
       }],
     }
   }
 
-  try {
-    const { owner, repo } = repositoryIndexer!.parseGitHubUrl(repo_url)
-    const renamed = await repositoryIndexer!.renameRepository(`${owner}/${repo}`, new_name)
+  const renamed = await repositoryIndexer!.renameRepository(repository, new_name)
 
-    if (renamed) {
-      return {
-        content: [{
-          type: 'text',
-          text: `✅ Repository "${owner}/${repo}" has been renamed to "${new_name}".`,
-        }],
-      }
-    }
-    else {
-      return {
-        content: [{
-          type: 'text',
-          text: `❌ Repository "${owner}/${repo}" not found in the index.`,
-        }],
-      }
-    }
-  }
-  catch (error) {
+  if (renamed) {
     return {
       content: [{
-        type: 'text',
-        text: `❌ Error renaming repository: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        type: 'text' as const,
+        text: `✅ Repository "${repository}" has been renamed to "${new_name}".`,
+      }],
+    }
+  } else {
+    return {
+      content: [{
+        type: 'text' as const,
+        text: `❌ Repository "${repository}" not found or could not be renamed.`,
       }],
     }
   }
 }
 
-async function handleSearchCodebase(query?: string) {
+async function handleSearchCodebase(query?: string, repositories?: string[], include_sources?: boolean) {
+  if (!searchEngine) {
+    throw new Error('Search engine not initialized')
+  }
+
   if (!query?.trim()) {
     return {
       content: [{
-        type: 'text',
-        text: `❌ Please provide a search query.\n\nExample: repository("search", query="authentication function")`,
+        type: 'text' as const,
+        text: `❌ Please provide a search query.\n\nExample: repository_tools(action="search", query="function login authentication")`,
       }],
     }
   }
 
-  try {
-    if (!searchEngine) {
-      throw new Error('Search engine not initialized')
-    }
+  const results = await searchEngine.searchCodebase(query, {
+    repositories: repositories,
+    includeSources: include_sources,
+  })
 
-    const results = await searchEngine.searchCodebase(query, {
-      includeSources: true,
-      maxResults: 10,
-    })
-
-    if (results.length === 0) {
-      return {
-        content: [{
-          type: 'text',
-          text: `🔍 No results found for query: "${query}"\n\n💡 Suggestions:\n• Use more specific keywords (e.g., "React component" instead of "code")\n• Check if repositories are indexed: repository("list")\n• Try different search terms\n• Make sure repositories are fully indexed`,
-        }],
-      }
-    }
-
-    const resultsText = results.map((result, index) => {
-      const score = (result.score * 100).toFixed(1)
-      const content = result.content.length > 300 
-        ? result.content.substring(0, 300) + '...' 
-        : result.content
-      
-      let sourceInfo = ''
-      if (result.metadata?.repository) {
-        sourceInfo += `Repository: ${result.metadata.repository}\n`
-      }
-      if (result.metadata?.path) {
-        sourceInfo += `File: ${result.metadata.path}\n`
-      }
-      if (result.metadata?.language) {
-        sourceInfo += `Language: ${result.metadata.language}\n`
-      }
-
-      return `${index + 1}. **${result.title || 'Code Snippet'}**\n`
-        + `   Score: ${score}%\n`
-        + `   ${sourceInfo}`
-        + `   Content: ${content}\n`
-    }).join('\n')
-
+  if (results.length === 0) {
     return {
       content: [{
-        type: 'text',
-        text: `🔍 Search Results for: "${query}"\n\nFound ${results.length} results:\n\n${resultsText}\n\n💡 Tip: Use more specific queries for better results!`,
+        type: 'text' as const,
+        text: `🔍 No search results found for query: "${query}"\n\nTry:\n• Using different keywords\n• Using broader search terms\n• Checking if repositories are indexed with repository_tools(action="list")`,
       }],
     }
   }
-  catch (error) {
-    return {
-      content: [{
-        type: 'text',
-        text: `❌ Error searching codebase: ${error instanceof Error ? error.message : 'Unknown error'}\n\nPlease check:\n• If repositories are indexed\n• Network connection\n• Search query format`,
-      }],
-    }
+
+  const resultsText = results.map((result, index) =>
+    `${index + 1}. **${result.title}**\n`
+    + `   Score: ${(result.score * 100).toFixed(1)}%\n`
+    + `   ${result.content}\n${
+      result.url ? `   URL: ${result.url}\n` : ''
+    }   Repository: ${result.metadata.repository || 'Unknown'}`,
+  ).join('\n\n')
+
+  return {
+    content: [{
+      type: 'text' as const,
+      text: `🔍 Code Search Results for: "${query}"\n\nFound ${results.length} results:\n\n${resultsText}\n\n💡 Use repository_tools(action="check_status", repository="owner/repo") to see indexing status.`,
+    }],
   }
-}
-
-
 }

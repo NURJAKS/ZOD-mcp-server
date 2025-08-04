@@ -75,7 +75,13 @@ export class RepositoryIndexer {
   constructor() {
     const token = process.env.GITHUB_TOKEN
     if (!token || token === 'your_github_token_here') {
-      console.warn('GITHUB_TOKEN not configured, using unauthenticated requests (limited to public repos)')
+      if (!process.argv.includes('--stdio')) {
+        console.warn('GITHUB_TOKEN not configured, using unauthenticated requests (limited to public repos)')
+      }
+    } else {
+      if (!process.argv.includes('--stdio')) {
+        console.log('GitHub token found, using authenticated requests')
+      }
     }
 
     this.octokit = new Octokit({
@@ -102,8 +108,16 @@ export class RepositoryIndexer {
     // Проверяем существование репозитория
     try {
       await this.octokit.repos.get({ owner, repo })
-    } catch (error) {
-      throw new Error(`Repository ${owner}/${repo} not found or not accessible`)
+    } catch (error: any) {
+      if (error.status === 404) {
+        throw new Error(`Repository ${owner}/${repo} not found. Please check the repository URL.`)
+      } else if (error.status === 403) {
+        throw new Error(`Repository ${owner}/${repo} is private and requires authentication. Please set a valid GITHUB_TOKEN.`)
+      } else if (error.status === 401) {
+        throw new Error(`Authentication failed. Please check your GITHUB_TOKEN.`)
+      } else {
+        throw new Error(`Repository ${owner}/${repo} not accessible: ${error.message || 'Unknown error'}`)
+      }
     }
 
     const record: RepositoryRecord = {

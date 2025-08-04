@@ -8,15 +8,16 @@ import { runMain as _runMain, defineCommand } from 'citty'
 import { version } from '../package.json'
 import { createServer, startServer, stopServer } from './server'
 import { registerDocumentationTools } from './tools/documentation'
-import { registerProjectTools } from './tools/project'
 import { registerRepositoryTools } from './tools/repository'
 import { registerWebSearchTools } from './tools/web-search'
+import { registerProjectInitTools } from './tools/project-init'
+import { registerDeepSearchTools } from './tools/deep-search'
 
 const cli = defineCommand({
   meta: {
-    name: 'nia-mcp-server',
+    name: 'zod-mcp-server',
     version,
-    description: 'NIA MCP Server - Intelligent code indexing, search, and research platform',
+    description: 'Zod MCP Server - Intelligent code indexing, search, and research platform',
   },
   args: {
     http: { type: 'boolean', description: 'Run with HTTP transport' },
@@ -49,28 +50,41 @@ const cli = defineCommand({
     }
 
     const mode = args.http ? 'http' : args.sse ? 'sse' : 'stdio'
-    console.log(`🚀 Starting MCP server in ${mode} mode...`)
-    const mcp = createServer({ name: 'nia-mcp-server', version })
+    
+    // Completely suppress all console output for stdio transport
+    if (mode === 'stdio') {
+      console.log = () => {}
+      console.error = () => {}
+      console.warn = () => {}
+      console.debug = () => {}
+      console.info = () => {}
+    } else {
+      console.log(`🚀 Starting MCP server in ${mode} mode...`)
+    }
+    
+    const mcp = createServer({ name: 'zod-mcp-server', version })
 
     process.on('SIGTERM', () => stopServer(mcp))
     process.on('SIGINT', () => stopServer(mcp))
 
     // Регистрация инструментов с обработкой ошибок
     try {
-      if (args.debug)
+      if (args.debug && mode !== 'stdio')
         console.log('🔧 Registering tools...')
 
       await registerToolsSafely(mcp, args.debug)
 
-      if (args.debug)
+      if (args.debug && mode !== 'stdio')
         console.log('✅ All tools registered successfully')
     }
     catch (error) {
-      console.error('❌ Error registering tools:', error)
+      if (mode !== 'stdio')
+        console.error('❌ Error registering tools:', error)
       process.exit(1)
     }
 
-    console.log(`🔄 Starting server with ${mode} transport...`)
+    if (mode !== 'stdio')
+      console.log(`🔄 Starting server with ${mode} transport...`)
     if (mode === 'http') {
       await startServer(mcp, { type: 'http', port: Number(args.port), endpoint: args.endpoint })
     }
@@ -90,7 +104,8 @@ async function registerToolsSafely(mcp: any, debug: boolean = false) {
     { name: 'RepositoryTools', register: registerRepositoryTools },
     { name: 'DocumentationTools', register: registerDocumentationTools },
     { name: 'WebSearchTools', register: registerWebSearchTools },
-    { name: 'ProjectTools', register: registerProjectTools },
+    { name: 'ProjectInitTools', register: registerProjectInitTools },
+    { name: 'DeepSearchTools', register: registerDeepSearchTools },
   ]
 
   for (const tool of tools) {
@@ -358,10 +373,15 @@ function showHelp() {
 
 export const runMain = () => {
   try {
-    console.log('🔧 Starting CLI...')
+    // Only log if not in stdio mode
+    if (!process.argv.includes('--stdio')) {
+      console.log('🔧 Starting CLI...')
+    }
     _runMain(cli)
   } catch (error) {
-    console.error('❌ CLI Error:', error)
+    if (!process.argv.includes('--stdio')) {
+      console.error('❌ CLI Error:', error)
+    }
     process.exit(1)
   }
 }

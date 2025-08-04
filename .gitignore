@@ -171,3 +171,18 @@ zod-debug.log
 dev-*.sh
 setup-*.sh
 fix-*.sh
+
+# ===== IMPORTANT PROJECT FILES TO TRACK =====
+# Ensure these important files are tracked
+!DEEP_SEARCH_GUIDE.md
+!ENHANCED_DEEP_SEARCH_SUMMARY.md
+!src/tools/deep-search.ts
+!src/tools/project-init.ts
+!tests/deep-search.test.ts
+!package.json
+!src/core/indexer.ts
+!src/core/search.ts
+!src/index.ts
+!src/tools/documentation.ts
+!src/tools/repository.ts
+!src/tools/web-search.ts
