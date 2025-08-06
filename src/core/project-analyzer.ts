@@ -435,6 +435,7 @@ export class ProjectAnalyzer {
       const components = this.identifyComponents(files)
       const coupling = this.calculateCoupling(files)
       const cohesion = this.calculateCohesion(files)
+      const patterns = this.detectDesignPatterns(files)
 
       return {
         pattern,
@@ -1032,6 +1033,131 @@ export class ProjectAnalyzer {
     }
     
     return Math.max(0, Math.min(100, cohesion))
+  }
+
+  // Enhanced AI Pattern Detection
+  private detectDesignPatterns(files: FileInfo[]): CodePattern[] {
+    const patterns: CodePattern[] = []
+    const filePaths = files.map(f => f.path.toLowerCase())
+    const fileNames = files.map(f => f.name.toLowerCase())
+
+    // Design Patterns Detection
+    const designPatterns = [
+      {
+        name: 'MVC Pattern',
+        type: 'architectural_pattern' as const,
+        indicators: ['controller', 'model', 'view', 'routes'],
+        confidence: 0.9
+      },
+      {
+        name: 'Repository Pattern',
+        type: 'design_pattern' as const,
+        indicators: ['repository', 'repo', 'dataaccess', 'dal'],
+        confidence: 0.85
+      },
+      {
+        name: 'Factory Pattern',
+        type: 'design_pattern' as const,
+        indicators: ['factory', 'creator', 'builder'],
+        confidence: 0.8
+      },
+      {
+        name: 'Observer Pattern',
+        type: 'design_pattern' as const,
+        indicators: ['observer', 'listener', 'subscriber', 'event'],
+        confidence: 0.75
+      },
+      {
+        name: 'Singleton Pattern',
+        type: 'design_pattern' as const,
+        indicators: ['singleton', 'instance', 'global'],
+        confidence: 0.7
+      },
+      {
+        name: 'Strategy Pattern',
+        type: 'design_pattern' as const,
+        indicators: ['strategy', 'algorithm', 'policy'],
+        confidence: 0.75
+      },
+      {
+        name: 'Command Pattern',
+        type: 'design_pattern' as const,
+        indicators: ['command', 'handler', 'executor'],
+        confidence: 0.7
+      },
+      {
+        name: 'Adapter Pattern',
+        type: 'design_pattern' as const,
+        indicators: ['adapter', 'wrapper', 'bridge'],
+        confidence: 0.65
+      }
+    ]
+
+    // Anti-Patterns Detection
+    const antiPatterns = [
+      {
+        name: 'God Object',
+        type: 'anti_pattern' as const,
+        indicators: ['god', 'monster', 'manager', 'controller'],
+        confidence: 0.8
+      },
+      {
+        name: 'Spaghetti Code',
+        type: 'anti_pattern' as const,
+        indicators: ['spaghetti', 'messy', 'complex'],
+        confidence: 0.7
+      },
+      {
+        name: 'Copy-Paste Programming',
+        type: 'anti_pattern' as const,
+        indicators: ['copy', 'paste', 'duplicate'],
+        confidence: 0.6
+      },
+      {
+        name: 'Premature Optimization',
+        type: 'anti_pattern' as const,
+        indicators: ['optimize', 'performance', 'speed'],
+        confidence: 0.65
+      }
+    ]
+
+    // Check for Design Patterns
+    for (const pattern of designPatterns) {
+      const matches = pattern.indicators.filter(indicator => 
+        filePaths.some(path => path.includes(indicator)) ||
+        fileNames.some(name => name.includes(indicator))
+      )
+      
+      if (matches.length > 0) {
+        patterns.push({
+          name: pattern.name,
+          type: pattern.type,
+          confidence: pattern.confidence,
+          locations: matches,
+          description: `Detected ${pattern.name} based on indicators: ${matches.join(', ')}`
+        })
+      }
+    }
+
+    // Check for Anti-Patterns
+    for (const pattern of antiPatterns) {
+      const matches = pattern.indicators.filter(indicator => 
+        filePaths.some(path => path.includes(indicator)) ||
+        fileNames.some(name => name.includes(indicator))
+      )
+      
+      if (matches.length > 0) {
+        patterns.push({
+          name: pattern.name,
+          type: pattern.type,
+          confidence: pattern.confidence,
+          locations: matches,
+          description: `Detected ${pattern.name} based on indicators: ${matches.join(', ')}`
+        })
+      }
+    }
+
+    return patterns
   }
 
   // Default metrics for error cases

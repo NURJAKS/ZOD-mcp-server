@@ -64,6 +64,70 @@ export class ContextualUnderstanding {
     }
   }
 
+  // Calculate AI Confidence based on multiple factors
+  public calculateAIConfidence(projectStructure: ProjectStructure, analysis: ProjectAnalysis): number {
+    let confidence = 0
+    let factors = 0
+
+    // Factor 1: Data Quality (0-25 points)
+    const fileCount = projectStructure.files.length
+    if (fileCount > 100) {
+      confidence += 25
+    } else if (fileCount > 50) {
+      confidence += 20
+    } else if (fileCount > 20) {
+      confidence += 15
+    } else {
+      confidence += 10
+    }
+    factors++
+
+    // Factor 2: Analysis Depth (0-25 points)
+    const hasQualityMetrics = analysis.quality && Object.keys(analysis.quality).length > 0
+    const hasSecurityMetrics = analysis.security && Object.keys(analysis.security).length > 0
+    const hasPerformanceMetrics = analysis.performance && Object.keys(analysis.performance).length > 0
+    const hasMaintainabilityMetrics = analysis.maintainability && Object.keys(analysis.maintainability).length > 0
+
+    if (hasQualityMetrics && hasSecurityMetrics && hasPerformanceMetrics && hasMaintainabilityMetrics) {
+      confidence += 25
+    } else if (hasQualityMetrics && hasSecurityMetrics) {
+      confidence += 20
+    } else if (hasQualityMetrics) {
+      confidence += 15
+    } else {
+      confidence += 10
+    }
+    factors++
+
+    // Factor 3: Pattern Detection Quality (0-25 points)
+    const patternCount = analysis.patterns.length
+    if (patternCount > 5) {
+      confidence += 25
+    } else if (patternCount > 3) {
+      confidence += 20
+    } else if (patternCount > 1) {
+      confidence += 15
+    } else {
+      confidence += 10
+    }
+    factors++
+
+    // Factor 4: Technology Detection (0-25 points)
+    const techCount = projectStructure.technologies.length
+    if (techCount > 10) {
+      confidence += 25
+    } else if (techCount > 5) {
+      confidence += 20
+    } else if (techCount > 2) {
+      confidence += 15
+    } else {
+      confidence += 10
+    }
+    factors++
+
+    return Math.min(95, Math.round(confidence / factors))
+  }
+
   // Senior Developer Insights
   async generateSeniorInsights(analysis: ProjectAnalysis, contextualAnalysis: ContextualAnalysis): Promise<SeniorInsights> {
     try {

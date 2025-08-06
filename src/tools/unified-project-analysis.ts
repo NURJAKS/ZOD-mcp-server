@@ -359,6 +359,9 @@ async function handleAIAnalyze(folder_path?: string, focus?: string, ai_depth?: 
     const context = await contextualUnderstanding.analyzeContext(structure, analysis)
     const insights = await contextualUnderstanding.generateSeniorInsights(analysis, context)
     const plan = await contextualUnderstanding.planFuture(insights, context)
+    
+    // Calculate real AI confidence
+    const aiConfidence = contextualUnderstanding.calculateAIConfidence(structure, analysis)
 
     // AI-enhanced analysis based on focus
     let aiAnalysis = ''
@@ -506,8 +509,8 @@ async function handleSmartInsights(folder_path?: string, perspective?: string, a
       + `🔒 **Security Assessment:**\n${insights.security}\n\n`
       + `⚡ **Performance Analysis:**\n${insights.performance}\n\n`
       + `💡 **Strategic Recommendations:**\n${insights.recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}\n\n`
-      + `🎯 **AI Confidence:** 95%\n`
-      + `📈 **Insight Quality:** High\n\n`
+      + `🎯 **AI Confidence:** ${aiConfidence}%\n`
+      + `📈 **Insight Quality:** ${aiConfidence > 80 ? 'Excellent' : aiConfidence > 60 ? 'Good' : 'Fair'}\n\n`
       + `🔄 **Next Steps:**\n`
       + `• Use 'ai_recommend' for actionable recommendations\n`
       + `• Use 'comprehensive' for full analysis\n`
