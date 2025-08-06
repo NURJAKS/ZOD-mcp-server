@@ -71,9 +71,11 @@ async function getProjectPath(targetPath?: string): Promise<string> {
     }
   }
   
-  // Try to find the current project root
-  let projectPath = process.cwd()
+  // Try to find the current project root dynamically
+  // First, try to get the actual working directory from environment
+  let projectPath = process.env.PWD || process.cwd()
   
+  // If we're in a subdirectory, try to find the project root
   const projectIndicators = [
     'package.json', 'pyproject.toml', 'Cargo.toml', 'pom.xml',
     'build.gradle', 'composer.json', 'requirements.txt', 'Gemfile',
@@ -83,37 +85,37 @@ async function getProjectPath(targetPath?: string): Promise<string> {
     'docker-compose.yml', 'Dockerfile', '.env', 'src/', 'lib/', 'app/'
   ]
   
-  const possiblePaths = [
-    process.cwd(),
-    process.env.PWD || process.cwd(),
-    process.env.HOME || process.env.USERPROFILE || '',
-    path.join(__dirname, '../../..'),
-    path.join(__dirname, '../..'),
-    path.join(__dirname, '..'),
-  ]
+  // Start from current directory and work up the tree
+  let currentPath = projectPath
+  let foundProject = false
   
-  for (const basePath of possiblePaths) {
-    if (!basePath) continue
-    
+  while (currentPath !== path.dirname(currentPath)) {
     try {
-      const hasProjectIndicator = await Promise.any(
-        projectIndicators.map(async (indicator) => {
-          try {
-            await fs.access(path.join(basePath, indicator))
-            return true
-          } catch {
-            return false
-          }
-        })
-      )
-      
-      if (hasProjectIndicator) {
-        projectPath = basePath
-        break
+      // Check if any project indicator exists in current path
+      for (const indicator of projectIndicators) {
+        try {
+          await fs.access(path.join(currentPath, indicator))
+          projectPath = currentPath
+          foundProject = true
+          break
+        } catch {
+          // Continue to next indicator
+        }
       }
+      
+      if (foundProject) break
+      
+      // Move up one directory
+      currentPath = path.dirname(currentPath)
     } catch (error) {
-      // Continue to next path
+      // Move up one directory
+      currentPath = path.dirname(currentPath)
     }
+  }
+  
+  // If no project found, use current directory
+  if (!foundProject) {
+    projectPath = process.env.PWD || process.cwd()
   }
   
   return projectPath
@@ -191,6 +193,16 @@ async function handleIndexProject(folder_path?: string, command?: string, includ
   try {
     const projectPath = await getProjectPath(folder_path)
     
+    // Validate that we're analyzing a real project
+    try {
+      const packageJsonPath = path.join(projectPath, 'package.json')
+      await fs.access(packageJsonPath)
+      const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf-8'))
+      safeLog(`✅ Analyzing project: ${packageJson.name || 'Unknown'} at ${projectPath}`)
+    } catch (error) {
+      safeLog(`⚠️ No package.json found at ${projectPath}, analyzing as generic project`)
+    }
+    
     if (!projectAnalyzer) {
       throw new Error('Project analyzer not initialized')
     }
@@ -230,10 +242,21 @@ async function handleIndexProject(folder_path?: string, command?: string, includ
       f.name.includes('index') || f.name.includes('main') || f.name.includes('app')
     ).slice(0, 3)
 
+    // Get project name for better identification
+    let projectName = 'Unknown Project'
+    try {
+      const packageJsonPath = path.join(projectPath, 'package.json')
+      const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf-8'))
+      projectName = packageJson.name || path.basename(projectPath)
+    } catch (error) {
+      projectName = path.basename(projectPath)
+    }
+
     return {
       content: [{
         type: 'text',
-        text: `✅ Project indexed successfully: ${projectPath}\n\n` +
+        text: `✅ Project indexed successfully: ${projectName}\n` +
+              `📍 Location: ${projectPath}\n\n` +
               `📊 Analysis Results:\n` +
               `• Files analyzed: ${structure.files.length}\n` +
               `• Languages detected: ${structure.technologies.filter(t => t.category === 'language').map(t => t.name).join(', ')}\n` +
