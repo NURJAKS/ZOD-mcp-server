@@ -59,12 +59,12 @@ export class SearchEngine {
         if (!process.argv.includes('--stdio')) {
           console.log('✅ OpenRouter client initialized for semantic search')
         }
-      }).catch(error => {
+      }).catch((error: any) => {
         if (!process.argv.includes('--stdio')) {
           console.log('❌ OpenRouter client not available:', error.message)
         }
       })
-    } catch (error) {
+    } catch (error: any) {
       if (!process.argv.includes('--stdio')) {
         console.log('❌ OpenRouter client not available:', error.message)
       }
@@ -83,7 +83,7 @@ export class SearchEngine {
       if (!process.argv.includes('--stdio')) {
         console.log('✅ OpenRouter client initialized for semantic search')
       }
-    } catch (error) {
+    } catch (error: any) {
       if (!process.argv.includes('--stdio')) {
         console.log('❌ OpenRouter client not available:', error.message)
       }
@@ -184,7 +184,7 @@ export class SearchEngine {
       console.log(`✅ Returning ${sortedResults.length} unique, relevant results`)
       return sortedResults.slice(0, options.maxResults || 10)
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Error in semantic search:', error)
       return [{
         id: 'error-fallback',
@@ -286,7 +286,8 @@ export class SearchEngine {
       // Use NewsAPI or similar service
       const apiKey = process.env.NEWS_API_KEY
       if (!apiKey) {
-        return this.getMockNewsResults(query, options)
+        console.warn('NEWS_API_KEY not configured, news search will not work')
+        return []
       }
 
       const response = await fetch(`https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&apiKey=${apiKey}&pageSize=${options.maxResults || 10}`)
@@ -306,7 +307,7 @@ export class SearchEngine {
       }))
     } catch (error) {
       console.error('Error in news search:', error)
-      return this.getMockNewsResults(query, options)
+      return []
     }
   }
 
@@ -373,7 +374,7 @@ export class SearchEngine {
       return results
     } catch (error) {
       console.error('Error in academic search:', error)
-      return this.getMockAcademicResults(query, options)
+      return []
     }
   }
 
@@ -412,7 +413,7 @@ export class SearchEngine {
       }))
     } catch (error) {
       console.error('Error in social monitoring:', error)
-      return this.getMockSocialResults(topic, options)
+      return []
     }
   }
 
@@ -591,7 +592,7 @@ export class SearchEngine {
           },
         }
       }).filter(Boolean) as SearchResult[]
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error in semantic search:', error)
       return []
     }
@@ -643,8 +644,8 @@ export class SearchEngine {
   ): Promise<SearchResult[]> {
     const apiKey = process.env.SERPER_API_KEY
     if (!apiKey) {
-      console.warn('SERPER_API_KEY not configured, using mock results')
-      return this.getMockWebResults(query, options)
+      console.warn('SERPER_API_KEY not configured, web search will not work')
+      return []
     }
 
     try {
@@ -675,44 +676,10 @@ export class SearchEngine {
         score: 0.8 - (index * 0.1), // Уменьшаем скор для каждого следующего результата
         metadata: { category: 'web', position: index + 1 },
       }))
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error in web search:', error)
-      return this.getMockWebResults(query, options)
+      return []
     }
-  }
-
-  private getMockWebResults(
-    query: string,
-    options: {
-      numResults?: number
-      category?: string
-      daysBack?: number
-      findSimilarTo?: string
-    }
-  ): SearchResult[] {
-    // Provide helpful fallback results when API is not available
-    const fallbackResults = [
-      {
-        id: 'fallback-1',
-        type: 'web' as const,
-        title: 'Web Search API Not Configured',
-        content: `To enable web search functionality, please configure the SERPER_API_KEY environment variable. You can get a free API key from https://serper.dev`,
-        url: 'https://serper.dev',
-        score: 0.9,
-        metadata: { category: 'setup', position: 1 },
-      },
-      {
-        id: 'fallback-2',
-        type: 'web' as const,
-        title: 'Alternative Search Options',
-        content: `While web search is not available, you can still search your indexed repositories and documentation using search_codebase and search_documentation tools.`,
-        url: '',
-        score: 0.8,
-        metadata: { category: 'help', position: 2 },
-      }
-    ]
-
-    return fallbackResults.slice(0, options.numResults || 2)
   }
 
   private async performSemanticDocumentationSearch(
@@ -749,9 +716,9 @@ export class SearchEngine {
       })
 
       const response = completion.choices[0]?.message?.content || ''
-      const relevantIndices = response.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n))
+      const relevantIndices = response.split(',').map((s: string) => parseInt(s.trim())).filter((n: number) => !isNaN(n))
 
-      return relevantIndices.map(index => {
+      return relevantIndices.map((index: number) => {
         const result = dbResults[index - 1]
         if (!result) return null
 
@@ -768,7 +735,7 @@ export class SearchEngine {
           },
         }
       }).filter(Boolean) as SearchResult[]
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error in semantic documentation search:', error)
       return []
     }
@@ -978,88 +945,6 @@ export class SearchEngine {
         vector: true
       },
     }))
-  }
-
-  private getMockNewsResults(
-    query: string,
-    options: {
-      sources?: string[]
-      timeRange?: string
-      maxResults?: number
-    }
-  ): Array<{
-    title: string
-    content: string
-    url: string
-    source: string
-    publishedAt: string
-  }> {
-    return [
-      {
-        title: `News API not configured for: ${query}`,
-        content: 'To enable real news search, configure NEWS_API_KEY environment variable. Get a free key from https://newsapi.org',
-        url: 'https://newsapi.org',
-        source: 'NewsAPI',
-        publishedAt: new Date().toISOString(),
-      }
-    ]
-  }
-
-  private getMockAcademicResults(
-    query: string,
-    options: {
-      fields?: string[]
-      yearFrom?: number
-      yearTo?: number
-      maxResults?: number
-    }
-  ): Array<{
-    title: string
-    authors: string[]
-    abstract: string
-    journal: string
-    year: number
-    citations: number
-    doi: string
-  }> {
-    return [
-      {
-        title: `Academic search not available for: ${query}`,
-        authors: ['System'],
-        abstract: 'Academic search is currently using fallback results. Consider implementing arXiv or Semantic Scholar API for real academic paper search.',
-        journal: 'System',
-        year: new Date().getFullYear(),
-        citations: 0,
-        doi: 'system://mock',
-      }
-    ]
-  }
-
-  private getMockSocialResults(
-    topic: string,
-    options: {
-      platforms?: string[]
-      timeRange?: string
-      maxResults?: number
-    }
-  ): Array<{
-    platform: string
-    author: string
-    content: string
-    url: string
-    publishedAt: string
-    engagement: number
-  }> {
-    return [
-      {
-        platform: 'system',
-        author: 'System',
-        content: `Social media monitoring not available for: ${topic}. Consider implementing Twitter API or Reddit API for real social media monitoring.`,
-        url: '',
-        publishedAt: new Date().toISOString(),
-        engagement: 0,
-      }
-    ]
   }
 
   // Generate semantic explanation for search results

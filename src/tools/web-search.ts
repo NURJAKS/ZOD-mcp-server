@@ -45,8 +45,6 @@ export function registerWebSearchTools({ mcp }: McpToolContext): void {
 
         const nextSteps = [
           'Use nia_deep_research_agent for comprehensive AI-powered research',
-          'Use nia_code_analysis for detailed code pattern analysis',
-          'Use nia_reasoning_engine for step-by-step problem solving',
           'Index interesting repositories with repository_tools(action="index")',
           'Index documentation sites with documentation_tools(action="index")',
           'Search your indexed content with repository_tools(action="search")',
@@ -69,56 +67,4 @@ export function registerWebSearchTools({ mcp }: McpToolContext): void {
       }
     },
   )
-
-  // nia_deep_research_agent - Enhanced Deep Research with AI reasoning
-  mcp.tool(
-    'nia_deep_research_agent',
-    'Perform deep, multi-step research on a topic using advanced AI research capabilities with reasoning and thought processes',
-    {
-      query: z.string().describe('Research question (use comprehensive questions for best results)'),
-      output_format: z.string().optional().describe('Structure hint (e.g., "comparison table", "pros and cons list", "step-by-step analysis")'),
-      reasoning_depth: z.enum(['basic', 'intermediate', 'advanced', 'expert']).default('advanced').describe('Depth of AI reasoning and analysis'),
-      include_code_analysis: z.boolean().default(true).describe('Include code analysis and implementation insights'),
-      include_trends: z.boolean().default(true).describe('Include current trends and community insights'),
-      max_iterations: z.number().min(1).max(5).default(3).describe('Maximum number of research iterations'),
-    },
-    async ({ query, output_format, reasoning_depth, include_code_analysis, include_trends, max_iterations }) => {
-      try {
-        const research = await searchEngine.deepResearch(query, output_format)
-
-        const analysisText = `🔬 **Enhanced Deep Research Results for:** "${query}"\n\n`
-          + `**🧠 Reasoning Depth:** ${reasoning_depth.toUpperCase()}\n`
-          + `**📊 Research Iterations:** ${max_iterations}\n\n`
-          + `**📋 Executive Summary:**\n${research.summary}\n\n`
-          + `**🔍 Detailed Analysis:**\n${research.analysis}\n\n`
-          + `**💡 Key Insights:**\n${research.recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}\n\n`
-          + `**📚 Sources & References:**\n${research.sources.map((source, index) => `${index + 1}. ${source}`).join('\n')}\n\n`
-          + `**🔄 Next Steps:**\n`
-          + `• Use nia_web_search for specific content discovery\n`
-          + `• Use nia_code_analysis for detailed code pattern analysis\n`
-          + `• Use nia_reasoning_engine for step-by-step problem solving\n`
-          + `• Index relevant repositories with repository_tools(action="index")\n`
-          + `• Index documentation with documentation_tools(action="index")\n`
-          + `• Search your indexed content for implementation details\n`
-          + `• Run follow-up research with different reasoning depth`
-
-        return {
-          content: [{
-            type: 'text',
-            text: analysisText,
-          }],
-        }
-      }
-      catch (error) {
-        return {
-          content: [{
-            type: 'text',
-            text: `❌ Error performing enhanced deep research: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          }],
-        }
-      }
-    },
-  )
-
-
 }

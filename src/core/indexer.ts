@@ -178,6 +178,16 @@ export class RepositoryIndexer {
     }))
   }
 
+  async getIndexedFiles(repositoryId: string): Promise<Array<{
+    path: string
+    content: string
+    language: string
+    size: number
+    lines: number
+  }>> {
+    return this.db.getIndexedFiles(repositoryId)
+  }
+
   parseGitHubUrl(url: string): { owner: string, repo: string } {
     const match = url.match(/github\.com\/([^/]+)\/([^/]+)/)
     if (!match) {
@@ -816,30 +826,82 @@ export class DocumentationIndexer {
       const $ = cheerio.load(html)
 
       const links = new Set<string>()
+      const processedUrls = new Set<string>()
 
-      // Ищем ссылки, соответствующие паттернам
-      $('a[href]').each((_, element) => {
-        const href = $(element).attr('href')
-        if (href) {
-          const fullUrl = new URL(href, baseUrl).href
+      // Функция для проверки соответствия URL паттерну
+      const matchesPattern = (url: string, pattern: string): boolean => {
+        try {
+          // Извлекаем путь из URL
+          const urlPath = new URL(url).pathname
+          
+          // Преобразуем паттерн в regex
+          let regexPattern = pattern
+            .replace(/\./g, '\\.') // Экранируем точки
+            .replace(/\*/g, '.*') // Заменяем * на .*
+            .replace(/\?/g, '\\.') // Заменяем ? на любой символ
+          
+          // Если паттерн начинается с /, добавляем якорь начала
+          if (pattern.startsWith('/')) {
+            regexPattern = '^' + regexPattern
+          }
+          
+          const regex = new RegExp(regexPattern, 'i')
+          return regex.test(urlPath)
+        } catch (error) {
+          console.error(`Invalid pattern: ${pattern}`, error instanceof Error ? error.message : String(error))
+          return false
+        }
+      }
 
-          // Проверяем, соответствует ли URL паттернам
-          const matchesPattern = patterns.some(pattern => {
-            if (pattern.startsWith('/')) {
-              return fullUrl.includes(pattern)
+      // Рекурсивная функция для поиска ссылок
+      const findLinksRecursively = async (url: string, depth: number = 0): Promise<void> => {
+        if (depth > 3 || processedUrls.has(url)) return // Ограничиваем глубину и избегаем циклов
+        
+        processedUrls.add(url)
+        
+        try {
+          const response = await fetch(url)
+          const html = await response.text()
+          const $ = cheerio.load(html)
+
+          // Ищем ссылки, соответствующие паттернам
+          $('a[href]').each((_, element) => {
+            const href = $(element).attr('href')
+            if (href) {
+              const fullUrl = new URL(href, url).href
+
+              // Проверяем, соответствует ли URL паттернам
+              const matchesAnyPattern = patterns.some(pattern => matchesPattern(fullUrl, pattern))
+
+              if (matchesAnyPattern) {
+                links.add(fullUrl)
+              }
             }
-            return fullUrl.includes(pattern)
           })
 
-          if (matchesPattern) {
-            links.add(fullUrl)
+          // Рекурсивно обрабатываем найденные ссылки (если не достигли максимальной глубины)
+          if (depth < 2) {
+            const linksToFollow = Array.from(links).slice(0, 5) // Ограничиваем количество ссылок для следования
+            for (const link of linksToFollow) {
+              if (!processedUrls.has(link)) {
+                await findLinksRecursively(link, depth + 1)
+                await new Promise(resolve => setTimeout(resolve, 100)) // Задержка между запросами
+              }
+            }
           }
+        } catch (error) {
+          console.error(`Error processing ${url}:`, error)
         }
-      })
+      }
+
+      // Начинаем рекурсивный поиск с базового URL
+      await findLinksRecursively(baseUrl)
 
       // Ограничиваем количество страниц для индексации
-      const maxPages = 20
+      const maxPages = 30
       const urlsToProcess = Array.from(links).slice(0, maxPages)
+
+      console.log(`Found ${links.size} matching URLs, processing ${urlsToProcess.length} pages`)
 
       for (const url of urlsToProcess) {
         const page = await this.fetchPage(url, onlyMainContent)

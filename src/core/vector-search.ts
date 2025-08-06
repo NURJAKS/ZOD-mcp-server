@@ -349,22 +349,26 @@ export class VectorSearchEngine {
         } = {}
     ): Promise<VectorSearchResult[]> {
         try {
-            // Simple text-based search fallback
-            const searchTerms = query.toLowerCase().split(' ')
+            // Real fallback search using database
+            const searchEngine = new SearchEngine()
+            await searchEngine.initialize()
             
-            // This would need to be connected to the database to get actual files
-            // For now, return a mock result to show the search is working
-            return [{
-                id: 'fallback-result',
-                score: 0.8,
+            const results = await searchEngine.searchCodebase(query, {
+                repositories: options.repositories,
+                maxResults: options.limit || 10
+            })
+            
+            return results.map(result => ({
+                id: result.id,
+                score: result.score,
                 payload: {
-                    path: 'example.html',
-                    content: `Found content matching: ${query}`,
-                    language: 'html',
-                    repository: options.repositories?.[0] || 'unknown',
+                    path: result.metadata?.path || 'unknown',
+                    content: result.content,
+                    language: result.metadata?.language || 'unknown',
+                    repository: result.metadata?.repository || 'unknown',
                     type: 'file'
                 }
-            }]
+            }))
         } catch (error) {
             safeLog(`Fallback search error: ${error}`, 'error')
             return []

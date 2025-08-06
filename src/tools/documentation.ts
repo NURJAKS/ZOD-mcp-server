@@ -33,16 +33,16 @@ async function initializeComponents() {
 initializeComponents()
 
 export function registerDocumentationTools({ mcp }: McpToolContext): void {
-  // Single Unified Documentation Tools Plugin
-  // This single tool handles all documentation management operations
+  // Enhanced Documentation Tools Plugin
+  // Supports wildcard patterns, recursive crawling, and comprehensive documentation management
 
   mcp.tool(
     'documentation_tools',
-    'Unified documentation management tool with 6 functions: index, list, check status, delete, rename, and search documentation',
+    'Unified documentation management tool with 7 functions: index, list, check status, delete, rename, search, and analyze documentation. Supports wildcard URL patterns for comprehensive crawling.',
     {
       action: z.enum(['index', 'list', 'check_status', 'delete', 'rename', 'search', 'analyze']).describe('Action to perform'),
       url: z.string().optional().describe('URL of the documentation site to index (required for index action)'),
-      url_patterns: z.array(z.string()).optional().describe('URL patterns to include in crawling (e.g., ["/docs/", "/guide/"])'),
+      url_patterns: z.array(z.string()).optional().describe('URL patterns to include in crawling. Supports wildcards: ["/docs/components/*", "/guide/*", "/api/*"]'),
       max_age: z.number().optional().describe('Maximum age of cached content in seconds'),
       only_main_content: z.boolean().optional().default(true).describe('Extract only main content (removes navigation, ads, etc.)'),
       source_id: z.string().optional().describe('Documentation source ID (used with check_status, delete, rename, analyze actions)'),
@@ -105,8 +105,21 @@ async function handleIndexDocumentation(url?: string, url_patterns?: string[], m
     return {
       content: [{
         type: 'text' as const,
-        text: `❌ Please provide a documentation URL.\n\nExample: documentation_tools(action="index", url="https://docs.example.com")`,
+        text: `❌ Please provide a documentation URL.\n\nExample: documentation_tools(action="index", url="https://docs.example.com", url_patterns=["/docs/components/*"])`,
       }],
+    }
+  }
+
+  // Validate URL patterns if provided
+  if (url_patterns && url_patterns.length > 0) {
+    const invalidPatterns = url_patterns.filter(pattern => !pattern || pattern.trim() === '')
+    if (invalidPatterns.length > 0) {
+      return {
+        content: [{
+          type: 'text' as const,
+          text: `❌ Invalid URL patterns detected: ${invalidPatterns.join(', ')}\n\nValid examples:\n• ["/docs/components/*"]\n• ["/guide/*", "/api/*"]\n• ["/docs/*"]`,
+        }],
+      }
     }
   }
 
@@ -116,10 +129,15 @@ async function handleIndexDocumentation(url?: string, url_patterns?: string[], m
     onlyMainContent: only_main_content,
   })
 
+  let patternInfo = ''
+  if (url_patterns && url_patterns.length > 0) {
+    patternInfo = `\nURL Patterns: ${url_patterns.join(', ')}\nWildcard Support: ✅ Enabled\nRecursive Crawling: ✅ Enabled`
+  }
+
   return {
     content: [{
       type: 'text' as const,
-      text: `✅ Documentation indexing started for ${result.name}\n\nStatus: ${result.status}\nProgress: ${result.progress}%\nURL: ${result.url}\nSource ID: ${result.id}\n\nUse documentation_tools(action="check_status", source_id="${result.id}") to monitor progress.`,
+      text: `✅ Documentation indexing started for ${result.name}\n\nStatus: ${result.status}\nProgress: ${result.progress}%\nURL: ${result.url}\nSource ID: ${result.id}${patternInfo}\n\nUse documentation_tools(action="check_status", source_id="${result.id}") to monitor progress.`,
     }],
   }
 }

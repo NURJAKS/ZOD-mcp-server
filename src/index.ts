@@ -12,6 +12,9 @@ import { registerRepositoryTools } from './tools/repository'
 import { registerWebSearchTools } from './tools/web-search'
 import { registerProjectInitTools } from './tools/project-init'
 import { registerDeepSearchTools } from './tools/deep-search'
+import { registerFleetTools } from './tools/fleet'
+import { registerSmartAIAnalyzer } from './tools/smart-ai-analyzer'
+import { registerVisualizerTools } from './tools/visualizer'
 
 const cli = defineCommand({
   meta: {
@@ -106,6 +109,9 @@ async function registerToolsSafely(mcp: any, debug: boolean = false) {
     { name: 'WebSearchTools', register: registerWebSearchTools },
     { name: 'ProjectInitTools', register: registerProjectInitTools },
     { name: 'DeepSearchTools', register: registerDeepSearchTools },
+    { name: 'FleetTools', register: registerFleetTools },
+    { name: 'SmartAIAnalyzer', register: registerSmartAIAnalyzer },
+    { name: 'VisualizerTools', register: registerVisualizerTools },
   ]
 
   for (const tool of tools) {

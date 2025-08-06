@@ -172,6 +172,92 @@ dev-*.sh
 setup-*.sh
 fix-*.sh
 
+# ===== TYPESCRIPT =====
+# TypeScript build info
+*.tsbuildinfo
+# TypeScript cache
+.tscache/
+
+# ===== VITE =====
+# Vite cache and build
+.vite/
+vite.config.ts.timestamp-*
+vite.config.ts.mjs.timestamp-*
+
+# ===== ESLINT =====
+.eslintcache
+
+# ===== VITEST =====
+# Vitest coverage
+coverage/
+.nyc_output/
+
+# ===== NODEMON =====
+# Nodemon cache
+.nodemon/
+
+# ===== PUPPETEER =====
+# Puppeteer cache
+.puppeteer/
+
+# ===== REDIS =====
+# Redis dump files
+dump.rdb
+*.rdb
+
+# ===== NEO4J =====
+# Neo4j data
+neo4j-data/
+neo4j-logs/
+
+# ===== MINIO =====
+# MinIO data
+minio-data/
+
+# ===== QDRANT =====
+# Qdrant storage
+qdrant_storage/
+qdrant-data/
+
+# ===== SQLITE =====
+# SQLite databases
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.sqlite-journal
+*.sqlite3-journal
+
+# ===== DEVELOPMENT TOOLS =====
+# Unbuild cache
+.unbuild/
+# Esbuild cache
+.esbuild/
+
+# ===== MONITORING & METRICS =====
+# Application metrics
+metrics/
+# Health check logs
+health-check.log
+# Performance logs
+performance.log
+
+# ===== API KEYS & SECRETS =====
+# Additional security patterns
+api-keys.json
+secrets.json
+credentials.json
+*.env
+.env.*
+
+# ===== BACKUP & ARCHIVE =====
+# Backup files
+*.backup
+*.bak
+*.old
+*.orig
+*.tmp
+
 # ===== IMPORTANT PROJECT FILES TO TRACK =====
 # Ensure these important files are tracked
 !DEEP_SEARCH_GUIDE.md
@@ -186,3 +272,12 @@ fix-*.sh
 !src/tools/documentation.ts
 !src/tools/repository.ts
 !src/tools/web-search.ts
+!README.md
+!LICENSE
+!tsconfig.json
+!vite.config.ts
+!eslint.config.js
+!build.config.ts
+!Dockerfile
+!docker-compose.yml
+!env.example
