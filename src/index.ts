@@ -12,8 +12,7 @@ import { registerRepositoryTools } from './tools/repository'
 import { registerUnifiedSearchTools } from './tools/unified-search'
 import { registerProjectInitTools } from './tools/project-init'
 import { registerMultiAgentTools } from './tools/multi-agent-tools'
-import { registerProjectTools } from './tools/project-tools'
-import { registerSmartAIAnalyzer } from './tools/smart-ai-analyzer'
+import { registerUnifiedProjectAnalysis } from './tools/unified-project-analysis'
 import { registerVisualizerTools } from './tools/visualizer'
 
 const cli = defineCommand({
@@ -109,8 +108,7 @@ async function registerToolsSafely(mcp: any, debug: boolean = false) {
     { name: 'UnifiedSearchTools', register: registerUnifiedSearchTools },
     { name: 'ProjectInitTools', register: registerProjectInitTools },
     { name: 'MultiAgentTools', register: registerMultiAgentTools },
-    { name: 'ProjectTools', register: registerProjectTools },
-    { name: 'SmartAIAnalyzer', register: registerSmartAIAnalyzer },
+    { name: 'UnifiedProjectAnalysis', register: registerUnifiedProjectAnalysis },
     { name: 'VisualizerTools', register: registerVisualizerTools },
   ]
 
