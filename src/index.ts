@@ -9,9 +9,8 @@ import { version } from '../package.json'
 import { createServer, startServer, stopServer } from './server'
 import { registerDocumentationTools } from './tools/documentation'
 import { registerRepositoryTools } from './tools/repository'
-import { registerWebSearchTools } from './tools/web-search'
+import { registerUnifiedSearchTools } from './tools/unified-search'
 import { registerProjectInitTools } from './tools/project-init'
-import { registerDeepSearchTools } from './tools/deep-search'
 import { registerMultiAgentTools } from './tools/multi-agent-tools'
 import { registerProjectTools } from './tools/project-tools'
 import { registerSmartAIAnalyzer } from './tools/smart-ai-analyzer'
@@ -107,9 +106,8 @@ async function registerToolsSafely(mcp: any, debug: boolean = false) {
   const tools = [
     { name: 'RepositoryTools', register: registerRepositoryTools },
     { name: 'DocumentationTools', register: registerDocumentationTools },
-    { name: 'WebSearchTools', register: registerWebSearchTools },
+    { name: 'UnifiedSearchTools', register: registerUnifiedSearchTools },
     { name: 'ProjectInitTools', register: registerProjectInitTools },
-    { name: 'DeepSearchTools', register: registerDeepSearchTools },
     { name: 'MultiAgentTools', register: registerMultiAgentTools },
     { name: 'ProjectTools', register: registerProjectTools },
     { name: 'SmartAIAnalyzer', register: registerSmartAIAnalyzer },
