@@ -217,7 +217,7 @@ export function registerUnifiedProjectAnalysis({ mcp }: McpToolContext): void {
           default:
             return {
               content: [{
-                type: 'text',
+                type: 'text' as const,
                 text: `❌ Invalid action: ${action}\n\nAvailable actions: index, analyze, insights, recommend, search, graph, cache, ai_analyze, context_search, smart_insights, ai_recommend, comprehensive`,
               }],
             }
@@ -225,7 +225,7 @@ export function registerUnifiedProjectAnalysis({ mcp }: McpToolContext): void {
       } catch (error) {
         return {
           content: [{
-            type: 'text',
+            type: 'text' as const,
             text: `❌ Unified project analysis error: ${error instanceof Error ? error.message : 'Unknown error'}`,
           }],
         }
@@ -337,9 +337,28 @@ async function handleAIAnalyze(folder_path?: string, focus?: string, ai_depth?: 
 
     // Perform AI-powered analysis
     const structure = await projectAnalyzer.analyzeProjectStructure(projectPath)
-    const context = await contextualUnderstanding.analyzeContext(structure)
-    const insights = await contextualUnderstanding.generateSeniorInsights(structure, focus)
-    const plan = await contextualUnderstanding.planFuture(structure)
+    const quality = await projectAnalyzer.analyzeCodeQuality(structure.files)
+    const performance = await projectAnalyzer.analyzePerformance(structure.files)
+    const security = await projectAnalyzer.analyzeSecurity(structure.files)
+    const maintainability = await projectAnalyzer.analyzeMaintainability(structure.files)
+    const architecture = await projectAnalyzer.analyzeArchitecture(structure.files)
+    
+    // Create ProjectAnalysis object with all required fields
+    const analysis = {
+      structure,
+      quality,
+      performance,
+      security,
+      maintainability,
+      architecture,
+      patterns: [], // Will be populated by analyzer
+      insights: [], // Will be populated by analyzer
+      recommendations: [] // Will be populated by analyzer
+    }
+    
+    const context = await contextualUnderstanding.analyzeContext(structure, analysis)
+    const insights = await contextualUnderstanding.generateSeniorInsights(analysis, context)
+    const plan = await contextualUnderstanding.planFuture(insights, context)
 
     // AI-enhanced analysis based on focus
     let aiAnalysis = ''
@@ -360,13 +379,13 @@ async function handleAIAnalyze(folder_path?: string, focus?: string, ai_depth?: 
     const analysisText = `🤖 **AI-Powered Project Analysis**\n\n`
       + `📁 **Project:** ${path.basename(projectPath)}\n`
       + `🎯 **Focus:** ${focus || 'Comprehensive'}\n`
-      + `🧠 **AI Depth:** ${ai_depth.toUpperCase()}\n`
-      + `🎯 **Reasoning:** ${reasoning_approach.toUpperCase()}\n\n`
-      + `📊 **Project Summary:**\n${insights.summary}\n\n`
-      + `🏗️ **Architecture Analysis:**\n${insights.architecture}\n\n`
-      + `💻 **Code Quality Insights:**\n${insights.codeQuality}\n\n`
-      + `🔒 **Security Assessment:**\n${insights.security}\n\n`
-      + `⚡ **Performance Analysis:**\n${insights.performance}\n\n`
+      + `🧠 **AI Depth:** ${ai_depth?.toUpperCase() || 'ADVANCED'}\n`
+      + `🎯 **Reasoning:** ${reasoning_approach?.toUpperCase() || 'SYSTEMATIC'}\n\n`
+      + `📊 **Project Summary:**\n${insights.architecture.join('\n')}\n\n`
+      + `🏗️ **Architecture Analysis:**\n${insights.architecture.join('\n')}\n\n`
+      + `💻 **Code Quality Insights:**\n${insights.codeQuality.join('\n')}\n\n`
+      + `🔒 **Security Assessment:**\n${insights.security.join('\n')}\n\n`
+      + `⚡ **Performance Analysis:**\n${insights.performance.join('\n')}\n\n`
       + `${aiAnalysis}`
       + `💡 **AI Recommendations:**\n${insights.recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}\n\n`
       + `🔮 **Future Planning:**\n${plan.shortTerm.map((item, index) => `${index + 1}. ${item}`).join('\n')}\n\n`
@@ -380,7 +399,7 @@ async function handleAIAnalyze(folder_path?: string, focus?: string, ai_depth?: 
 
     return {
       content: [{
-        type: 'text',
+        type: 'text' as const,
         text: analysisText,
       }],
     }
@@ -404,7 +423,25 @@ async function handleContextSearch(folder_path?: string, query?: string, ai_dept
 
     // Perform AI-powered contextual search
     const structure = await projectAnalyzer!.analyzeProjectStructure(projectPath)
-    const context = await contextualUnderstanding.analyzeContext(structure)
+    const quality = await projectAnalyzer!.analyzeCodeQuality(structure.files)
+    const performance = await projectAnalyzer!.analyzePerformance(structure.files)
+    const security = await projectAnalyzer!.analyzeSecurity(structure.files)
+    const maintainability = await projectAnalyzer!.analyzeMaintainability(structure.files)
+    const architecture = await projectAnalyzer!.analyzeArchitecture(structure.files)
+    
+    const analysis = {
+      structure,
+      quality,
+      performance,
+      security,
+      maintainability,
+      architecture,
+      patterns: [],
+      insights: [],
+      recommendations: []
+    }
+    
+    const context = await contextualUnderstanding.analyzeContext(structure, analysis)
     
     // Search for relevant content
     const searchResults = await searchEngine.searchCodebase(query || '', { maxResults: 10 })
