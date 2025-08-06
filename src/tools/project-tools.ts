@@ -223,6 +223,13 @@ async function handleIndexProject(folder_path?: string, command?: string, includ
       }
     }
 
+    // Get some specific file examples for better insights
+    const codeFiles = structure.files.filter(f => f.type === 'code').slice(0, 5)
+    const configFiles = structure.files.filter(f => f.type === 'config').slice(0, 3)
+    const mainFiles = structure.files.filter(f => 
+      f.name.includes('index') || f.name.includes('main') || f.name.includes('app')
+    ).slice(0, 3)
+
     return {
       content: [{
         type: 'text',
@@ -232,9 +239,13 @@ async function handleIndexProject(folder_path?: string, command?: string, includ
               `• Languages detected: ${structure.technologies.filter(t => t.category === 'language').map(t => t.name).join(', ')}\n` +
               `• Dependencies: ${structure.dependencies.length}\n` +
               `• Architecture pattern: ${architecture.pattern}\n` +
-              `• Code quality score: ${Math.round(100 - quality.technical_debt)}%\n` +
+              `• Code quality score: ${Math.round(Math.max(0, 100 - quality.technical_debt))}%\n` +
               `• Security score: ${security.security_score}%\n` +
               `• Test coverage: ${quality.test_coverage}%\n\n` +
+              `📁 Key Files Found:\n` +
+              `• Main files: ${mainFiles.map(f => f.name).join(', ')}\n` +
+              `• Code files: ${codeFiles.map(f => f.name).join(', ')}\n` +
+              `• Config files: ${configFiles.map(f => f.name).join(', ')}\n\n` +
               `💡 Use 'analyze' action for detailed insights or 'insights' for senior developer perspective.`,
       }],
     }
@@ -287,7 +298,7 @@ async function handleAnalyzeProject(folder_path?: string, focus?: string, includ
     if (!focus || focus === 'comprehensive') {
       analysisText += `📊 Comprehensive Analysis:\n`
       analysisText += `• Architecture: ${analysis.architecture.pattern}\n`
-      analysisText += `• Code Quality: ${Math.round(100 - analysis.quality.technical_debt)}%\n`
+      analysisText += `• Code Quality: ${Math.round(Math.max(0, 100 - analysis.quality.technical_debt))}%\n`
       analysisText += `• Security: ${analysis.security.security_score}% (${analysis.security.risk_level} risk)\n`
       analysisText += `• Performance: ${analysis.performance.bundle_size.toFixed(1)}KB bundle size\n`
       analysisText += `• Maintainability: ${analysis.maintainability.maintainability_index.toFixed(1)}/100\n\n`

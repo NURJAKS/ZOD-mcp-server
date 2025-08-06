@@ -732,47 +732,44 @@ export class ProjectAnalyzer {
     let vulnerabilities = 0
     
     // Check for common security issues in file names and paths
-    const securityKeywords = [
-      'password', 'secret', 'key', 'token', 'auth', 'login',
-      'admin', 'root', 'sudo', 'privilege', 'permission'
+    const highRiskKeywords = [
+      'password.txt', 'secret.json', 'key.pem', 'token.env',
+      'admin.config', 'root.key', 'sudo.conf'
     ]
     
     for (const file of files) {
       const fileName = file.name.toLowerCase()
       const filePath = file.path.toLowerCase()
       
-      // Check for hardcoded secrets in file names
-      if (securityKeywords.some(keyword => fileName.includes(keyword))) {
+      // Check for high-risk security files (more specific)
+      if (highRiskKeywords.some(keyword => fileName.includes(keyword))) {
         vulnerabilities += 1
       }
       
-      // Check for config files with potential secrets
-      if (file.type === 'config' && file.size > 1000) {
-        vulnerabilities += 1
+      // Check for environment files that might contain secrets
+      if (fileName.includes('.env') && !fileName.includes('.example')) {
+        vulnerabilities += 0.5
+      }
+      
+      // Check for large config files that might contain secrets
+      if (file.type === 'config' && file.size > 5000) {
+        vulnerabilities += 0.5
       }
     }
     
     // Check for outdated dependencies (real analysis)
     const hasPackageJson = files.some(f => f.name === 'package.json')
     if (hasPackageJson) {
-      // Check for common vulnerable dependency patterns
-      const hasOldDependencies = files.some(f => 
-        f.name === 'package.json' && f.size > 2000 // Large package.json might have many dependencies
+      // Check for very large package.json (might indicate many dependencies)
+      const hasManyDependencies = files.some(f => 
+        f.name === 'package.json' && f.size > 3000
       )
-      if (hasOldDependencies) {
-        vulnerabilities += 1
-      }
-      
-      // Check for lock files that might indicate outdated dependencies
-      const hasLockFiles = files.some(f => 
-        f.name === 'package-lock.json' || f.name === 'yarn.lock'
-      )
-      if (hasLockFiles) {
-        vulnerabilities += 0.5 // Lower risk for lock files
+      if (hasManyDependencies) {
+        vulnerabilities += 0.5
       }
     }
     
-    return Math.min(5, vulnerabilities)
+    return Math.min(3, vulnerabilities)
   }
 
   private calculateSecurityScore(vulnerabilities: number): number {
