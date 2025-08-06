@@ -30,10 +30,10 @@ interface ProjectConfig {
 }
 
 export function registerProjectInitTools({ mcp }: McpToolContext): void {
-  // initialize_project - Set up NIA-enabled projects with IDE configs
+  // initialize_project - Set up ZOD-enabled projects with IDE configs
   mcp.tool(
     'initialize_project',
-    'Initialize a NIA-enabled project with IDE-specific rules and configurations',
+    'Initialize a ZOD-enabled project with IDE-specific rules and configurations',
     {
       project_root: z.string().describe('Absolute path to the project root directory'),
       profiles: z.array(z.enum(SUPPORTED_PROFILES)).optional().default(['cursor']).describe('List of IDE profiles to set up'),
@@ -86,7 +86,7 @@ async function initializeProject(projectRoot: string, profiles: Profile[]): Prom
   const createdFiles: string[] = []
   const errors: string[] = []
 
-  results.push(`🚀 Initializing NIA-enabled project at: ${projectRoot}`)
+      results.push(`🚀 Initializing ZOD-enabled project at: ${projectRoot}`)
   results.push(`📋 IDE Profiles: ${profiles.join(', ')}`)
   results.push('')
 
@@ -104,14 +104,14 @@ async function initializeProject(projectRoot: string, profiles: Profile[]): Prom
     }
   }
 
-  // Create NIA-specific files
-  try {
-    const niaResults = await createNIAFiles(projectRoot, projectConfig)
-    createdFiles.push(...niaResults.createdFiles)
-    results.push(niaResults.summary)
-  } catch (error) {
-    errors.push(`NIA files: ${error instanceof Error ? error.message : 'Unknown error'}`)
-  }
+      // Create ZOD-specific files
+    try {
+      const zodResults = await createZODFiles(projectRoot, projectConfig)
+      createdFiles.push(...zodResults.createdFiles)
+      results.push(zodResults.summary)
+    } catch (error) {
+      errors.push(`ZOD files: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
 
   // Summary
   results.push('')
@@ -128,7 +128,7 @@ async function initializeProject(projectRoot: string, profiles: Profile[]): Prom
   results.push('🎯 Next Steps:')
   results.push('• Open your project in the configured IDE')
   results.push('• Review and customize the generated configurations')
-  results.push('• Use NIA tools for enhanced development experience')
+      results.push('• Use ZOD tools for enhanced development experience')
 
   return results.join('\n')
 }
@@ -141,7 +141,7 @@ async function detectProjectConfig(projectRoot: string): Promise<ProjectConfig> 
 
   let config: ProjectConfig = {
     name: path.basename(projectRoot),
-    description: 'NIA-enabled project',
+    description: 'ZOD-enabled project',
     version: '1.0.0',
     type: 'application',
     language: 'unknown',
@@ -444,7 +444,7 @@ async function setupJetBrains(projectRoot: string, config: ProjectConfig): Promi
 
   const workspaceXml = `<?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="ProjectId" id="nia-${config.name}"/>
+  <component name="ProjectId" id="zod-${config.name}"/>
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
@@ -466,7 +466,7 @@ async function setupNeovim(projectRoot: string, config: ProjectConfig): Promise<
     fs.mkdirSync(nvimDir, { recursive: true })
   }
 
-  const initLua = `-- NIA Project Neovim Configuration
+  const initLua = `-- ZOD Project Neovim Configuration
 vim.opt.number = true
 vim.opt.relativenumber = true
 vim.opt.tabstop = 2
@@ -506,19 +506,19 @@ async function setupSublime(projectRoot: string, config: ProjectConfig): Promise
   return createdFiles
 }
 
-async function createNIAFiles(projectRoot: string, config: ProjectConfig): Promise<{ summary: string, createdFiles: string[] }> {
+async function createZODFiles(projectRoot: string, config: ProjectConfig): Promise<{ summary: string, createdFiles: string[] }> {
   const createdFiles: string[] = []
   const summary: string[] = []
 
-  summary.push('🔧 Creating NIA-specific files...')
+      summary.push('🔧 Creating ZOD-specific files...')
 
-  // Create .nia/config.json
-  const niaDir = path.join(projectRoot, '.nia')
-  if (!fs.existsSync(niaDir)) {
-    fs.mkdirSync(niaDir, { recursive: true })
-  }
+      // Create .zod/config.json
+    const zodDir = path.join(projectRoot, '.zod')
+    if (!fs.existsSync(zodDir)) {
+      fs.mkdirSync(zodDir, { recursive: true })
+    }
 
-  const niaConfig = {
+    const zodConfig = {
     "project": {
       "name": config.name,
       "description": config.description,
@@ -527,7 +527,7 @@ async function createNIAFiles(projectRoot: string, config: ProjectConfig): Promi
       "language": config.language,
       "framework": config.framework
     },
-    "nia": {
+          "zod": {
       "enabled": true,
       "version": "1.2.4",
       "features": [
@@ -539,13 +539,13 @@ async function createNIAFiles(projectRoot: string, config: ProjectConfig): Promi
     }
   }
 
-  fs.writeFileSync(path.join(niaDir, 'config.json'), JSON.stringify(niaConfig, null, 2))
-  createdFiles.push('.nia/config.json')
+      fs.writeFileSync(path.join(zodDir, 'config.json'), JSON.stringify(zodConfig, null, 2))
+    createdFiles.push('.zod/config.json')
 
-  // Create .nia/README.md
-  const niaReadme = `# NIA Project Configuration
+      // Create .zod/README.md
+    const zodReadme = `# ZOD Project Configuration
 
-This project is configured with NIA (Network Intelligence Assistant) for enhanced development experience.
+This project is configured with ZOD (Zod MCP Server) for enhanced development experience.
 
 ## Features
 - Repository indexing and search
@@ -566,10 +566,10 @@ This project is configured with NIA (Network Intelligence Assistant) for enhance
 - Version: ${config.version}
 `
 
-  fs.writeFileSync(path.join(niaDir, 'README.md'), niaReadme)
-  createdFiles.push('.nia/README.md')
+      fs.writeFileSync(path.join(zodDir, 'README.md'), zodReadme)
+    createdFiles.push('.zod/README.md')
 
-  summary.push(`✅ NIA configuration created (${createdFiles.length} files)`)
+      summary.push(`✅ ZOD configuration created (${createdFiles.length} files)`)
 
   return { summary: summary.join('\n'), createdFiles }
 } 

@@ -12,7 +12,6 @@ import { registerRepositoryTools } from './tools/repository'
 import { registerUnifiedSearchTools } from './tools/unified-search'
 import { registerProjectInitTools } from './tools/project-init'
 import { registerMultiAgentTools } from './tools/multi-agent-tools'
-import { registerUnifiedProjectAnalysis } from './tools/unified-project-analysis'
 import { registerVisualizerTools } from './tools/visualizer'
 
 const cli = defineCommand({
@@ -108,7 +107,6 @@ async function registerToolsSafely(mcp: any, debug: boolean = false) {
     { name: 'UnifiedSearchTools', register: registerUnifiedSearchTools },
     { name: 'ProjectInitTools', register: registerProjectInitTools },
     { name: 'MultiAgentTools', register: registerMultiAgentTools },
-    { name: 'UnifiedProjectAnalysis', register: registerUnifiedProjectAnalysis },
     { name: 'VisualizerTools', register: registerVisualizerTools },
   ]
 
@@ -147,7 +145,7 @@ async function registerToolsSafely(mcp: any, debug: boolean = false) {
 }
 
 async function setupMCP(apiKey?: string) {
-  console.log('🚀 Setting up NIA MCP Server...')
+      console.log('🚀 Setting up ZOD MCP Server...')
 
   // Create global MCP configuration
   const cursorDir = join(homedir(), '.cursor')
@@ -160,8 +158,8 @@ async function setupMCP(apiKey?: string) {
 
   const mcpConfig: any = {
     mcpServers: {
-      'nia-mcp-server': {
-        command: 'nia-mcp',
+      'zod-mcp-server': {
+        command: 'zod-mcp',
         args: ['--stdio'],
       },
     },
@@ -169,9 +167,9 @@ async function setupMCP(apiKey?: string) {
 
   // Add API key if provided
   if (apiKey) {
-    mcpConfig.mcpServers['nia-mcp-server'].env = {
-      NIA_API_KEY: apiKey,
-      NIA_API_URL: 'https://apigcp.trynia.ai/',
+    mcpConfig.mcpServers['zod-mcp-server'].env = {
+      ZOD_API_KEY: apiKey,
+      ZOD_API_URL: 'https://apigcp.tryzod.ai/',
     }
   }
 
@@ -193,7 +191,7 @@ async function setupMCP(apiKey?: string) {
   // Create .gitignore entry for API key
   const gitignorePath = '.gitignore'
   const gitignoreContent = `
-# NIA MCP Server
+# ZOD MCP Server
 .cursor/mcp.json
 .env
 *.log
@@ -206,17 +204,17 @@ async function setupMCP(apiKey?: string) {
   else {
     // Append to existing .gitignore
     const existingContent = readFileSync(gitignorePath, 'utf8')
-    if (!existingContent.includes('# NIA MCP Server')) {
+    if (!existingContent.includes('# ZOD MCP Server')) {
       writeFileSync(gitignorePath, existingContent + gitignoreContent)
       console.log(`✅ Updated .gitignore`)
     }
   }
 
   // Create README with usage instructions
-  const readmePath = 'NIA_SETUP.md'
-  const readmeContent = `# 🚀 NIA MCP Server Setup
+  const readmePath = 'ZOD_SETUP.md'
+  const readmeContent = `# 🚀 ZOD MCP Server Setup
 
-Your NIA MCP Server has been successfully configured!
+Your ZOD MCP Server has been successfully configured!
 
 ## 🎯 Quick Start
 
@@ -236,7 +234,7 @@ search_codebase(query: "authentication logic")
 index_documentation(url: "https://docs.example.com")
 
 # Web search
-nia_web_search(query: "React hooks best practices")
+zod_web_search(query: "React hooks best practices")
 \`\`\`
 
 ## 📋 Available Tools
@@ -253,8 +251,8 @@ nia_web_search(query: "React hooks best practices")
 - \`search_documentation\` - Search documentation
 
 ### Web Search & Research
-- \`nia_web_search\` - AI-powered search
-- \`nia_deep_research_agent\` - Deep research
+- \`zod_web_search\` - AI-powered search
+- \`zod_deep_research_agent\` - Deep research
 
 ### Project Initialization
 - \`initialize_project\` - Setup IDE configurations
@@ -263,16 +261,16 @@ nia_web_search(query: "React hooks best practices")
 
 If something doesn't work:
 1. Restart Cursor
-2. Check: \`nia-mcp-server --help\`
-3. Reinstall: \`npm install -g @your-org/nia-mcp-server\`
+2. Check: \`zod-mcp-server --help\`
+3. Reinstall: \`npm install -g @your-org/zod-mcp-server\`
 
 ## 📞 Support
 
-- GitHub: https://github.com/your-org/nia-mcp-server
-- Documentation: https://docs.trynia.ai
+- GitHub: https://github.com/your-org/zod-mcp-server
+- Documentation: https://docs.tryzod.ai
 
 ---
-*Powered by NIA MCP Server v${version}*
+*Powered by ZOD MCP Server v${version}*
 `
 
   writeFileSync(readmePath, readmeContent)
@@ -295,16 +293,16 @@ If something doesn't work:
   console.log('')
   console.log('🎯 Next steps:')
   console.log('1. Restart Cursor to load the new configuration')
-  console.log('2. Open NIA_SETUP.md for usage examples')
+  console.log('2. Open ZOD_SETUP.md for usage examples')
   console.log('3. Try: index_repository(repo_url: "https://github.com/NURJAKS/Todo-list")')
   console.log('')
-  console.log('💡 Your NIA MCP Server is ready to use!')
+  console.log('💡 Your ZOD MCP Server is ready to use!')
   console.log('')
   console.log('🚀 Happy coding!')
 }
 
 async function checkStatus() {
-  console.log('🔍 Checking NIA MCP Server installation...')
+  console.log('🔍 Checking ZOD MCP Server installation...')
   console.log('')
 
   // Check global config
@@ -321,7 +319,7 @@ async function checkStatus() {
   const { execSync } = await import('node:child_process')
   let commandAvailable = false
   try {
-    execSync('which nia-mcp', { stdio: 'ignore' })
+    execSync('which zod-mcp', { stdio: 'ignore' })
     commandAvailable = true
   }
   catch {
@@ -337,29 +335,29 @@ async function checkStatus() {
   else {
     console.log('⚠️  Some issues detected:')
     if (!commandAvailable) {
-      console.log('   • Run: npm install -g @your-org/nia-mcp-server')
+      console.log('   • Run: npm install -g @your-org/zod-mcp-server')
     }
     if (!globalExists || !localExists) {
-      console.log('   • Run: nia-mcp setup')
+      console.log('   • Run: zod-mcp setup')
     }
   }
 }
 
 function showHelp() {
-  console.log('🚀 NIA MCP Server - Intelligent code indexing, search, and research platform')
+  console.log('🚀 ZOD MCP Server - Intelligent code indexing, search, and research platform')
   console.log('')
   console.log('📋 Available commands:')
   console.log('')
   console.log('  Setup:')
-  console.log('    nia-mcp setup [API_KEY]      Setup MCP configuration (API key optional)')
+  console.log('    zod-mcp setup [API_KEY]      Setup MCP configuration (API key optional)')
   console.log('')
   console.log('  Status:')
-  console.log('    nia-mcp status               Check installation status')
+  console.log('    zod-mcp status               Check installation status')
   console.log('')
   console.log('  Run server:')
-  console.log('    nia-mcp                     Run with stdio transport (default)')
-  console.log('    nia-mcp --http              Run with HTTP transport')
-  console.log('    nia-mcp --sse               Run with SSE transport')
+  console.log('    zod-mcp                     Run with stdio transport (default)')
+  console.log('    zod-mcp --http              Run with HTTP transport')
+  console.log('    zod-mcp --sse               Run with SSE transport')
   console.log('')
   console.log('  Options:')
   console.log('    --port PORT                        Port for http/sse (default: 3000)')
@@ -367,12 +365,12 @@ function showHelp() {
   console.log('    --help                             Show this help')
   console.log('')
   console.log('🎯 Quick start:')
-  console.log('  1. nia-mcp setup')
+  console.log('  1. zod-mcp setup')
   console.log('  2. Restart Cursor')
   console.log('  3. Try: index_repository(repo_url: "https://github.com/NURJAKS/Todo-list")')
   console.log('')
-  console.log('📖 Documentation: https://docs.trynia.ai')
-  console.log('🐛 Issues: https://github.com/your-org/nia-mcp-server')
+  console.log('📖 Documentation: https://docs.tryzod.ai')
+  console.log('🐛 Issues: https://github.com/your-org/zod-mcp-server')
 }
 
 export const runMain = () => {

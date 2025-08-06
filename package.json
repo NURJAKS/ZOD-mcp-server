@@ -2,7 +2,7 @@
   "name": "@your-org/zod-mcp-server",
   "type": "module",
   "version": "0.1.0",
-  "description": "NIA MCP Server - Intelligent code indexing, search, and research platform",
+  "description": "ZOD MCP Server - Intelligent code indexing, search, and research platform",
   "contributors": [
     {
       "name": "Kevin Kern",
@@ -25,7 +25,7 @@
     "./cli": "./bin/cli.mjs"
   },
   "bin": {
-    "nia-mcp": "./bin/cli.mjs"
+    "zod-mcp": "./bin/cli.mjs"
   },
   "files": [
     "bin",

@@ -44,7 +44,7 @@ export class DatabaseManager {
             fs.mkdirSync(dataDir, { recursive: true })
         }
 
-        this.dbPath = path.join(dataDir, 'nia.db')
+        this.dbPath = path.join(dataDir, 'zod.db')
     }
 
     async initialize(): Promise<void> {

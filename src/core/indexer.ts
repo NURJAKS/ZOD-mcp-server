@@ -754,7 +754,7 @@ export class DocumentationIndexer {
 
       const response = await fetch(url, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; NIA-Bot/1.0)',
+          'User-Agent': 'Mozilla/5.0 (compatible; ZOD-Bot/1.0)',
         },
         signal: controller.signal,
       })

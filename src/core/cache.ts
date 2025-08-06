@@ -15,7 +15,7 @@ export interface CacheEntry<T = any> {
 export class CacheService {
   private client: RedisClientType | null = null
   private isInitialized = false
-  private prefix: string = 'nia:'
+  private prefix: string = 'zod:'
 
   constructor() {
     this.initialize()

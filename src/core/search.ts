@@ -512,9 +512,9 @@ export class SearchEngine {
         ]
         
         const recommendations = [
-          'Use nia_deep_research_agent for comprehensive AI-powered research',
-          'Use nia_code_analysis for detailed code pattern analysis',
-          'Use nia_reasoning_engine for step-by-step problem solving',
+          'Use zod_deep_research_agent for comprehensive AI-powered research',
+          'Use zod_code_analysis for detailed code pattern analysis',
+          'Use zod_reasoning_engine for step-by-step problem solving',
           'Index relevant repositories with repository_tools(action="index")',
           'Search your indexed content with search_codebase'
         ]

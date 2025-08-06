@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🚀 Setting up NIA MCP Server..."
+echo "🚀 Setting up ZOD MCP Server..."
 
 # Check if Node.js is installed
 if ! command -v node &> /dev/null; then
@@ -46,6 +46,6 @@ echo ""
 echo "🔧 Next steps:"
 echo "  1. Edit .env file with your API keys (optional)"
 echo "  2. Restart Cursor IDE to load MCP configuration"
-echo "  3. Test with: list_repositories() or nia_web_search('test')"
+echo "  3. Test with: list_repositories() or zod_web_search('test')"
 echo ""
 echo "📖 Documentation: README.md and CURSOR_SETUP.md" 

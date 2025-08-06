@@ -16,7 +16,7 @@ export interface UploadOptions {
 
 export class StorageService {
   private client: Client | null = null
-  private bucket: string = 'nia-documents'
+  private bucket: string = 'zod-documents'
   private isInitialized = false
 
   constructor() {
@@ -30,7 +30,7 @@ export class StorageService {
       const accessKey = process.env.MINIO_ACCESS_KEY
       const secretKey = process.env.MINIO_SECRET_KEY
       const useSSL = process.env.MINIO_USE_SSL === 'true'
-      this.bucket = process.env.MINIO_BUCKET || 'nia-documents'
+      this.bucket = process.env.MINIO_BUCKET || 'zod-documents'
 
       if (!accessKey || !secretKey) {
         safeLog('⚠️ MinIO credentials not configured, storage features disabled', 'warn')

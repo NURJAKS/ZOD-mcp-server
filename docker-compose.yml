@@ -4,7 +4,7 @@ services:
   # Redis Cache
   redis:
     image: redis:7-alpine
-    container_name: nia-redis
+    container_name: zod-redis
     ports:
       - "6379:6379"
     volumes:
@@ -15,7 +15,7 @@ services:
   # Neo4j Graph Database
   neo4j:
     image: neo4j:5.15
-    container_name: nia-neo4j
+    container_name: zod-neo4j
     ports:
       - "7474:7474"  # HTTP
       - "7687:7687"  # Bolt
@@ -33,7 +33,7 @@ services:
   # MinIO Object Storage
   minio:
     image: minio/minio:latest
-    container_name: nia-minio
+    container_name: zod-minio
     ports:
       - "9000:9000"  # API
       - "9001:9001"  # Console
@@ -48,7 +48,7 @@ services:
   # Qdrant Vector Database
   qdrant:
     image: qdrant/qdrant:latest
-    container_name: nia-qdrant
+    container_name: zod-qdrant
     ports:
       - "6333:6333"  # REST API
       - "6334:6334"  # gRPC
