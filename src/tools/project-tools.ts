@@ -21,19 +21,38 @@ let contextualUnderstanding: ContextualUnderstanding | null = null
 // Initialize components
 async function initializeComponents() {
   try {
-    projectDatabase = new ProjectDatabase()
-    projectAnalyzer = new ProjectAnalyzer()
-    contextualUnderstanding = new ContextualUnderstanding()
+    // Initialize with error handling for each component
+    try {
+      projectDatabase = new ProjectDatabase()
+      await projectDatabase.initialize()
+      safeLog('✅ Project database initialized')
+    } catch (error) {
+      safeLog(`⚠️ Project database not available: ${error}`, 'warn')
+      projectDatabase = null
+    }
 
-    await Promise.all([
-      projectDatabase.initialize(),
-      projectAnalyzer.initialize(),
-      contextualUnderstanding.initialize(),
-    ])
+    try {
+      projectAnalyzer = new ProjectAnalyzer()
+      await projectAnalyzer.initialize()
+      safeLog('✅ Project analyzer initialized')
+    } catch (error) {
+      safeLog(`❌ Failed to initialize project analyzer: ${error}`, 'error')
+      throw error // Analyzer is critical
+    }
+
+    try {
+      contextualUnderstanding = new ContextualUnderstanding()
+      await contextualUnderstanding.initialize()
+      safeLog('✅ Contextual understanding initialized')
+    } catch (error) {
+      safeLog(`❌ Failed to initialize contextual understanding: ${error}`, 'error')
+      throw error // Contextual understanding is critical
+    }
 
     safeLog('✅ Project tools components initialized successfully')
   } catch (error) {
     safeLog(`❌ Failed to initialize project tools components: ${error}`, 'error')
+    throw error
   }
 }
 
@@ -637,13 +656,40 @@ async function handleSemanticSearch(folder_path?: string, query?: string, includ
               line.toLowerCase().includes(queryLower)
             ).slice(0, 3) // Limit to 3 matching lines
             
-            if (matchingLines.length > 0) {
-              searchResults.push({
-                file: file.path,
-                match: matchingLines.join('\n'),
-                relevance: Math.random() * 100 // Simplified relevance score
-              })
-            }
+                         if (matchingLines.length > 0) {
+               // Calculate real relevance score based on match quality
+               const queryWords = query.toLowerCase().split(/\s+/)
+               const contentLower = content.toLowerCase()
+               
+               let relevance = 0
+               
+               // Exact phrase match gets highest score
+               if (contentLower.includes(query.toLowerCase())) {
+                 relevance += 50
+               }
+               
+               // Word frequency scoring
+               for (const word of queryWords) {
+                 if (word.length > 2) { // Ignore short words
+                   const wordCount = (contentLower.match(new RegExp(word, 'g')) || []).length
+                   relevance += Math.min(20, wordCount * 5)
+                 }
+               }
+               
+               // File type bonus
+               if (file.type === 'code') relevance += 10
+               if (file.language === 'typescript' || file.language === 'javascript') relevance += 5
+               
+               // File size penalty (prefer smaller, focused files)
+               if (file.size > 10000) relevance -= 10
+               else if (file.size < 1000) relevance += 5
+               
+               searchResults.push({
+                 file: file.path,
+                 match: matchingLines.join('\n'),
+                 relevance: Math.min(100, Math.max(0, relevance))
+               })
+             }
           }
         } catch (error) {
           // Skip files that can't be read
