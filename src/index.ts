@@ -13,6 +13,7 @@ import { registerWebSearchTools } from './tools/web-search'
 import { registerProjectInitTools } from './tools/project-init'
 import { registerDeepSearchTools } from './tools/deep-search'
 import { registerMultiAgentTools } from './tools/multi-agent-tools'
+import { registerProjectTools } from './tools/project-tools'
 import { registerSmartAIAnalyzer } from './tools/smart-ai-analyzer'
 import { registerVisualizerTools } from './tools/visualizer'
 
@@ -110,6 +111,7 @@ async function registerToolsSafely(mcp: any, debug: boolean = false) {
     { name: 'ProjectInitTools', register: registerProjectInitTools },
     { name: 'DeepSearchTools', register: registerDeepSearchTools },
     { name: 'MultiAgentTools', register: registerMultiAgentTools },
+    { name: 'ProjectTools', register: registerProjectTools },
     { name: 'SmartAIAnalyzer', register: registerSmartAIAnalyzer },
     { name: 'VisualizerTools', register: registerVisualizerTools },
   ]
