@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import 'dotenv/config'
 import type { McpToolContext } from './types'
+import { getEnvManager } from './core/env-manager'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
@@ -113,6 +114,9 @@ const cli = defineCommand({
 
 // Функция для безопасной регистрации инструментов
 async function registerToolsSafely(mcp: any, debug: boolean = false) {
+  // Load environment manager
+  const envManager = await getEnvManager()
+  
   const tools = [
     { name: 'RepositoryTools', register: registerRepositoryTools },
     { name: 'DocumentationTools', register: registerDocumentationTools },
@@ -137,7 +141,7 @@ async function registerToolsSafely(mcp: any, debug: boolean = false) {
 
       // Добавляем таймаут для регистрации инструментов
       await Promise.race([
-        tool.register({ mcp } as McpToolContext),
+        tool.register({ mcp, envManager } as McpToolContext),
         new Promise((_, reject) =>
           setTimeout(() => reject(new Error(`Timeout registering ${tool.name}`)), 10000),
         ),

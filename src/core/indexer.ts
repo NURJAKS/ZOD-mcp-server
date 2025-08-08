@@ -8,6 +8,7 @@ dotenv.config()
 export interface IndexingOptions {
   branch?: string
   maxFiles?: number
+  maxFileSizeBytes?: number
   includePatterns?: string[]
   excludePatterns?: string[]
 }
@@ -306,14 +307,31 @@ export class RepositoryIndexer {
         return []
       }
 
-      // Use the specified branch or default branch
+      // Resolve the target branch to a commit SHA
       const targetBranch = branch || repoInfo.data.default_branch
+      let treeSha = targetBranch
+      try {
+        const branchInfo = await this.octokit.repos.getBranch({ owner, repo, branch: targetBranch })
+        treeSha = branchInfo.data.commit.sha
+      } catch (e: any) {
+        // If branch resolution fails (e.g., branch not found), fallback to default branch
+        if (targetBranch !== repoInfo.data.default_branch) {
+          const defaultBranch = repoInfo.data.default_branch
+          try {
+            const branchInfo = await this.octokit.repos.getBranch({ owner, repo, branch: defaultBranch })
+            treeSha = branchInfo.data.commit.sha
+          } catch {
+            // Keep original ref as a last resort; GitHub may still accept a ref name
+            treeSha = targetBranch
+          }
+        }
+      }
 
       // Получаем дерево файлов
       const response = await this.octokit.git.getTree({
         owner,
         repo,
-        tree_sha: targetBranch,
+        tree_sha: treeSha,
         recursive: 'true',
       })
 
@@ -362,38 +380,35 @@ export class RepositoryIndexer {
   }> {
     const indexedFiles: FileInfo[] = []
     const excludedFiles: { path: string; reason: string; category: 'dependencies' | 'build' | 'system' | 'git' | 'other' }[] = []
-    const maxFiles = options.maxFiles || 1000
+    const envMax = parseInt(process.env.MAX_FILE_COUNT || '', 10)
+    const maxFiles = Number.isFinite(envMax) && envMax > 0
+      ? (options.maxFiles ?? envMax)
+      : (options.maxFiles ?? tree.length)
+    const maxFileSize = options.maxFileSizeBytes ?? (parseInt(process.env.MAX_FILE_SIZE || '', 10) || (1024 * 1024))
 
-    // Get the current repository record for progress updates
+    // Pre-filter by include/exclude patterns to avoid unnecessary API calls
+    const includePatterns = options.includePatterns && options.includePatterns.length > 0 ? options.includePatterns : null
+    const extraExcludePatterns = options.excludePatterns || []
+
+    const items = tree.filter(item => {
+      if (indexedFiles.length >= maxFiles) return false
+      // Binary extensions excluded early
+      if (this.isBinaryExtension(item.path)) return false
+      if (this.shouldExcludeFile(item.path, extraExcludePatterns)) return false
+      if (includePatterns && !this.matchesAnyPattern(item.path, includePatterns)) return false
+      if (item.size && item.size > maxFileSize) return false
+      return true
+    })
+
     const record = await this.db.getRepository(repositoryId)
     if (!record) {
       throw new Error('Repository record not found')
     }
 
-    for (let i = 0; i < tree.length; i++) {
-      const item = tree[i]
-      
-      if (indexedFiles.length >= maxFiles) {
-        break
-      }
-
-      // Update progress every 10 files or at the end
-      if (i % 10 === 0 || i === tree.length - 1) {
-        const progress = Math.min(90, 50 + Math.round((i / tree.length) * 40))
-        record.progress = progress
-        record.indexedFiles = indexedFiles.length
-        record.totalFiles = tree.length
-        await this.db.saveRepository(record)
-      }
-
-      // Проверяем исключения
-      if (this.shouldExcludeFile(item.path)) {
-        const reason = this.getExclusionReason(item.path)
-        const category = this.getExclusionCategory(item.path)
-        excludedFiles.push({ path: item.path, reason, category })
-        continue
-      }
-
+    const concurrency = Math.max(1, Math.min(16, parseInt(process.env.INDEX_CONCURRENCY || '5', 10)))
+    let processed = 0
+    const processOne = async (item: { path: string; size: number; type: string; sha: string }) => {
+      if (indexedFiles.length >= maxFiles) return
       // Получаем содержимое файла
       const content = await this.getFileContent(item.sha, item.size, owner, repo)
       if (!content) {
@@ -402,7 +417,7 @@ export class RepositoryIndexer {
           reason: 'Failed to fetch content',
           category: 'other'
         })
-        continue
+        return
       }
 
       // Создаем информацию о файле
@@ -438,12 +453,35 @@ export class RepositoryIndexer {
             }
           )
         }
-      } catch (error) {
+      } catch (error: any) {
         // Vector search is optional, don't fail the indexing
         console.log(`Failed to index file in vector DB: ${fileInfo.path} Error: ${error.message}`)
       }
 
       indexedFiles.push(fileInfo)
+      processed++
+
+      // Update progress periodically
+      if (processed % 25 === 0 || processed === items.length) {
+        const progress = Math.min(90, 50 + Math.round((processed / Math.max(1, items.length)) * 40))
+        record.progress = progress
+        record.indexedFiles = indexedFiles.length
+        record.totalFiles = tree.length
+        await this.db.saveRepository(record)
+      }
+    }
+
+    // Simple batching for concurrency control
+    let batch: Promise<void>[] = []
+    for (const item of items) {
+      batch.push(processOne(item))
+      if (batch.length >= concurrency) {
+        await Promise.allSettled(batch)
+        batch = []
+      }
+    }
+    if (batch.length) {
+      await Promise.allSettled(batch)
     }
 
     return { indexedFiles, excludedFiles }
@@ -451,8 +489,9 @@ export class RepositoryIndexer {
 
   private async getFileContent(sha: string, size: number, owner: string, repo: string): Promise<string | null> {
     try {
+      const maxFileSize = parseInt(process.env.MAX_FILE_SIZE || '', 10) || (1024 * 1024)
       // Skip large files
-      if (size > 1024 * 1024) { // 1MB limit
+      if (size > maxFileSize) {
         console.log(`Skipping large file: ${sha} (${size} bytes)`)
         return null
       }
@@ -514,13 +553,36 @@ export class RepositoryIndexer {
       'pnpm-lock.yaml',
     ]
 
-    return excludePatterns.some((pattern) => {
-      if (pattern.includes('*')) {
-        const regex = new RegExp(pattern.replace('*', '.*'))
-        return regex.test(path)
-      }
-      return path.includes(pattern)
-    })
+    return excludePatterns.some((pattern) => this.matchesPattern(path, pattern))
+  }
+
+  // Enhanced pattern matching supporting ** and * globs
+  private matchesPattern(path: string, pattern: string): boolean {
+    // Escape regex special chars except *
+    const escaped = pattern
+      .replace(/[-\/\\^$+?.()|[\]{}]/g, '\\$&')
+      .replace(/\*\*/g, '::GLOBSTAR::')
+      .replace(/\*/g, '[^/]*')
+      .replace(/::GLOBSTAR::/g, '.*')
+    const regex = new RegExp('^' + escaped + '$')
+    return regex.test(path)
+  }
+
+  private matchesAnyPattern(path: string, patterns: string[]): boolean {
+    return patterns.some(p => this.matchesPattern(path, p))
+  }
+
+  private isBinaryExtension(path: string): boolean {
+    const ext = path.split('.').pop()?.toLowerCase()
+    if (!ext) return false
+    const binaryExts = new Set([
+      'png','jpg','jpeg','gif','bmp','webp','ico','svg',
+      'pdf','zip','gz','tar','rar','7z','xz','bz2',
+      'mp3','mp4','mov','avi','mkv','wav','flac',
+      'woff','woff2','ttf','otf',
+      'wasm','iso','dmg','exe','dll','so','bin'
+    ])
+    return binaryExts.has(ext)
   }
 
   private getExclusionReason(path: string): string {
@@ -548,6 +610,7 @@ export class RepositoryIndexer {
       tsx: 'TypeScript',
       js: 'JavaScript',
       jsx: 'JavaScript',
+      mdx: 'Markdown',
       md: 'Markdown',
       json: 'JSON',
       yml: 'YAML',
@@ -568,6 +631,10 @@ export class RepositoryIndexer {
       rb: 'Ruby',
       swift: 'Swift',
       kt: 'Kotlin',
+      toml: 'TOML',
+      ini: 'INI',
+      sh: 'Shell',
+      bash: 'Shell',
     }
     return languageMap[ext || ''] || 'Text'
   }

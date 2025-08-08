@@ -6,7 +6,7 @@ import { registerUnifiedSearchTools } from '../src/tools/unified-search'
 import { registerProjectInitTools } from '../src/tools/project-init'
 
 describe('MCP tools registration', () => {
-  it('registers tools and aliases without error', async () => {
+  it('registers unified tools with actions without error', async () => {
     const mcp = createServer({ name: 'test', version: '0.0.0' }) as any
     // intercept registration
     const registry = new Map<string, any>()
@@ -21,11 +21,9 @@ describe('MCP tools registration', () => {
     registerUnifiedSearchTools({ mcp })
     registerProjectInitTools({ mcp })
 
-    // spot-check presence of aliases
+    // unified tool ids only
     for (const key of [
-      'index_repository','list_repositories','check_repository_status','delete_repository','rename_repository','search_codebase',
-      'index_documentation','list_documentation','check_documentation_status','delete_documentation','rename_documentation','search_documentation',
-      'nia_web_search','nia_deep_research_agent',
+      'repository_tools','documentation_tools','webdeep_research','initialize_project',
     ]) {
       expect(registry.has(key)).toBe(true)
     }
