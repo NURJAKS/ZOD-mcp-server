@@ -38,7 +38,7 @@ export class ReflectiveLayer {
   }
 
   async reason(input: ReasoningInput): Promise<ReasoningOutput> {
-    const sys = `You are ZOD Core, an engineering reasoning module. Be precise, concise, and actionable. Output structured, production-grade insights. Decide when tools are needed.`
+    const sys = `You are ZOD Core, an engineering reasoning module. Be precise, concise, and actionable. Output structured, production-grade insights. Decide when tools are needed. When proposing actions, return a JSON block in a fenced code block: \n\n\`\`\`json\n{ "answer": "...", "actions": [{ "tool": "repository_tools", "params": {"action": "list"}, "reason": "..." }]}\n\`\`\``
     const prompt = [
       `Intent: ${input.intent}`,
       `Query: ${input.query}`,
@@ -73,31 +73,34 @@ export class ReflectiveLayer {
   }
 
   private parse(raw: string): ReasoningOutput {
-    // Simple heuristic parser: try to detect actions JSON fenced blocks; otherwise treat as text
-    const actionMatch = raw.match(/```(json)?[\s\S]*?\{[\s\S]*?\}[\s\S]*?```/)
-    let actions: ReasoningOutput['actions']
-    if (actionMatch) {
+    // Expect JSON block like: ```json {"answer":"...","actions":[{...}]} ```
+    const fenced = raw.match(/```json[\s\S]*?```/)
+    if (fenced) {
       try {
-        const jsonText = actionMatch[0].replace(/```(json)?/g, '').replace(/```/g, '').trim()
-        const obj = JSON.parse(jsonText)
-        if (Array.isArray(obj.actions)) actions = obj.actions
-      } catch {
-        // ignore parse error
-      }
+        const json = fenced[0].replace(/```json|```/g, '').trim()
+        const parsed = JSON.parse(json)
+        return {
+          reasoning: raw.slice(0, 4000),
+          answer: typeof parsed.answer === 'string' ? parsed.answer : raw.replace(/```[\s\S]*?```/g, '').trim(),
+          actions: Array.isArray(parsed.actions) ? parsed.actions : undefined,
+        }
+      } catch { /* fallthrough */ }
     }
-    const answer = raw.replace(/```[\s\S]*?```/g, '').trim()
-    return { reasoning: raw.slice(0, 2000), answer, actions }
+    return { reasoning: raw.slice(0, 4000), answer: raw.replace(/```[\s\S]*?```/g, '').trim() }
   }
 
   private localPlan(prompt: string): ReasoningOutput {
-    // Minimal deterministic plan choosing based on prompt semantics
     const lower = prompt.toLowerCase()
     const actions: ReasoningOutput['actions'] = []
-    if (lower.includes('visualiz')) actions?.push({ tool: 'visualizer', params: {} , reason: 'User asked for architecture/visualization' })
-    if (lower.includes('index') || lower.includes('analyz')) actions?.push({ tool: 'repository', params: { action: 'list' }, reason: 'May need repository context' })
+    if (lower.includes('visualiz')) actions?.push({ tool: 'visualizer', params: { action: 'visualize' }, reason: 'Architecture/visualization requested' })
+    if (lower.includes('document') || lower.includes('docs')) actions?.push({ tool: 'documentation_tools', params: { action: 'search', query: 'project' }, reason: 'Documentation insight requested' })
+    if (lower.includes('init') || lower.includes('setup')) actions?.push({ tool: 'initialize_project', params: { project_root: process.cwd() }, reason: 'Project initialization requested' })
+    if (lower.includes('research') || lower.includes('web')) actions?.push({ tool: 'web&deep_research', params: { action: 'web_search', query: 'topic' }, reason: 'External research requested' })
+    if (lower.includes('agent') || lower.includes('delegate')) actions?.push({ tool: 'multi_agent_tools', params: { action: 'launch_fleet' }, reason: 'Delegation to agents requested' })
+    if (lower.includes('repo') || lower.includes('index') || lower.includes('analyz')) actions?.push({ tool: 'repository_tools', params: { action: 'list' }, reason: 'Repository context needed' })
     return {
-      reasoning: 'Local rule-based reasoning used due to missing LLM credentials.',
-      answer: 'Generated response using available semantic memory and heuristics.',
+      reasoning: 'Local deterministic planning used (no LLM).',
+      answer: 'Generated response using available context and deterministic logic.',
       actions,
     }
   }

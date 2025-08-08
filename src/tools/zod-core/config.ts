@@ -4,6 +4,7 @@ import { join } from 'node:path'
 export interface ZodCoreConfig {
   models: {
     reasoningModel: string
+    embeddingModel?: string
     embeddingModelHint?: string
   }
   memory: {
@@ -27,6 +28,11 @@ export interface ZodCoreConfig {
     projectInit: boolean
     multiAgent: boolean
   }
+  chunking?: {
+    maxTokens?: number
+    overlap?: number
+    strategy?: 'sliding' | 'ast'
+  }
 }
 
 export function loadZodCoreConfig(projectPath?: string): ZodCoreConfig {
@@ -48,7 +54,8 @@ export function loadZodCoreConfig(projectPath?: string): ZodCoreConfig {
   const base: ZodCoreConfig = {
     models: {
       reasoningModel: env('OPENROUTER_REASONING_MODEL', 'openrouter/deepseek/deepseek-coder')!,
-      embeddingModelHint: env('EMBEDDING_MODEL_HINT', 'text-embedding-3-large'),
+      embeddingModel: env('EMBEDDING_MODEL', 'openai/text-embedding-3-large'),
+      embeddingModelHint: env('EMBEDDING_MODEL_HINT', 'openai/text-embedding-3-large'),
     },
     memory: {
       vectorBackend: env('QDRANT_URL') ? 'qdrant' : 'local',
@@ -68,6 +75,11 @@ export function loadZodCoreConfig(projectPath?: string): ZodCoreConfig {
       projectInit: env('ENABLE_PROJECT_INIT', 'true') === 'true',
       multiAgent: env('ENABLE_MULTI_AGENT', 'true') === 'true',
     },
+    chunking: {
+      maxTokens: Number(env('ZODCORE_CHUNK_MAX_TOKENS', '800')),
+      overlap: Number(env('ZODCORE_CHUNK_OVERLAP', '120')),
+      strategy: (env('ZODCORE_CHUNK_STRATEGY', 'sliding') as 'sliding' | 'ast'),
+    },
   }
 
   // shallow merge (env/base wins unless explicitly overridden)
@@ -78,6 +90,7 @@ export function loadZodCoreConfig(projectPath?: string): ZodCoreConfig {
     memory: { ...base.memory, ...(fileConfig.memory || {}) },
     workingMemory: { ...base.workingMemory, ...(fileConfig.workingMemory || {}) },
     tools: { ...base.tools, ...(fileConfig.tools || {}) },
+    chunking: { ...base.chunking, ...(fileConfig as any).chunking },
   }
 }
 

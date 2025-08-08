@@ -116,6 +116,17 @@ test-indexing.js
 test-cli.js
 test-storage-tool.js
 test-tools.js
+# Additional test files
+test-fast-example.js
+test-fast-tools.js
+test-fast-example.cjs
+test-comprehensive-indexing.js
+test-direct-indexing.js
+test-simple-indexing.js
+test-indexing.cjs
+test-unified-project-analysis.js
+test-real-project.js
+test-project-tools.js
 
 # ===== RUNTIME FILES =====
 *.pid
@@ -151,6 +162,7 @@ temp/
 *.log
 logs/
 log/
+server.log
 
 # ===== ADDITIONAL BUILD =====
 # More comprehensive build patterns
@@ -290,3 +302,7 @@ credentials.json
 !Dockerfile
 !docker-compose.yml
 !env.example
+!REFACTORING_PLAN.md
+!ZOD_CORE_USAGE_EXAMPLES.md
+!FINAL_IMPLEMENTATION_SUMMARY.md
+!MIND_CORE_SUMMARY.md

@@ -16,6 +16,22 @@ const ZodQuerySchema = z.object({
   maxDepth: z.number().optional(),
 })
 
+// More flexible schema for tool input
+const ToolInputSchema = z.object({
+  action: z.enum(['handle','cli']).optional().default('handle'),
+  sessionId: z.string().default(() => Math.random().toString(36).slice(2)),
+  query: z.string().describe('Natural language query or instruction'),
+  intent: z.enum(['analyze','explain','suggest','plan','reflect']).optional(),
+  projectPath: z.string().optional(),
+  area: z.string().optional(),
+  targetPath: z.string().optional(),
+  maxDepth: z.number().optional(),
+  preferInternalAnalysis: z.boolean().optional(),
+  allowVisualizer: z.boolean().optional(),
+  allowExternalSearch: z.boolean().optional(),
+  allowInit: z.boolean().optional(),
+})
+
 const ZodContextSchema = z.object({
   projectPath: z.string().optional(),
   sessionId: z.string(),
@@ -50,11 +66,23 @@ export class ZodCoreOrchestrator {
 
     // 1) Gather semantic context (conditionally)
     let memoryHitsText = ''
+    const memoryHits: OrchestratorResponse['memoryHits'] = []
     try {
       if (context.projectPath && (query.intent !== 'reflect' || !(context.toolPreferences?.preferInternalAnalysis === false))) {
         await this.memory.ensureIndexedProject(context.projectPath, 'local')
         const hits = await this.memory.searchProject(query.query, { limit: cfg.memory.maxResults, scoreThreshold: cfg.memory.scoreThreshold })
-        memoryHitsText = hits.map(h => `- [${(h.payload as any).path}] score=${h.score.toFixed(2)}\n${(h.payload as any).content}`).join('\n')
+        memoryHitsText = hits.map(h => `- [${(h.payload as any).path || (h.payload as any).title}] score=${h.score.toFixed(2)}\n${(h.payload as any).content}`).join('\n')
+        for (const h of hits) {
+          const p: any = h.payload
+          memoryHits.push({
+            source: p.type === 'page' ? 'doc' : 'file',
+            pathOrUrl: p.path || p.url || '',
+            title: p.title,
+            language: p.language,
+            score: h.score,
+            snippet: p.content,
+          })
+        }
       }
     } catch (e) {
       safeLog(`ZOD Core semantic memory warning: ${e}`, 'warn')
@@ -77,7 +105,14 @@ export class ZodCoreOrchestrator {
     const proposed = reasoning.actions || []
     const conditionalCalls = [] as { tool: any; params: any }[]
     if (query.intent === 'plan' || query.intent === 'reflect' || query.intent === 'analyze') {
-      for (const a of proposed) conditionalCalls.push({ tool: a.tool, params: a.params })
+      for (const a of proposed) {
+        const name = a.tool || ''
+        const prefs = context.toolPreferences || {}
+        if (name.includes('visualizer') && prefs.allowVisualizer === false) continue
+        if ((name.includes('web') || name.includes('research')) && prefs.allowExternalSearch === false) continue
+        if ((name.includes('initialize') || name.includes('project')) && prefs.allowInit === false) continue
+        conditionalCalls.push({ tool: a.tool, params: a.params })
+      }
     }
 
     const usedTools: string[] = []
@@ -97,8 +132,11 @@ export class ZodCoreOrchestrator {
       title: query.intent?.toUpperCase(),
       text: reasoning.answer,
       data: routedResults,
+      memoryHits,
       usedTools,
       sessionId: context.sessionId,
+      workingState: wm?.state,
+      trace: reasoning.reasoning,
     }
 
     // 6) Persist outcome in working memory
@@ -118,7 +156,7 @@ export function registerZodCoreTool({ mcp }: McpToolContext) {
     'zod_core',
     'ZOD Core — Context-Aware Cognitive Kernel. Analyze/explain/plan/reflect with selective tool delegation.',
     {
-      action: z.enum(['handle','cli']).default('handle'),
+      action: z.enum(['handle','cli']).optional().default('handle'),
       sessionId: z.string().default(() => Math.random().toString(36).slice(2)),
       query: z.string().describe('Natural language query or instruction'),
       intent: z.enum(['analyze','explain','suggest','plan','reflect']).optional(),
@@ -132,28 +170,55 @@ export function registerZodCoreTool({ mcp }: McpToolContext) {
       allowInit: z.boolean().optional(),
     },
     async (input) => {
-      const zq: ZodQuery = ZodQuerySchema.parse({
-        query: input.query,
-        intent: input.intent,
-        area: input.area,
-        targetPath: input.targetPath,
-        maxDepth: input.maxDepth,
-      })
-      const zc: ZodContext = ZodContextSchema.parse({
-        sessionId: input.sessionId,
-        projectPath: input.projectPath,
-        toolPreferences: {
-          allowExternalSearch: input.allowExternalSearch,
-          allowVisualizer: input.allowVisualizer,
-          allowInit: input.allowInit,
-          preferInternalAnalysis: input.preferInternalAnalysis,
-        },
-        environment: process.env,
-      })
+      try {
+        // Handle legacy calls where intent might be passed as action
+        let actualIntent = input.intent
+        if (input.action && ['analyze','explain','suggest','plan','reflect'].includes(input.action as any)) {
+          actualIntent = input.action as any
+        }
+        
+        const zq: ZodQuery = ZodQuerySchema.parse({
+          query: input.query,
+          intent: actualIntent,
+          area: input.area,
+          targetPath: input.targetPath,
+          maxDepth: input.maxDepth,
+        })
+        const zc: ZodContext = ZodContextSchema.parse({
+          sessionId: input.sessionId,
+          projectPath: input.projectPath,
+          toolPreferences: {
+            allowExternalSearch: input.allowExternalSearch,
+            allowVisualizer: input.allowVisualizer,
+            allowInit: input.allowInit,
+            preferInternalAnalysis: input.preferInternalAnalysis,
+          },
+          environment: process.env,
+        })
 
-      const result = await orchestrator.handle(zq, zc)
-      return {
-        content: [{ type: 'text' as const, text: result.text }],
+        const result = await orchestrator.handle(zq, zc)
+        return {
+          content: [{ type: 'text' as const, text: result.text }],
+          metadata: {
+            sessionId: result.sessionId,
+            intent: zq.intent || 'explain',
+            usedTools: result.usedTools,
+            memoryHits: result.memoryHits,
+            trace: (result as any).trace,
+          }
+        }
+      } catch (error) {
+        return {
+          content: [{ 
+            type: 'text' as const, 
+            text: `ZOD Core error: ${error instanceof Error ? error.message : 'Unknown error'}. Please ensure you have OPENROUTER_API_KEY set for embeddings.` 
+          }],
+          metadata: {
+            sessionId: input.sessionId,
+            intent: input.intent || 'explain',
+            error: true,
+          }
+        }
       }
     }
   )

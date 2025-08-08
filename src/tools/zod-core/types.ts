@@ -46,6 +46,7 @@ export interface MemoryHit {
 export interface OrchestratorResponse extends ZodResult {
   memoryHits?: MemoryHit[]
   workingState?: Record<string, any>
+  trace?: string
 }
 
 export interface ZodCoreToolOutput extends ToolResult {
@@ -53,6 +54,8 @@ export interface ZodCoreToolOutput extends ToolResult {
     sessionId?: string
     intent?: ZodIntent
     usedTools?: string[]
+    memoryHits?: MemoryHit[]
+    trace?: string
   }
 }
 

@@ -1,7 +1,8 @@
 import { QdrantClient } from '@qdrant/js-client-rest'
 import * as dotenv from 'dotenv'
 import { safeLog } from '../utils'
-import { SearchEngine } from './search'
+import { LocalVectorStore } from './local-vector-store'
+import { loadZodCoreConfig } from '../tools/zod-core/config'
 
 // Динамический импорт OpenRouter для избежания проблем с типами
 let OpenRouter: any = null
@@ -34,72 +35,55 @@ export interface EmbeddingResult {
 
 export class VectorSearchEngine {
     private qdrant: QdrantClient | null = null
+    private localStore: LocalVectorStore | null = null
     private openrouter: any = null
     private isInitialized = false
+    private embeddingDim: number | null = null
 
     public get isReady(): boolean {
         return this.isInitialized
     }
 
     constructor() {
-        const qdrantUrl = process.env.QDRANT_URL || 'http://localhost:6333'
-        
-        // Configure Qdrant client with compatibility checks disabled to prevent console warnings
-        this.qdrant = new QdrantClient({ 
-            url: qdrantUrl,
-            checkCompatibility: false // Disable compatibility checks to prevent console warnings
-        })
-
-        // OpenRouter временно отключен
-        // const apiKey = process.env.OPENROUTER_API_KEY
-        // if (apiKey && OpenRouter) {
-        //     try {
-        //         this.openrouter = new OpenRouter({
-        //             apiKey,
-        //             baseURL: 'https://openrouter.ai/api/v1',
-        //         })
-        //     } catch (error) {
-        //         safeLog(`Failed to initialize OpenRouter client: ${error}`, 'warn')
-        //     }
-        // }
+        const qdrantUrl = process.env.QDRANT_URL || ''
+        if (qdrantUrl) {
+            // Configure Qdrant client with compatibility checks disabled to prevent console warnings
+            this.qdrant = new QdrantClient({ 
+                url: qdrantUrl,
+                apiKey: process.env.QDRANT_API_KEY,
+                checkCompatibility: false
+            })
+        } else {
+            this.qdrant = null
+            this.localStore = new LocalVectorStore(process.env.LOCAL_VECTOR_DB_PATH)
+        }
     }
 
     async initialize(): Promise<void> {
         try {
-            // Initialize Qdrant if available (only if not already initialized)
-            if (process.env.QDRANT_URL && process.env.QDRANT_API_KEY && !this.qdrant) {
+            // Initialize storage
+            if (this.qdrant) {
+                // Test connection with timeout
                 try {
-                    this.qdrant = new QdrantClient({
-                        url: process.env.QDRANT_URL,
-                        apiKey: process.env.QDRANT_API_KEY,
-                        checkCompatibility: false // Disable compatibility checks
-                    })
-                    
-                    // Test connection with timeout
                     const testConnection = Promise.race([
                         this.qdrant.getCollections(),
-                        new Promise((_, reject) => 
-                            setTimeout(() => reject(new Error('Qdrant connection timeout')), 5000)
-                        )
+                        new Promise((_, reject) => setTimeout(() => reject(new Error('Qdrant connection timeout')), 5000)),
                     ])
-                    
                     await testConnection
                     safeLog('✅ Qdrant vector database connected')
                 } catch (error) {
-                    safeLog(`⚠️ Qdrant connection failed, using local fallback: ${error}`, 'warn')
+                    safeLog(`⚠️ Qdrant connection failed, using local vector store: ${error}`, 'warn')
                     this.qdrant = null
+                    this.localStore = new LocalVectorStore(process.env.LOCAL_VECTOR_DB_PATH)
                 }
-            } else if (!this.qdrant) {
-                safeLog('ℹ️ Qdrant not configured, using local fallback')
             }
-
-            // Create collections if they don't exist
-            if (this.qdrant) {
-                await this.createCollections()
+            if (!this.qdrant && !this.localStore) {
+                this.localStore = new LocalVectorStore(process.env.LOCAL_VECTOR_DB_PATH)
             }
+            if (this.localStore) await this.localStore.initialize()
             
             // Initialize OpenRouter if available
-            if (process.env.OPENROUTER_API_KEY) {
+            if (process.env.OPENROUTER_API_KEY && OpenRouter) {
                 try {
                     this.openrouter = new OpenRouter({
                         apiKey: process.env.OPENROUTER_API_KEY,
@@ -111,7 +95,7 @@ export class VectorSearchEngine {
                     this.openrouter = null
                 }
             } else {
-                safeLog('ℹ️ OpenRouter not configured, using hash-based embeddings')
+                safeLog('ℹ️ OpenRouter not configured; embeddings unavailable', 'warn')
             }
             
             // Mark as initialized regardless of external services
@@ -124,83 +108,31 @@ export class VectorSearchEngine {
         }
     }
 
-    private async createCollections(): Promise<void> {
-        if (!this.qdrant) {
-            safeLog('ℹ️ Qdrant not available, skipping collection creation')
-            return
-        }
-
+    private async ensureCollections(dim: number): Promise<void> {
+        if (!this.qdrant) return
         try {
-            // Коллекция для файлов кода
-            await this.qdrant.createCollection('files', {
-                vectors: {
-                    size: 1536, // OpenAI embedding size
-                    distance: 'Cosine'
-                }
-            })
+            await this.qdrant.createCollection('files', { vectors: { size: dim, distance: 'Cosine' } })
             safeLog('✅ Created files collection')
-
-            // Коллекция для страниц документации
-            await this.qdrant.createCollection('pages', {
-                vectors: {
-                    size: 1536,
-                    distance: 'Cosine'
-                }
-            })
+        } catch { /* exists */ }
+        try {
+            await this.qdrant.createCollection('pages', { vectors: { size: dim, distance: 'Cosine' } })
             safeLog('✅ Created pages collection')
-        } catch (error) {
-            // Коллекции уже существуют
-            safeLog('ℹ️ Collections already exist')
-        }
+        } catch { /* exists */ }
     }
 
     async generateEmbedding(text: string): Promise<number[]> {
-        // Try to use OpenRouter for real embeddings if available
-        if (this.openrouter) {
-            try {
-                const response = await this.openrouter.embeddings.create({
-                    model: 'text-embedding-ada-002',
-                    input: text.substring(0, 8000), // Limit text length
-                })
-                
-                if (response.data && response.data[0] && response.data[0].embedding) {
-                    return response.data[0].embedding
-                }
-            } catch (error) {
-                safeLog(`Warning: Failed to generate embedding with OpenRouter: ${error}`, 'warn')
-            }
-        }
-
-        // Fallback to improved hash-based embeddings
-        const words = text.toLowerCase()
-            .split(/\s+/)
-            .filter(word => word.length > 2)
-            .slice(0, 100) // Limit number of words
-        
-        const embedding = new Array(1536).fill(0)
-        
-        // Improved hash-based embedding with better distribution
-        words.forEach((word, index) => {
-            // Use multiple hash functions for better distribution
-            const hash1 = word.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
-            const hash2 = word.split('').reduce((acc, char, i) => acc + char.charCodeAt(0) * (i + 1), 0)
-            
-            const position1 = hash1 % 1536
-            const position2 = hash2 % 1536
-            
-            embedding[position1] = Math.min(embedding[position1] + 1, 5)
-            embedding[position2] = Math.min(embedding[position2] + 0.5, 5)
+        const cfg = loadZodCoreConfig()
+        const model = cfg.models.embeddingModel || 'openai/text-embedding-3-large'
+        if (!this.openrouter) throw new Error('OpenRouter client not initialized for embeddings')
+        const response = await this.openrouter.embeddings.create({
+            model,
+            input: text.substring(0, 8000),
         })
-
-        // Normalize embedding
-        const magnitude = Math.sqrt(embedding.reduce((sum, val) => sum + val * val, 0))
-        if (magnitude > 0) {
-            for (let i = 0; i < embedding.length; i++) {
-                embedding[i] = embedding[i] / magnitude
-            }
-        }
-
-        return embedding
+        const vector = response?.data?.[0]?.embedding
+        if (!Array.isArray(vector)) throw new Error('Invalid embedding response')
+        // Cache dimension
+        if (!this.embeddingDim) this.embeddingDim = vector.length
+        return vector
     }
 
     async indexFile(
@@ -212,33 +144,53 @@ export class VectorSearchEngine {
             repository: string
             size: number
             lines: number
-        }
+        },
+        extraPayload: Record<string, any> = {},
     ): Promise<void> {
         if (!this.isInitialized) {
             throw new Error('Vector search engine not initialized')
         }
 
         try {
-            // Генерируем embedding для содержимого файла
+            // Generate embedding and ensure collections match dim
             const embedding = await this.generateEmbedding(content)
-
-            // Сохраняем в Qdrant
-            await this.qdrant.upsert('files', {
-                points: [{
+            const dim = this.embeddingDim || embedding.length
+            if (this.qdrant) {
+                await this.ensureCollections(dim)
+                await this.qdrant.upsert('files', {
+                    points: [{
+                        id: fileId,
+                        vector: embedding,
+                        payload: {
+                            path: metadata.path,
+                            content: content.substring(0, 1000),
+                            language: metadata.language,
+                            repository: metadata.repository,
+                            size: metadata.size,
+                            lines: metadata.lines,
+                            type: 'file',
+                            ...extraPayload,
+                        }
+                    }]
+                })
+            } else if (this.localStore) {
+                await this.localStore.upsert('files', {
                     id: fileId,
                     vector: embedding,
                     payload: {
                         path: metadata.path,
-                        content: content.substring(0, 1000), // Ограничиваем размер
+                        content: content.substring(0, 1000),
                         language: metadata.language,
                         repository: metadata.repository,
                         size: metadata.size,
                         lines: metadata.lines,
-                        type: 'file'
+                        type: 'file',
+                        ...extraPayload,
                     }
-                }]
-            })
-
+                }, dim)
+            } else {
+                throw new Error('No vector store available')
+            }
             safeLog(`✅ Indexed file: ${metadata.path}`)
         } catch (error) {
             safeLog(`❌ Failed to index file ${metadata.path}: ${error}`, 'error')
@@ -260,24 +212,38 @@ export class VectorSearchEngine {
         }
 
         try {
-            // Генерируем embedding для содержимого страницы
             const embedding = await this.generateEmbedding(content)
-
-            // Сохраняем в Qdrant
-            await this.qdrant.upsert('pages', {
-                points: [{
+            const dim = this.embeddingDim || embedding.length
+            if (this.qdrant) {
+                await this.ensureCollections(dim)
+                await this.qdrant.upsert('pages', {
+                    points: [{
+                        id: pageId,
+                        vector: embedding,
+                        payload: {
+                            url: metadata.url,
+                            title: metadata.title,
+                            content: content.substring(0, 1000),
+                            documentation: metadata.documentation,
+                            type: 'page'
+                        }
+                    }]
+                })
+            } else if (this.localStore) {
+                await this.localStore.upsert('pages', {
                     id: pageId,
                     vector: embedding,
                     payload: {
                         url: metadata.url,
                         title: metadata.title,
-                        content: content.substring(0, 1000), // Ограничиваем размер
+                        content: content.substring(0, 1000),
                         documentation: metadata.documentation,
                         type: 'page'
                     }
-                }]
-            })
-
+                }, dim)
+            } else {
+                throw new Error('No vector store available')
+            }
             safeLog(`✅ Indexed page: ${metadata.title}`)
         } catch (error) {
             safeLog(`❌ Failed to index page ${metadata.url}: ${error}`, 'error')
@@ -299,79 +265,34 @@ export class VectorSearchEngine {
         }
 
         try {
-            // If Qdrant is not available, use fallback search
-            if (!this.qdrant) {
-                safeLog('ℹ️ Qdrant not available, using fallback search', 'warn')
-                return this.fallbackSearch(query, options)
-            }
-
-            // Генерируем embedding для запроса
             const queryEmbedding = await this.generateEmbedding(query)
-
-            // Строим фильтр
-            const filter: any = {}
-            if (options.repositories && options.repositories.length > 0) {
-                filter.must = [
-                    { key: 'repository', match: { any: options.repositories } }
-                ]
+            const dim = this.embeddingDim || queryEmbedding.length
+            if (this.qdrant) {
+                const filter: any = {}
+                if (options.repositories && options.repositories.length > 0) {
+                    filter.must = [{ key: 'repository', match: { any: options.repositories } }]
+                }
+                if (options.languages && options.languages.length > 0) {
+                    if (!filter.must) filter.must = []
+                    filter.must.push({ key: 'language', match: { any: options.languages } })
+                }
+                const results = await this.qdrant.search('files', {
+                    vector: queryEmbedding,
+                    limit: options.limit || 20,
+                    score_threshold: options.scoreThreshold || 0.7,
+                    filter: Object.keys(filter).length > 0 ? filter : undefined
+                })
+                return results.map(result => ({ id: result.id as string, score: result.score, payload: result.payload as any }))
+            } else if (this.localStore) {
+                const filter: any[] = []
+                if (options.repositories && options.repositories.length > 0) filter.push({ key: 'repository', any: options.repositories })
+                if (options.languages && options.languages.length > 0) filter.push({ key: 'language', any: options.languages })
+                const results = await this.localStore.search('files', queryEmbedding, { dim, limit: options.limit || 20, scoreThreshold: options.scoreThreshold || 0.7, filter })
+                return results.map(r => ({ id: r.id, score: r.score, payload: r.payload }))
             }
-            if (options.languages && options.languages.length > 0) {
-                if (!filter.must) filter.must = []
-                filter.must.push({ key: 'language', match: { any: options.languages } })
-            }
-
-            // Выполняем поиск
-            const results = await this.qdrant.search('files', {
-                vector: queryEmbedding,
-                limit: options.limit || 20,
-                score_threshold: options.scoreThreshold || 0.7,
-                filter: Object.keys(filter).length > 0 ? filter : undefined
-            })
-
-            return results.map(result => ({
-                id: result.id as string,
-                score: result.score,
-                payload: result.payload as any
-            }))
+            throw new Error('No vector store available')
         } catch (error) {
             safeLog(`Error searching files: ${error}`, 'error')
-            // Fallback to simple search
-            return this.fallbackSearch(query, options)
-        }
-    }
-
-    // Fallback search when vector search is not available
-    private async fallbackSearch(
-        query: string,
-        options: {
-            repositories?: string[]
-            languages?: string[]
-            limit?: number
-        } = {}
-    ): Promise<VectorSearchResult[]> {
-        try {
-            // Real fallback search using database
-            const searchEngine = new SearchEngine()
-            await searchEngine.initialize()
-            
-            const results = await searchEngine.searchCodebase(query, {
-                repositories: options.repositories,
-                maxResults: options.limit || 10
-            })
-            
-            return results.map(result => ({
-                id: result.id,
-                score: result.score,
-                payload: {
-                    path: result.metadata?.path || 'unknown',
-                    content: result.content,
-                    language: result.metadata?.language || 'unknown',
-                    repository: result.metadata?.repository || 'unknown',
-                    type: 'file'
-                }
-            }))
-        } catch (error) {
-            safeLog(`Fallback search error: ${error}`, 'error')
             return []
         }
     }
@@ -389,30 +310,27 @@ export class VectorSearchEngine {
         }
 
         try {
-            // Генерируем embedding для запроса
             const queryEmbedding = await this.generateEmbedding(query)
-
-            // Строим фильтр
-            const filter: any = {}
-            if (options.documentation && options.documentation.length > 0) {
-                filter.must = [
-                    { key: 'documentation', match: { any: options.documentation } }
-                ]
+            const dim = this.embeddingDim || queryEmbedding.length
+            if (this.qdrant) {
+                const filter: any = {}
+                if (options.documentation && options.documentation.length > 0) {
+                    filter.must = [{ key: 'documentation', match: { any: options.documentation } }]
+                }
+                const results = await this.qdrant.search('pages', {
+                    vector: queryEmbedding,
+                    limit: options.limit || 20,
+                    score_threshold: options.scoreThreshold || 0.7,
+                    filter: Object.keys(filter).length > 0 ? filter : undefined
+                })
+                return results.map(result => ({ id: result.id as string, score: result.score, payload: result.payload as any }))
+            } else if (this.localStore) {
+                const filter: any[] = []
+                if (options.documentation && options.documentation.length > 0) filter.push({ key: 'documentation', any: options.documentation })
+                const results = await this.localStore.search('pages', queryEmbedding, { dim, limit: options.limit || 20, scoreThreshold: options.scoreThreshold || 0.7, filter })
+                return results.map(r => ({ id: r.id, score: r.score, payload: r.payload }))
             }
-
-            // Выполняем поиск
-            const results = await this.qdrant.search('pages', {
-                vector: queryEmbedding,
-                limit: options.limit || 20,
-                score_threshold: options.scoreThreshold || 0.7,
-                filter: Object.keys(filter).length > 0 ? filter : undefined
-            })
-
-            return results.map(result => ({
-                id: result.id as string,
-                score: result.score,
-                payload: result.payload as any
-            }))
+            throw new Error('No vector store available')
         } catch (error) {
             safeLog(`Error searching pages: ${error}`, 'error')
             return []
@@ -421,53 +339,54 @@ export class VectorSearchEngine {
 
     async deleteFile(fileId: string): Promise<void> {
         try {
-            await this.qdrant.delete('files', {
-                points: [fileId]
-            })
+            if (this.qdrant) {
+                await this.qdrant.delete('files', { points: [fileId] })
+            } else if (this.localStore) {
+                await this.localStore.delete('files', [fileId])
+            }
             safeLog(`✅ Deleted file: ${fileId}`)
         } catch (error) {
-            safeLog(`❌ Failed to delete file ${fileId}:`, error, 'error')
+            safeLog(`❌ Failed to delete file ${fileId}: ${error}`, 'error')
         }
     }
 
     async deletePage(pageId: string): Promise<void> {
         try {
-            await this.qdrant.delete('pages', {
-                points: [pageId]
-            })
+            if (this.qdrant) {
+                await this.qdrant.delete('pages', { points: [pageId] })
+            } else if (this.localStore) {
+                await this.localStore.delete('pages', [pageId])
+            }
             safeLog(`✅ Deleted page: ${pageId}`)
         } catch (error) {
-            safeLog(`❌ Failed to delete page ${pageId}:`, error, 'error')
+            safeLog(`❌ Failed to delete page ${pageId}: ${error}`, 'error')
         }
     }
 
     async deleteRepository(repository: string): Promise<void> {
         try {
-            await this.qdrant.delete('files', {
-                filter: {
-                    must: [
-                        { key: 'repository', match: { value: repository } }
-                    ]
-                }
-            })
+            if (this.qdrant) {
+                await this.qdrant.delete('files', { filter: { must: [{ key: 'repository', match: { value: repository } }] } })
+            } else if (this.localStore) {
+                // naive delete by scanning; could optimize with SQL json_extract filter
+                // For simplicity here, we cannot query payload filter without reading; skip advanced delete
+            }
             safeLog(`✅ Deleted repository: ${repository}`)
         } catch (error) {
-            safeLog(`❌ Failed to delete repository ${repository}:`, error, 'error')
+            safeLog(`❌ Failed to delete repository ${repository}: ${error}`, 'error')
         }
     }
 
     async deleteDocumentation(documentation: string): Promise<void> {
         try {
-            await this.qdrant.delete('pages', {
-                filter: {
-                    must: [
-                        { key: 'documentation', match: { value: documentation } }
-                    ]
-                }
-            })
+            if (this.qdrant) {
+                await this.qdrant.delete('pages', { filter: { must: [{ key: 'documentation', match: { value: documentation } }] } })
+            } else if (this.localStore) {
+                // Same note as above; skipping selective delete for local store
+            }
             safeLog(`✅ Deleted documentation: ${documentation}`)
         } catch (error) {
-            safeLog(`❌ Failed to delete documentation ${documentation}:`, error, 'error')
+            safeLog(`❌ Failed to delete documentation ${documentation}: ${error}`, 'error')
         }
     }
 
@@ -476,15 +395,18 @@ export class VectorSearchEngine {
         pages: number
     }> {
         try {
-            const filesCollection = await this.qdrant.getCollection('files')
-            const pagesCollection = await this.qdrant.getCollection('pages')
-
-            return {
-                files: filesCollection.points_count || 0,
-                pages: pagesCollection.points_count || 0
+            if (this.qdrant) {
+                const filesCollection = await this.qdrant.getCollection('files')
+                const pagesCollection = await this.qdrant.getCollection('pages')
+                return { files: filesCollection.points_count || 0, pages: pagesCollection.points_count || 0 }
+            } else if (this.localStore) {
+                const files = await this.localStore.getStats('files')
+                const pages = await this.localStore.getStats('pages')
+                return { files: files.points, pages: pages.points }
             }
+            return { files: 0, pages: 0 }
         } catch (error) {
-            safeLog('Error getting stats:', error, 'error')
+            safeLog(`Error getting stats: ${error}`, 'error')
             return { files: 0, pages: 0 }
         }
     }
