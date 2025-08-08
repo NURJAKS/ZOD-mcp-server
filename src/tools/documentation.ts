@@ -97,6 +97,65 @@ export function registerDocumentationTools({ mcp }: McpToolContext): void {
       }
     },
   )
+
+  // Aliased tools following explicit names from spec
+  mcp.tool(
+    'index_documentation',
+    'Index documentation or website for intelligent search',
+    {
+      url: z.string().describe('URL of the documentation site to index'),
+      url_patterns: z.array(z.string()).optional().describe('URL patterns to include in crawling (e.g., ["/docs/", "/guide/"])'),
+      max_age: z.number().optional().describe('Maximum age of cached content in seconds'),
+      only_main_content: z.boolean().optional().default(true).describe('Extract only main content (removes navigation, ads, etc.)'),
+    },
+    async ({ url, url_patterns, max_age, only_main_content }) => handleIndexDocumentation(url, url_patterns, max_age, only_main_content),
+  )
+
+  mcp.tool(
+    'list_documentation',
+    'List all indexed documentation sources',
+    {},
+    async () => handleListDocumentation(),
+  )
+
+  mcp.tool(
+    'check_documentation_status',
+    'Check the indexing status of a documentation source',
+    {
+      source_id: z.string().describe('Documentation source ID'),
+    },
+    async ({ source_id }) => handleCheckDocumentationStatus(source_id),
+  )
+
+  mcp.tool(
+    'delete_documentation',
+    'Delete an indexed documentation source',
+    {
+      source_id: z.string().describe('Documentation source ID to delete'),
+    },
+    async ({ source_id }) => handleDeleteDocumentation(source_id),
+  )
+
+  mcp.tool(
+    'rename_documentation',
+    'Rename a documentation source for better organization',
+    {
+      source_id: z.string().describe('Documentation source ID'),
+      new_name: z.string().min(1).max(100).describe('New display name (1-100 characters)'),
+    },
+    async ({ source_id, new_name }) => handleRenameDocumentation(source_id, new_name),
+  )
+
+  mcp.tool(
+    'search_documentation',
+    'Search indexed documentation using natural language',
+    {
+      query: z.string().describe('Natural language search query'),
+      sources: z.array(z.string()).optional().describe('List of documentation source IDs to search'),
+      include_sources: z.boolean().optional().default(true).describe('Whether to include source references in results'),
+    },
+    async ({ query, sources, include_sources }) => handleSearchDocumentation(query, sources, include_sources),
+  )
 }
 
 // Helper functions for each action

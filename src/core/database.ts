@@ -460,4 +460,53 @@ export class DatabaseManager {
             this.db = null
         }
     }
+
+    // Generic storage methods for MIND CORE
+    async store(collection: string, key: string, value: any): Promise<void> {
+        if (!this.db) throw new Error('Database not initialized')
+        
+        // Create table if it doesn't exist
+        await this.db.exec(`
+            CREATE TABLE IF NOT EXISTS ${collection} (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        `)
+        
+        await this.db.run(
+            `INSERT OR REPLACE INTO ${collection} (key, value) VALUES (?, ?)`,
+            [key, JSON.stringify(value)]
+        )
+    }
+
+    async get(collection: string, key: string): Promise<any | null> {
+        if (!this.db) throw new Error('Database not initialized')
+        
+        const result = await this.db.get(
+            `SELECT value FROM ${collection} WHERE key = ?`,
+            [key]
+        )
+        
+        return result ? JSON.parse(result.value) : null
+    }
+
+    async getAll(collection: string): Promise<Record<string, any>> {
+        if (!this.db) throw new Error('Database not initialized')
+        
+        const results = await this.db.all(`SELECT key, value FROM ${collection}`)
+        const data: Record<string, any> = {}
+        
+        for (const row of results) {
+            data[row.key] = JSON.parse(row.value)
+        }
+        
+        return data
+    }
+
+    async clear(collection: string): Promise<void> {
+        if (!this.db) throw new Error('Database not initialized')
+        
+        await this.db.run(`DELETE FROM ${collection}`)
+    }
 } 

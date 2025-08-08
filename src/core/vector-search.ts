@@ -1,6 +1,7 @@
 import { QdrantClient } from '@qdrant/js-client-rest'
 import * as dotenv from 'dotenv'
 import { safeLog } from '../utils'
+import { SearchEngine } from './search'
 
 // Динамический импорт OpenRouter для избежания проблем с типами
 let OpenRouter: any = null

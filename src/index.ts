@@ -9,10 +9,11 @@ import { version } from '../package.json'
 import { createServer, startServer, stopServer } from './server'
 import { registerDocumentationTools } from './tools/documentation'
 import { registerRepositoryTools } from './tools/repository'
-import { registerUnifiedSearchTools } from './tools/unified-search'
+import { registerUnifiedSearchTools as registerWebDeepResearchTools } from './tools/unified-search'
 import { registerProjectInitTools } from './tools/project-init'
 import { registerMultiAgentTools } from './tools/multi-agent-tools'
 import { registerVisualizerTools } from './tools/visualizer'
+
 
 const cli = defineCommand({
   meta: {
@@ -65,6 +66,17 @@ const cli = defineCommand({
     
     const mcp = createServer({ name: 'zod-mcp-server', version })
 
+    // Wrap mcp.tool to capture tool handlers for internal routing
+    const toolRegistry = new Map<string, { schema: any, handler: (params: any) => Promise<any> }>()
+    const originalTool = (mcp as any).tool?.bind(mcp)
+    if (originalTool) {
+      ;(mcp as any).tool = (name: string, description: string, schema: any, handler: (params: any) => Promise<any>) => {
+        toolRegistry.set(name, { schema, handler })
+        ;(mcp as any).__toolHandlers = toolRegistry
+        return originalTool(name, description, schema, handler)
+      }
+    }
+
     process.on('SIGTERM', () => stopServer(mcp))
     process.on('SIGINT', () => stopServer(mcp))
 
@@ -104,10 +116,13 @@ async function registerToolsSafely(mcp: any, debug: boolean = false) {
   const tools = [
     { name: 'RepositoryTools', register: registerRepositoryTools },
     { name: 'DocumentationTools', register: registerDocumentationTools },
-    { name: 'UnifiedSearchTools', register: registerUnifiedSearchTools },
+    { name: 'WebDeepResearchTools', register: registerWebDeepResearchTools },
     { name: 'ProjectInitTools', register: registerProjectInitTools },
     { name: 'MultiAgentTools', register: registerMultiAgentTools },
     { name: 'VisualizerTools', register: registerVisualizerTools },
+    // ZOD Core tool registration
+    { name: 'ZodCore', register: (ctx: any) => import('./tools/zod-core/core').then(m => m.registerZodCoreTool(ctx)) },
+
   ]
 
   for (const tool of tools) {
@@ -358,6 +373,9 @@ function showHelp() {
   console.log('    zod-mcp                     Run with stdio transport (default)')
   console.log('    zod-mcp --http              Run with HTTP transport')
   console.log('    zod-mcp --sse               Run with SSE transport')
+  console.log('')
+  console.log('  ZOD Core:')
+  console.log('    zod-mcp zod-core --query "Explain ./src" --context /path/to/project --intent explain')
   console.log('')
   console.log('  Options:')
   console.log('    --port PORT                        Port for http/sse (default: 3000)')

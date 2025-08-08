@@ -1,0 +1,54 @@
+{
+  "mind_core": {
+    "daemon_mode": false,
+    "update_interval": 5000,
+    "memory_limit": 1000,
+    "learning_rate": 0.1,
+    "confidence_threshold": 0.7,
+    "context_window": 10,
+    "layers": {
+      "ide_snapshot": {
+        "enabled": true,
+        "track_cursor": true,
+        "track_selections": true,
+        "track_activity": true
+      },
+      "semantic_map": {
+        "enabled": true,
+        "include_patterns": ["**/*.{js,ts,jsx,tsx,py,java,cpp,c,go,rs}"],
+        "exclude_patterns": ["**/node_modules/**", "**/dist/**", "**/build/**"],
+        "vector_dimensions": 384
+      },
+      "intention_predictor": {
+        "enabled": true,
+        "prediction_types": ["refactor", "search", "test", "analyze", "debug"],
+        "confidence_threshold": 0.7
+      },
+      "focus_trace": {
+        "enabled": true,
+        "heatmap_resolution": "file",
+        "interaction_history_size": 100
+      },
+      "structure_model": {
+        "enabled": true,
+        "architecture_depth": 3,
+        "detect_patterns": true
+      },
+      "goal_model": {
+        "enabled": true,
+        "goal_sources": ["README.md", "docs/**/*.md", ".git/COMMIT_EDITMSG"],
+        "goal_categories": ["performance", "security", "scalability", "maintainability", "usability"]
+      },
+      "feedback_loop": {
+        "enabled": true,
+        "learning_rate": 0.1,
+        "feedback_history_size": 50
+      }
+    },
+    "output": {
+      "format": "json",
+      "include_metadata": true,
+      "event_streaming": false
+    }
+  }
+} 

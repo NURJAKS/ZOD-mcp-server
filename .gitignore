@@ -74,6 +74,15 @@ mcp-debug.log
 # MCP Inspector cache
 .mcp-inspector/
 inspector-cache/
+# ZOD Core working memory & data
+zod-data/
+zod-cache/
+qdrant-data/
+qdrant_storage/
+*.sqlite
+*.sqlite3
+*.db
+dump.rdb
 
 # ===== PACKAGE MANAGERS =====
 .yarn/

@@ -23,8 +23,8 @@ async function initializeSearchEngine() {
 export function registerUnifiedSearchTools({ mcp }: McpToolContext): void {
   // Unified powerful search tool combining web search and deep research
   mcp.tool(
-    'unified_search',
-    'Powerful unified search tool combining web search, deep research, code analysis, and AI-powered insights. Real implementation with no mocks.',
+    'web&deep_research',
+    'Web & Deep Research tool combining web search, deep research, code analysis, and AI-powered insights.',
     {
       action: z.enum(['web_search', 'deep_research', 'code_search', 'news_search', 'academic_search', 'social_monitor', 'comprehensive']).describe('Search action to perform'),
       query: z.string().describe('Search query or research question'),
@@ -116,6 +116,36 @@ export function registerUnifiedSearchTools({ mcp }: McpToolContext): void {
           }],
         }
       }
+    },
+  )
+
+  // Aliased tools per specification
+  mcp.tool(
+    'nia_web_search',
+    'AI-powered search for repos, docs, and content',
+    {
+      query: z.string().describe('Natural language search query'),
+      num_results: z.number().min(1).max(10).default(5).describe('Number of results to return (max: 10)'),
+      category: z.enum(['github', 'company', 'research paper', 'news', 'tweet', 'pdf']).optional().describe('Filter by category'),
+      days_back: z.number().optional().describe('Only show results from the last N days'),
+      find_similar_to: z.string().optional().describe('URL to find similar content to'),
+    },
+    async ({ query, num_results, category, days_back, find_similar_to }) => {
+      await initializeSearchEngine()
+      return handleWebSearch(query, num_results, category, days_back, find_similar_to)
+    },
+  )
+
+  mcp.tool(
+    'nia_deep_research_agent',
+    'Deep multi-step research and analysis',
+    {
+      query: z.string().describe('Research question (use comprehensive questions for best results)'),
+      output_format: z.string().optional().describe('Structure hint (e.g., "comparison table", "pros and cons list")'),
+    },
+    async ({ query, output_format }) => {
+      await initializeSearchEngine()
+      return handleDeepResearch(query, 'advanced', true, true, 3, true, 'systematic', 'patterns', true, output_format)
     },
   )
 }
