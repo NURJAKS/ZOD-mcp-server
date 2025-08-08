@@ -11,11 +11,12 @@ let searchEngine: SearchEngine | null = null
 let octokit: Octokit | null = null
 
 // Инициализируем компоненты асинхронно
-async function initializeComponents() {
+async function initializeComponents(envManager?: any) {
   try {
-    const token = process.env.GITHUB_TOKEN
+    const token = envManager?.getToken('github') || process.env.GITHUB_TOKEN
     if (token) {
       octokit = new Octokit({ auth: token })
+      safeLog('✅ GitHub token configured', 'info')
     } else {
       safeLog('⚠️ GITHUB_TOKEN not configured, repository analysis features will be limited', 'warn')
     }
@@ -35,9 +36,9 @@ async function initializeComponents() {
 }
 
 // Запускаем инициализацию
-initializeComponents()
+initializeComponents(envManager)
 
-export function registerRepositoryTools({ mcp }: McpToolContext): void {
+export function registerRepositoryTools({ mcp, envManager }: McpToolContext): void {
   // Single Unified Repository Tools Plugin
   // This single tool handles all repository management operations
 
@@ -48,13 +49,17 @@ export function registerRepositoryTools({ mcp }: McpToolContext): void {
       action: z.enum(['index', 'list', 'check_status', 'delete', 'rename', 'search']).describe('Action to perform'),
       repo_url: z.string().optional().describe('GitHub repository URL (required for index action)'),
       branch: z.string().optional().describe('Branch to index (defaults to main branch, used with index action)'),
+      max_files: z.number().int().positive().optional().describe('Maximum number of files to index (env MAX_FILE_COUNT fallback)'),
+      max_file_size_bytes: z.number().int().positive().optional().describe('Maximum file size to index in bytes (env MAX_FILE_SIZE fallback)'),
+      include_patterns: z.array(z.string()).optional().describe('Glob patterns to include (e.g., ["**/*.py", "src/**"])'),
+      exclude_patterns: z.array(z.string()).optional().describe('Additional glob patterns to exclude'),
       repository: z.string().optional().describe('Repository in owner/repo format (used with check_status, delete, rename actions)'),
       new_name: z.string().optional().describe('New display name for rename action (1-100 characters)'),
       query: z.string().optional().describe('Search query for search action'),
       repositories: z.array(z.string()).optional().describe('List of repositories to search (owner/repo format, used with search action)'),
       include_sources: z.boolean().optional().default(true).describe('Whether to include source code in search results'),
     },
-    async ({ action, repo_url, branch, repository, new_name, query, repositories, include_sources }) => {
+    async ({ action, repo_url, branch, max_files, max_file_size_bytes, include_patterns, exclude_patterns, repository, new_name, query, repositories, include_sources }) => {
       try {
         if (!repositoryIndexer) {
           throw new Error('Repository indexer not initialized')
@@ -62,7 +67,7 @@ export function registerRepositoryTools({ mcp }: McpToolContext): void {
 
         switch (action) {
           case 'index':
-            return await handleIndexRepository(repo_url, branch)
+            return await handleIndexRepository(repo_url, branch, max_files, max_file_size_bytes, include_patterns, exclude_patterns)
           
           case 'list':
             return await handleListRepositories()
@@ -99,65 +104,28 @@ export function registerRepositoryTools({ mcp }: McpToolContext): void {
   )
 
   // Aliased tools following explicit names from spec
-  mcp.tool(
-    'index_repository',
-    'Index a GitHub repository for intelligent code search',
-    {
-      repo_url: z.string().describe('GitHub repository URL (e.g., https://github.com/owner/repo)'),
-      branch: z.string().optional().describe('Branch to index (defaults to main branch)'),
-    },
-    async ({ repo_url, branch }) => handleIndexRepository(repo_url, branch),
-  )
+  
 
-  mcp.tool(
-    'list_repositories',
-    'List all indexed repositories with their status',
-    {},
-    async () => handleListRepositories(),
-  )
+  
 
-  mcp.tool(
-    'check_repository_status',
-    'Check indexing status of a repository',
-    {
-      repository: z.string().describe('Repository in owner/repo format'),
-    },
-    async ({ repository }) => handleCheckRepositoryStatus(repository),
-  )
+  
 
-  mcp.tool(
-    'delete_repository',
-    'Delete an indexed repository',
-    {
-      repository: z.string().describe('Repository in owner/repo format'),
-    },
-    async ({ repository }) => handleDeleteRepository(repository),
-  )
+  
 
-  mcp.tool(
-    'rename_repository',
-    'Rename an indexed repository',
-    {
-      repository: z.string().describe('Repository in owner/repo format'),
-      new_name: z.string().min(1).max(100).describe('New display name (1-100 characters)'),
-    },
-    async ({ repository, new_name }) => handleRenameRepository(repository, new_name),
-  )
+  
 
-  mcp.tool(
-    'search_codebase',
-    'Search indexed repositories using natural language',
-    {
-      query: z.string().describe('Natural language search query'),
-      repositories: z.array(z.string()).optional().describe('List of repositories to search (owner/repo format)'),
-      include_sources: z.boolean().optional().default(true).describe('Whether to include source code in results'),
-    },
-    async ({ query, repositories, include_sources }) => handleSearchCodebase(query, repositories, include_sources),
-  )
+  
 }
 
 // Helper functions for each action
-async function handleIndexRepository(repo_url?: string, branch?: string) {
+async function handleIndexRepository(
+  repo_url?: string,
+  branch?: string,
+  max_files?: number,
+  max_file_size_bytes?: number,
+  include_patterns?: string[],
+  exclude_patterns?: string[],
+) {
   if (!repo_url?.trim()) {
     return {
       content: [{
@@ -211,6 +179,10 @@ async function handleIndexRepository(repo_url?: string, branch?: string) {
   // Start indexing
   const result = await repositoryIndexer!.indexRepository(repo_url, {
     branch: branch || 'main',
+    maxFiles: max_files,
+    maxFileSizeBytes: max_file_size_bytes,
+    includePatterns: include_patterns,
+    excludePatterns: exclude_patterns,
   })
 
   return {

@@ -20,10 +20,10 @@ async function initializeSearchEngine() {
   }
 }
 
-export function registerUnifiedSearchTools({ mcp }: McpToolContext): void {
+export function registerUnifiedSearchTools({ mcp, envManager }: McpToolContext): void {
   // Unified powerful search tool combining web search and deep research
   mcp.tool(
-    'web&deep_research',
+    'webdeep_research',
     'Web & Deep Research tool combining web search, deep research, code analysis, and AI-powered insights.',
     {
       action: z.enum(['web_search', 'deep_research', 'code_search', 'news_search', 'academic_search', 'social_monitor', 'comprehensive']).describe('Search action to perform'),
@@ -80,7 +80,7 @@ export function registerUnifiedSearchTools({ mcp }: McpToolContext): void {
 
         switch (action) {
           case 'web_search':
-            return await handleWebSearch(query, num_results, category, days_back, find_similar_to)
+            return await handleWebSearch(query, num_results, category, days_back, find_similar_to, envManager)
           
           case 'deep_research':
             return await handleDeepResearch(query, reasoning_depth, include_code_analysis, include_trends, max_iterations, include_reasoning_steps, reasoning_approach, code_analysis_type, include_code_examples, output_format)
@@ -119,38 +119,26 @@ export function registerUnifiedSearchTools({ mcp }: McpToolContext): void {
     },
   )
 
-  // Aliased tools per specification
-  mcp.tool(
-    'nia_web_search',
-    'AI-powered search for repos, docs, and content',
-    {
-      query: z.string().describe('Natural language search query'),
-      num_results: z.number().min(1).max(10).default(5).describe('Number of results to return (max: 10)'),
-      category: z.enum(['github', 'company', 'research paper', 'news', 'tweet', 'pdf']).optional().describe('Filter by category'),
-      days_back: z.number().optional().describe('Only show results from the last N days'),
-      find_similar_to: z.string().optional().describe('URL to find similar content to'),
-    },
-    async ({ query, num_results, category, days_back, find_similar_to }) => {
-      await initializeSearchEngine()
-      return handleWebSearch(query, num_results, category, days_back, find_similar_to)
-    },
-  )
-
-  mcp.tool(
-    'nia_deep_research_agent',
-    'Deep multi-step research and analysis',
-    {
-      query: z.string().describe('Research question (use comprehensive questions for best results)'),
-      output_format: z.string().optional().describe('Structure hint (e.g., "comparison table", "pros and cons list")'),
-    },
-    async ({ query, output_format }) => {
-      await initializeSearchEngine()
-      return handleDeepResearch(query, 'advanced', true, true, 3, true, 'systematic', 'patterns', true, output_format)
-    },
-  )
 }
 
-async function handleWebSearch(query: string, num_results: number, category?: string, days_back?: number, find_similar_to?: string) {
+async function handleWebSearch(query: string, num_results: number, category?: string, days_back?: number, find_similar_to?: string, envManager?: any) {
+  // Check if we have required API keys
+  const serperToken = envManager?.getToken('serper')
+  const serpapiToken = envManager?.getToken('serpapi')
+  
+  if (!serperToken && !serpapiToken) {
+    return {
+      content: [{
+        type: 'text' as const,
+        text: `⚠️ **API Configuration Required**\n\n` +
+              `To perform web searches, you need to configure one of these API keys in your .env file:\n\n` +
+              `• SERPER_API_KEY=your_serper_api_key\n` +
+              `• SERPAPI_KEY=your_serpapi_key\n\n` +
+              `For now, showing simulated results...\n\n`
+      }],
+    }
+  }
+
   const results = await searchEngine!.searchWeb(query, {
     numResults: num_results,
     category,

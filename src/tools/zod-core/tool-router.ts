@@ -6,7 +6,7 @@ export interface RoutedCall {
   tool:
   | 'repository_tools'
   | 'documentation_tools'
-  | 'web&deep_research'
+  | 'webdeep_research'
   | 'initialize_project'
   | 'multi_agent_tools'
   | 'visualizer'
@@ -14,7 +14,6 @@ export interface RoutedCall {
   // explicit aliases
   | 'index_repository' | 'list_repositories' | 'check_repository_status' | 'delete_repository' | 'rename_repository' | 'search_codebase'
   | 'index_documentation' | 'list_documentation' | 'check_documentation_status' | 'delete_documentation' | 'rename_documentation' | 'search_documentation'
-  | 'nia_web_search' | 'nia_deep_research_agent'
   params: any
 }
 
