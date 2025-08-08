@@ -98,62 +98,7 @@ export function registerRepositoryTools({ mcp }: McpToolContext): void {
     },
   )
 
-  // Aliased tools following explicit names from spec
-  mcp.tool(
-    'index_repository',
-    'Index a GitHub repository for intelligent code search',
-    {
-      repo_url: z.string().describe('GitHub repository URL (e.g., https://github.com/owner/repo)'),
-      branch: z.string().optional().describe('Branch to index (defaults to main branch)'),
-    },
-    async ({ repo_url, branch }) => handleIndexRepository(repo_url, branch),
-  )
 
-  mcp.tool(
-    'list_repositories',
-    'List all indexed repositories with their status',
-    {},
-    async () => handleListRepositories(),
-  )
-
-  mcp.tool(
-    'check_repository_status',
-    'Check indexing status of a repository',
-    {
-      repository: z.string().describe('Repository in owner/repo format'),
-    },
-    async ({ repository }) => handleCheckRepositoryStatus(repository),
-  )
-
-  mcp.tool(
-    'delete_repository',
-    'Delete an indexed repository',
-    {
-      repository: z.string().describe('Repository in owner/repo format'),
-    },
-    async ({ repository }) => handleDeleteRepository(repository),
-  )
-
-  mcp.tool(
-    'rename_repository',
-    'Rename an indexed repository',
-    {
-      repository: z.string().describe('Repository in owner/repo format'),
-      new_name: z.string().min(1).max(100).describe('New display name (1-100 characters)'),
-    },
-    async ({ repository, new_name }) => handleRenameRepository(repository, new_name),
-  )
-
-  mcp.tool(
-    'search_codebase',
-    'Search indexed repositories using natural language',
-    {
-      query: z.string().describe('Natural language search query'),
-      repositories: z.array(z.string()).optional().describe('List of repositories to search (owner/repo format)'),
-      include_sources: z.boolean().optional().default(true).describe('Whether to include source code in results'),
-    },
-    async ({ query, repositories, include_sources }) => handleSearchCodebase(query, repositories, include_sources),
-  )
 }
 
 // Helper functions for each action
