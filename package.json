@@ -29,7 +29,8 @@
     "zod-mcp": "./bin/cli.mjs",
     "mcp-zod-core": "./dist/tools/zod-core/cli.mjs",
     "mcp": "./bin/mcp.mjs",
-    "focusflow": "./bin/focusflow.mjs"
+    "focusflow": "./bin/focusflow.mjs",
+    "focusflow-tray": "./bin/focusflow-tray.mjs"
   },
   "files": [
     "bin",

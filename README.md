@@ -179,6 +179,26 @@ focusflow(action="stop")
 focusflow(action="set_config", work_minutes=30, break_minutes=5, theme="light")
 ```
 
+### FocusFlow Tray‑виджет (Linux)
+Иконка в системном трее с таймером и управлением.
+
+Зависимости ОС (Ubuntu/Debian):
+```bash
+sudo apt update
+sudo apt install -y libappindicator3-1 gir1.2-appindicator3-0.1 gir1.2-gtk-3.0 python3-gi libnotify-bin pulseaudio-utils alsa-utils
+```
+
+Запуск:
+```bash
+focusflow-tray
+```
+
+Функции:
+- Показ оставшегося времени в трей‑лейбле
+- Меню Start/Pause/Reset/Quit
+- Системные уведомления (notify-send)
+- Реальные звуковые сигналы (paplay/aplay/терминальный bell)
+
 ### Example Usage
 
 ```typescript
