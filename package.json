@@ -28,7 +28,8 @@
   "bin": {
     "zod-mcp": "./bin/cli.mjs",
     "mcp-zod-core": "./dist/tools/zod-core/cli.mjs",
-    "mcp": "./bin/mcp.mjs"
+    "mcp": "./bin/mcp.mjs",
+    "focusflow": "./bin/focusflow.mjs"
   },
   "files": [
     "bin",
@@ -52,6 +53,13 @@
     "lint:fix": "eslint --fix",
     "typecheck": "tsc --noEmit",
     "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "test:watch": "vitest --watch",
+    "test:mcp": "node test-mcp-tools-hard.js",
+    "test:edge": "node test-edge-cases.js",
+    "test:performance": "node test-performance.js",
+    "test:comprehensive": "node run-comprehensive-tests.js",
+    "test:all": "npm run test:comprehensive",
     "release": "tsx scripts/release.ts"
   },
   "dependencies": {
@@ -59,10 +67,18 @@
     "@modelcontextprotocol/sdk": "^1.9.0",
     "@octokit/rest": "^21.0.2",
     "@qdrant/js-client-rest": "^1.15.0",
+    "@typescript-eslint/eslint-plugin": "^8.15.0",
+    "@typescript-eslint/parser": "^8.15.0",
     "axios": "^1.7.0",
     "cheerio": "^1.0.0-rc.12",
     "citty": "^0.1.6",
     "dotenv": "^16.5.0",
+    "eslint": "^9.15.0",
+    "eslint-plugin-security": "^2.1.1",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^6.1.1",
+    "eslint-plugin-unicorn": "^58.0.0",
     "h3": "^1.15.1",
     "minio": "^7.1.0",
     "neo4j-driver": "^5.20.0",
@@ -81,6 +97,7 @@
     "@types/cheerio": "^0.22.35",
     "@types/node": "^22.14.1",
     "@types/node-cron": "^3.0.11",
+    "@vitest/coverage-v8": "^3.1.1",
     "esbuild": "^0.25.2",
     "glob": "^11.0.3",
     "nodemon": "^3.1.9",

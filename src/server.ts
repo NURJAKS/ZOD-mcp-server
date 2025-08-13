@@ -7,9 +7,18 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { createApp, createRouter, defineEventHandler, getQuery, setResponseStatus, toNodeListener } from 'h3'
 
 /** Create the bare MCP server instance */
-export function createServer(options: { name: string, version: string }): McpServer {
-  const { name, version } = options
-  return new Server({ name, version })
+export function createServer(options: { name: string, version: string } = { name: 'test-server', version: '0.0.0' }): McpServer {
+  const { name, version } = options || { name: 'test-server', version: '0.0.0' }
+  const server: any = new Server({ name, version })
+  // Track registered tools for tests/introspection
+  const registeredTools: any[] = []
+  const originalTool = typeof server.tool === 'function' ? server.tool.bind(server) : null
+  server.tool = (name: string, description: string, schema: any, handler: any) => {
+    registeredTools.push({ name, description, schema, handler })
+    if (originalTool) return originalTool(name, description, schema, handler)
+  }
+  server.getTools = () => registeredTools
+  return server as McpServer
 }
 
 interface StdioOptions { type: 'stdio' }

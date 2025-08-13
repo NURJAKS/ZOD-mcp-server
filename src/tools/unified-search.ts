@@ -23,7 +23,7 @@ async function initializeSearchEngine() {
 export function registerUnifiedSearchTools({ mcp }: McpToolContext): void {
   // Unified powerful search tool combining web search and deep research
   mcp.tool(
-    'web&deep_research',
+    'webdeep_research',
     'Web & Deep Research tool combining web search, deep research, code analysis, and AI-powered insights.',
     {
       action: z.enum(['web_search', 'deep_research', 'code_search', 'news_search', 'academic_search', 'social_monitor', 'comprehensive']).describe('Search action to perform'),
@@ -123,274 +123,383 @@ export function registerUnifiedSearchTools({ mcp }: McpToolContext): void {
 }
 
 async function handleWebSearch(query: string, num_results: number, category?: string, days_back?: number, find_similar_to?: string) {
-  const results = await searchEngine!.searchWeb(query, {
-    numResults: num_results,
-    category,
-    daysBack: days_back,
-    findSimilarTo: find_similar_to,
-  })
+  try {
+    const results = await searchEngine!.searchWeb(query, {
+      numResults: num_results,
+      category,
+      daysBack: days_back,
+      findSimilarTo: find_similar_to,
+    })
 
-  if (results.length === 0) {
+    if (results.length === 0) {
+      return {
+        content: [{
+          type: 'text',
+          text: `🔍 No web search results found for query: "${query}"\n\n**Possible reasons:**\n• No internet connection\n• API key not configured (SERPER_API_KEY)\n• Query too specific or complex\n\n**Try:**\n• Using different keywords\n• Removing category filters\n• Using broader search terms\n• Using deep_research action for comprehensive analysis`,
+        }],
+      }
+    }
+
+    const resultsText = results.map((result, index) =>
+      `${index + 1}. **${result.title}**\n`
+      + `   Score: ${(result.score * 100).toFixed(1)}%\n`
+      + `   ${result.content}\n${
+        result.url ? `   URL: ${result.url}\n` : ''
+      }   Category: ${result.metadata.category || 'general'}\n`,
+    ).join('\n\n')
+
     return {
       content: [{
         type: 'text',
-        text: `🔍 No web search results found for query: "${query}"\n\nTry:\n• Using different keywords\n• Removing category filters\n• Using broader search terms\n• Using deep_research action for comprehensive analysis`,
+        text: `🔍 Web Search Results for: "${query}"\n\nFound ${results.length} results:\n\n${resultsText}\n\n**Next Steps:**\n• Use deep_research for comprehensive analysis\n• Use code_search for implementation details\n• Use news_search for current trends\n• Use academic_search for research papers`,
       }],
     }
-  }
-
-  const resultsText = results.map((result, index) =>
-    `${index + 1}. **${result.title}**\n`
-    + `   Score: ${(result.score * 100).toFixed(1)}%\n`
-    + `   ${result.content}\n${
-      result.url ? `   URL: ${result.url}\n` : ''
-    }   Category: ${result.metadata.category || 'general'}\n`,
-  ).join('\n\n')
-
-  return {
-    content: [{
-      type: 'text',
-      text: `🔍 Web Search Results for: "${query}"\n\nFound ${results.length} results:\n\n${resultsText}\n\n**Next Steps:**\n• Use deep_research for comprehensive analysis\n• Use code_search for implementation details\n• Use news_search for current trends\n• Use academic_search for research papers`,
-    }],
+  } catch (error) {
+    safeLog('Web search error:', error)
+    return {
+      content: [{
+        type: 'text',
+        text: `❌ Web search failed: ${error instanceof Error ? error.message : 'Unknown error'}\n\n**Troubleshooting:**\n• Check if SERPER_API_KEY is set in environment\n• Verify internet connection\n• Try using deep_research instead for comprehensive analysis`,
+      }],
+    }
   }
 }
 
 async function handleDeepResearch(query: string, reasoning_depth: string, include_code_analysis: boolean, include_trends: boolean, max_iterations: number, include_reasoning_steps: boolean, reasoning_approach: string, code_analysis_type: string, include_code_examples: boolean, output_format?: string) {
-  const research = await searchEngine!.deepResearch(query, output_format)
+  try {
+    const research = await searchEngine!.deepResearch(query, output_format)
 
-  // Perform additional code analysis if requested
-  let codeAnalysis = null
-  if (include_code_analysis) {
-    try {
-      const codeResults = await searchEngine!.searchCodebase(query, { maxResults: 5 })
-      codeAnalysis = {
-        overview: `Code analysis for "${query}" with ${reasoning_depth} depth`,
-        detailedAnalysis: `Found ${codeResults.length} relevant code examples. Analysis includes pattern recognition, architectural considerations, and implementation strategies.`,
-        examples: codeResults.slice(0, 3).map((result, index) => ({
-          title: result.title,
-          language: result.metadata?.language || 'text',
-          code: result.content.substring(0, 500) + '...'
+    // Perform additional code analysis if requested
+    let codeAnalysis = null
+    if (include_code_analysis) {
+      try {
+        const codeResults = await searchEngine!.searchCodebase(query, { maxResults: 5 })
+        codeAnalysis = {
+          overview: `Code analysis for "${query}" with ${reasoning_depth} depth`,
+          detailedAnalysis: `Found ${codeResults.length} relevant code examples. Analysis includes pattern recognition, architectural considerations, and implementation strategies.`,
+          examples: codeResults.slice(0, 3).map((result, index) => ({
+            title: result.title,
+            language: result.metadata?.language || 'text',
+            code: result.content.substring(0, 500) + '...'
+          })),
+          alternatives: [
+            {
+              title: 'Simple Implementation',
+              description: 'Basic approach suitable for small projects',
+              pros: 'Easy to understand and implement',
+              cons: 'Limited scalability and features'
+            },
+            {
+              title: 'Enterprise Solution',
+              description: 'Comprehensive solution with advanced features',
+              pros: 'Highly scalable, feature-rich, production-ready',
+              cons: 'Complex implementation, higher learning curve'
+            }
+          ],
+          bestPractices: [
+            'Follow established design patterns',
+            'Implement proper error handling',
+            'Use appropriate data structures',
+            'Consider performance implications',
+            'Write comprehensive tests',
+            'Document your code thoroughly'
+          ]
+        }
+      } catch (error) {
+        safeLog('Code analysis failed:', error)
+        codeAnalysis = {
+          overview: `Code analysis requested but failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          detailedAnalysis: 'Unable to perform code analysis due to technical issues.',
+          examples: [],
+          alternatives: [],
+          bestPractices: []
+        }
+      }
+    }
+
+    // Generate step-by-step reasoning
+    let reasoningSteps = null
+    if (include_reasoning_steps) {
+      const steps = Math.min(max_iterations, 5)
+      reasoningSteps = {
+        steps: Array.from({ length: steps }, (_, i) => ({
+          title: `Step ${i + 1}: ${getStepTitle(i, reasoning_approach)}`,
+          description: `Analyzing ${getStepFocus(i, query)}`,
+          reasoning: generateReasoning(i, query, reasoning_approach),
+          confidence: Math.max(70, 100 - (i * 5)),
+          visualization: generateVisualization(i, reasoning_approach)
         })),
-        alternatives: [
-          {
-            title: 'Simple Implementation',
-            description: 'Basic approach suitable for small projects',
-            pros: 'Easy to understand and implement',
-            cons: 'Limited scalability and features'
-          },
-          {
-            title: 'Enterprise Solution',
-            description: 'Comprehensive solution with advanced features',
-            pros: 'Highly scalable, feature-rich, production-ready',
-            cons: 'Complex implementation, higher learning curve'
-          }
+        conclusion: `After ${steps} steps of ${reasoning_approach} reasoning, we've analyzed the problem comprehensively.`,
+        insights: [
+          'Problem complexity requires systematic analysis',
+          'Multiple approaches available with different trade-offs',
+          'Context-specific considerations are crucial',
+          'Implementation strategy depends on requirements'
         ],
-        bestPractices: [
-          'Follow established design patterns',
-          'Implement proper error handling',
-          'Use appropriate data structures',
-          'Consider performance implications',
-          'Write comprehensive tests',
-          'Document your code thoroughly'
+        recommendations: [
+          'Start with the most straightforward approach',
+          'Validate assumptions with real-world testing',
+          'Consider long-term maintenance implications',
+          'Document your decision-making process'
         ]
       }
-    } catch (error) {
-      safeLog('Code analysis failed:', error)
     }
-  }
 
-  // Generate step-by-step reasoning
-  let reasoningSteps = null
-  if (include_reasoning_steps) {
-    const steps = Math.min(max_iterations, 5)
-    reasoningSteps = {
-      steps: Array.from({ length: steps }, (_, i) => ({
-        title: `Step ${i + 1}: ${getStepTitle(i, reasoning_approach)}`,
-        description: `Analyzing ${getStepFocus(i, query)}`,
-        reasoning: generateReasoning(i, query, reasoning_approach),
-        confidence: Math.max(70, 100 - (i * 5)),
-        visualization: generateVisualization(i, reasoning_approach)
-      })),
-      conclusion: `After ${steps} steps of ${reasoning_approach} reasoning, we've analyzed the problem comprehensively.`,
-      insights: [
-        'Problem complexity requires systematic analysis',
-        'Multiple approaches available with different trade-offs',
-        'Context-specific considerations are crucial',
-        'Implementation strategy depends on requirements'
-      ],
-      recommendations: [
-        'Start with the most straightforward approach',
-        'Validate assumptions with real-world testing',
-        'Consider long-term maintenance implications',
-        'Document the reasoning process for future reference'
-      ]
+    // Generate trends analysis if requested
+    let trendsAnalysis = null
+    if (include_trends) {
+      try {
+        const newsResults = await searchEngine!.searchNews(query, { maxResults: 3 })
+        const socialResults = await searchEngine!.monitorSocial(query, { maxResults: 3 })
+        
+        trendsAnalysis = {
+          currentTrends: newsResults.map(article => ({
+            title: article.title,
+            source: article.source,
+            publishedAt: article.publishedAt,
+            summary: article.content.substring(0, 200) + '...'
+          })),
+          socialSentiment: socialResults.map(post => ({
+            platform: post.platform,
+            author: post.author,
+            content: post.content.substring(0, 150) + '...',
+            engagement: post.engagement
+          })),
+          trendSummary: `Analysis of ${newsResults.length} news articles and ${socialResults.length} social media posts related to "${query}"`,
+          keyInsights: [
+            'Current market trends and developments',
+            'Community sentiment and discussions',
+            'Emerging technologies and approaches',
+            'Industry best practices and standards'
+          ]
+        }
+      } catch (error) {
+        safeLog('Trends analysis failed:', error)
+        trendsAnalysis = {
+          currentTrends: [],
+          socialSentiment: [],
+          trendSummary: `Trends analysis requested but failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          keyInsights: []
+        }
+      }
     }
-  }
 
-  const analysisText = `🔬 **Deep Research Results for:** "${query}"\n\n`
-    + `**🧠 Reasoning Depth:** ${reasoning_depth.toUpperCase()}\n`
-    + `**📊 Research Iterations:** ${max_iterations}\n`
-    + `**🎯 Reasoning Approach:** ${reasoning_approach.toUpperCase()}\n\n`
-    + `**📋 Executive Summary:**\n${research.summary}\n\n`
-    + `**🔍 Detailed Analysis:**\n${research.analysis}\n\n`
-    + `${codeAnalysis ? `**💻 Integrated Code Analysis (${code_analysis_type.toUpperCase()}):**\n`
-      + `**📋 Overview:**\n${codeAnalysis.overview}\n\n`
-      + `**🔍 Detailed Analysis:**\n${codeAnalysis.detailedAnalysis}\n\n`
-      + `${include_code_examples ? `**💻 Code Examples:**\n${codeAnalysis.examples.map((example, index) => `${index + 1}. ${example.title}\n\`\`\`${example.language}\n${example.code}\n\`\`\``).join('\n\n')}\n\n` : ''}`
-      + `**🔄 Alternative Approaches:**\n${codeAnalysis.alternatives.map((alt, index) => `${index + 1}. **${alt.title}**\n   ${alt.description}\n   ${alt.pros ? `   ✅ Pros: ${alt.pros}\n` : ''}   ${alt.cons ? `   ❌ Cons: ${alt.cons}\n` : ''}`).join('\n\n')}\n\n`
-      + `**🎯 Best Practices:**\n${codeAnalysis.bestPractices.map((practice, index) => `${index + 1}. ${practice}`).join('\n')}\n\n` : ''}`
-    + `${reasoningSteps ? `**🧠 Step-by-Step Reasoning (${reasoning_approach.toUpperCase()}):**\n`
-      + `${reasoningSteps.steps.map((step, index) => 
-        `${index + 1}. **${step.title}** (Confidence: ${step.confidence}%)\n   ${step.description}\n   ${step.reasoning}\n${step.visualization ? `   📊 ${step.visualization}\n` : ''}`
-      ).join('\n\n')}\n\n`
-      + `**📋 Final Conclusion:**\n${reasoningSteps.conclusion}\n\n`
-      + `**💡 Key Insights:**\n${reasoningSteps.insights.map((insight, index) => `${index + 1}. ${insight}`).join('\n')}\n\n` : ''}`
-    + `**🎯 Recommendations:**\n${research.recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}\n\n`
-    + `**📚 Sources & References:**\n${research.sources.map((source, index) => `${index + 1}. ${source}`).join('\n')}\n\n`
-    + `**🔄 Next Steps:**\n`
-    + `• Use web_search for specific content discovery\n`
-    + `• Use code_search for implementation details\n`
-    + `• Use news_search for current trends\n`
-    + `• Use academic_search for research papers\n`
-    + `• Use social_monitor for community insights`
+    // Build comprehensive response
+    let responseText = `🔬 Deep Research Results for: "${query}"\n\n`
+    responseText += `**Research Summary:**\n${research.summary}\n\n`
+    responseText += `**Detailed Analysis:**\n${research.analysis}\n\n`
+    
+    if (codeAnalysis) {
+      responseText += `**Code Analysis:**\n${codeAnalysis.overview}\n\n`
+      responseText += `**Best Practices:**\n${codeAnalysis.bestPractices.map(bp => `• ${bp}`).join('\n')}\n\n`
+    }
+    
+    if (reasoningSteps) {
+      responseText += `**Reasoning Process (${reasoning_approach}):**\n`
+      reasoningSteps.steps.forEach(step => {
+        responseText += `${step.title}\n${step.description}\nConfidence: ${step.confidence}%\n\n`
+      })
+      responseText += `**Conclusion:**\n${reasoningSteps.conclusion}\n\n`
+    }
+    
+    if (trendsAnalysis) {
+      responseText += `**Current Trends:**\n${trendsAnalysis.trendSummary}\n\n`
+      if (trendsAnalysis.currentTrends.length > 0) {
+        responseText += `**Recent News:**\n`
+        trendsAnalysis.currentTrends.forEach((trend, i) => {
+          responseText += `${i + 1}. ${trend.title} (${trend.source})\n   ${trend.summary}\n\n`
+        })
+      }
+    }
+    
+    responseText += `**Sources:**\n${research.sources.map((source, i) => `${i + 1}. ${source}`).join('\n')}\n\n`
+    responseText += `**Recommendations:**\n${research.recommendations.map((rec, i) => `${i + 1}. ${rec}`).join('\n')}`
 
-  return {
-    content: [{
-      type: 'text',
-      text: analysisText,
-    }],
+    return {
+      content: [{
+        type: 'text',
+        text: responseText
+      }],
+    }
+  } catch (error) {
+    safeLog('Deep research error:', error)
+    return {
+      content: [{
+        type: 'text',
+        text: `❌ Deep research failed: ${error instanceof Error ? error.message : 'Unknown error'}\n\n**Troubleshooting:**\n• Check if OPENROUTER_API_KEY is set in environment\n• Verify internet connection\n• Try using web_search for basic results\n• Check server logs for detailed error information`,
+      }],
+    }
   }
 }
 
 async function handleCodeSearch(query: string, num_results: number, sources?: string[]) {
-  const results = await searchEngine!.searchCodebase(query, { 
-    maxResults: num_results,
-    repositories: sources
-  })
+  try {
+    const results = await searchEngine!.searchCodebase(query, {
+      maxResults: num_results,
+      repositories: sources,
+    })
 
-  if (results.length === 0) {
+    if (results.length === 0) {
+      return {
+        content: [{
+          type: 'text',
+          text: `💻 No code search results found for query: "${query}"\n\n**Possible reasons:**\n• No indexed repositories\n• Query too specific\n• No matching code patterns\n\n**Try:**\n• Index repositories first with repository_tools(action="index")\n• Use broader search terms\n• Check if repositories contain relevant code\n• Use deep_research for comprehensive analysis`,
+        }],
+      }
+    }
+
+    const resultsText = results.map((result, index) =>
+      `${index + 1}. **${result.title}**\n`
+      + `   Language: ${result.metadata?.language || 'unknown'}\n`
+      + `   Repository: ${result.metadata?.repository || 'unknown'}\n`
+      + `   Score: ${(result.score * 100).toFixed(1)}%\n`
+      + `   Content: ${result.content.substring(0, 300)}...\n`,
+    ).join('\n\n')
+
     return {
       content: [{
         type: 'text',
-        text: `💻 No code search results found for query: "${query}"\n\nTry:\n• Using different keywords\n• Using broader search terms\n• Using web_search for general information\n• Using deep_research for comprehensive analysis`,
+        text: `💻 Code Search Results for: "${query}"\n\nFound ${results.length} results:\n\n${resultsText}\n\n**Next Steps:**\n• Use deep_research for comprehensive analysis\n• Index more repositories for broader search\n• Use web_search for external code examples`,
       }],
     }
-  }
-
-  const resultsText = results.map((result, index) =>
-    `${index + 1}. **${result.title}**\n`
-    + `   Score: ${(result.score * 100).toFixed(1)}%\n`
-    + `   Language: ${result.metadata?.language || 'unknown'}\n`
-    + `   ${result.content}\n${
-      result.url ? `   URL: ${result.url}\n` : ''
-    }`,
-  ).join('\n\n')
-
-  return {
-    content: [{
-      type: 'text',
-      text: `💻 Code Search Results for: "${query}"\n\nFound ${results.length} results:\n\n${resultsText}\n\n**Next Steps:**\n• Use deep_research for comprehensive analysis\n• Use web_search for documentation\n• Use news_search for current trends`,
-    }],
+  } catch (error) {
+    safeLog('Code search error:', error)
+    return {
+      content: [{
+        type: 'text',
+        text: `❌ Code search failed: ${error instanceof Error ? error.message : 'Unknown error'}\n\n**Troubleshooting:**\n• Check if repositories are indexed\n• Verify database connection\n• Try using web_search for external results\n• Use deep_research for comprehensive analysis`,
+      }],
+    }
   }
 }
 
 async function handleNewsSearch(query: string, num_results: number, sources?: string[], time_range?: string) {
-  const results = await searchEngine!.searchNews(query, {
-    sources,
-    timeRange: time_range,
-    maxResults: num_results
-  })
+  try {
+    const results = await searchEngine!.searchNews(query, {
+      maxResults: num_results,
+      sources,
+      timeRange: time_range,
+    })
 
-  if (results.length === 0) {
+    if (results.length === 0) {
+      return {
+        content: [{
+          type: 'text',
+          text: `📰 No news results found for query: "${query}"\n\n**Possible reasons:**\n• No NEWS_API_KEY configured\n• Query too specific or recent\n• No news available for the topic\n\n**Try:**\n• Using different keywords\n• Checking if NEWS_API_KEY is set\n• Using broader search terms\n• Using deep_research for comprehensive analysis`,
+        }],
+      }
+    }
+
+    const resultsText = results.map((result, index) =>
+      `${index + 1}. **${result.title}**\n`
+      + `   Source: ${result.source}\n`
+      + `   Published: ${result.publishedAt}\n`
+      + `   Content: ${result.content.substring(0, 200)}...\n`
+      + `   URL: ${result.url}\n`,
+    ).join('\n\n')
+
     return {
       content: [{
         type: 'text',
-        text: `📰 No news search results found for query: "${query}"\n\nTry:\n• Using different keywords\n• Using broader search terms\n• Using web_search for general information\n• Using deep_research for comprehensive analysis`,
+        text: `📰 News Search Results for: "${query}"\n\nFound ${results.length} results:\n\n${resultsText}\n\n**Next Steps:**\n• Use deep_research for comprehensive analysis\n• Use web_search for broader content\n• Use social_monitor for community discussions`,
       }],
     }
-  }
-
-  const resultsText = results.map((result, index) =>
-    `${index + 1}. **${result.title}**\n`
-    + `   Source: ${result.source}\n`
-    + `   Published: ${result.publishedAt}\n`
-    + `   ${result.content}\n`
-    + `   URL: ${result.url}\n`,
-  ).join('\n\n')
-
-  return {
-    content: [{
-      type: 'text',
-      text: `📰 News Search Results for: "${query}"\n\nFound ${results.length} results:\n\n${resultsText}\n\n**Next Steps:**\n• Use deep_research for comprehensive analysis\n• Use web_search for more information\n• Use social_monitor for community reactions`,
-    }],
+  } catch (error) {
+    safeLog('News search error:', error)
+    return {
+      content: [{
+        type: 'text',
+        text: `❌ News search failed: ${error instanceof Error ? error.message : 'Unknown error'}\n\n**Troubleshooting:**\n• Check if NEWS_API_KEY is set in environment\n• Verify internet connection\n• Try using web_search for general results\n• Use deep_research for comprehensive analysis`,
+      }],
+    }
   }
 }
 
 async function handleAcademicSearch(query: string, num_results: number, fields?: string[], year_from?: number, year_to?: number) {
-  const results = await searchEngine!.searchAcademic(query, {
-    fields,
-    yearFrom: year_from,
-    yearTo: year_to,
-    maxResults: num_results
-  })
+  try {
+    const results = await searchEngine!.searchAcademic(query, {
+      maxResults: num_results,
+      fields,
+      yearFrom: year_from,
+      yearTo: year_to,
+    })
 
-  if (results.length === 0) {
+    if (results.length === 0) {
+      return {
+        content: [{
+          type: 'text',
+          text: `📚 No academic results found for query: "${query}"\n\n**Possible reasons:**\n• Query too specific or niche\n• No papers available for the topic\n• Year range too restrictive\n\n**Try:**\n• Using broader search terms\n• Expanding year range\n• Using different field categories\n• Using deep_research for comprehensive analysis`,
+        }],
+      }
+    }
+
+    const resultsText = results.map((result, index) =>
+      `${index + 1}. **${result.title}**\n`
+      + `   Authors: ${result.authors.join(', ')}\n`
+      + `   Journal: ${result.journal}\n`
+      + `   Year: ${result.year}\n`
+      + `   Citations: ${result.citations}\n`
+      + `   DOI: ${result.doi}\n`
+      + `   Abstract: ${result.abstract.substring(0, 300)}...\n`,
+    ).join('\n\n')
+
     return {
       content: [{
         type: 'text',
-        text: `📚 No academic search results found for query: "${query}"\n\nTry:\n• Using different keywords\n• Using broader search terms\n• Using web_search for general information\n• Using deep_research for comprehensive analysis`,
+        text: `📚 Academic Search Results for: "${query}"\n\nFound ${results.length} results:\n\n${resultsText}\n\n**Next Steps:**\n• Use deep_research for comprehensive analysis\n• Use web_search for broader content\n• Use news_search for current developments`,
       }],
     }
-  }
-
-  const resultsText = results.map((result, index) =>
-    `${index + 1}. **${result.title}**\n`
-    + `   Authors: ${result.authors.join(', ')}\n`
-    + `   Journal: ${result.journal}\n`
-    + `   Year: ${result.year}\n`
-    + `   Citations: ${result.citations}\n`
-    + `   Abstract: ${result.abstract}\n`
-    + `   DOI: ${result.doi}\n`,
-  ).join('\n\n')
-
-  return {
-    content: [{
-      type: 'text',
-      text: `📚 Academic Search Results for: "${query}"\n\nFound ${results.length} results:\n\n${resultsText}\n\n**Next Steps:**\n• Use deep_research for comprehensive analysis\n• Use web_search for more information\n• Use code_search for implementation details`,
-    }],
+  } catch (error) {
+    safeLog('Academic search error:', error)
+    return {
+      content: [{
+        type: 'text',
+        text: `❌ Academic search failed: ${error instanceof Error ? error.message : 'Unknown error'}\n\n**Troubleshooting:**\n• Check internet connection\n• Verify arXiv API availability\n• Try using web_search for general results\n• Use deep_research for comprehensive analysis`,
+      }],
+    }
   }
 }
 
 async function handleSocialMonitor(query: string, num_results: number, platforms?: string[], time_range?: string) {
-  const results = await searchEngine!.monitorSocial(query, {
-    platforms,
-    timeRange: time_range,
-    maxResults: num_results
-  })
+  try {
+    const results = await searchEngine!.monitorSocial(query, {
+      maxResults: num_results,
+      platforms,
+      timeRange: time_range,
+    })
 
-  if (results.length === 0) {
+    if (results.length === 0) {
+      return {
+        content: [{
+          type: 'text',
+          text: `📱 No social media results found for query: "${query}"\n\n**Possible reasons:**\n• Query too specific or niche\n• No recent discussions on the topic\n• Platform limitations\n\n**Try:**\n• Using broader search terms\n• Checking different platforms\n• Using different time ranges\n• Using deep_research for comprehensive analysis`,
+        }],
+      }
+    }
+
+    const resultsText = results.map((result, index) =>
+      `${index + 1}. **${result.content.substring(0, 100)}...**\n`
+      + `   Platform: ${result.platform}\n`
+      + `   Author: ${result.author}\n`
+      + `   Published: ${result.publishedAt}\n`
+      + `   Engagement: ${result.engagement}\n`
+      + `   URL: ${result.url}\n`,
+    ).join('\n\n')
+
     return {
       content: [{
         type: 'text',
-        text: `📱 No social media results found for query: "${query}"\n\nTry:\n• Using different keywords\n• Using broader search terms\n• Using web_search for general information\n• Using news_search for current events`,
+        text: `📱 Social Media Monitoring Results for: "${query}"\n\nFound ${results.length} results:\n\n${resultsText}\n\n**Next Steps:**\n• Use deep_research for comprehensive analysis\n• Use news_search for current developments\n• Use web_search for broader content`,
       }],
     }
-  }
-
-  const resultsText = results.map((result, index) =>
-    `${index + 1}. **${result.content}**\n`
-    + `   Platform: ${result.platform}\n`
-    + `   Author: ${result.author}\n`
-    + `   Engagement: ${result.engagement}\n`
-    + `   Published: ${result.publishedAt}\n`
-    + `   URL: ${result.url}\n`,
-  ).join('\n\n')
-
-  return {
-    content: [{
-      type: 'text',
-      text: `📱 Social Media Results for: "${query}"\n\nFound ${results.length} results:\n\n${resultsText}\n\n**Next Steps:**\n• Use deep_research for comprehensive analysis\n• Use news_search for current events\n• Use web_search for more information`,
-    }],
+  } catch (error) {
+    safeLog('Social monitor error:', error)
+    return {
+      content: [{
+        type: 'text',
+        text: `❌ Social media monitoring failed: ${error instanceof Error ? error.message : 'Unknown error'}\n\n**Troubleshooting:**\n• Check internet connection\n• Verify Reddit API availability\n• Try using web_search for general results\n• Use deep_research for comprehensive analysis`,
+      }],
+    }
   }
 }
 
@@ -466,4 +575,4 @@ function generateVisualization(stepIndex: number, approach: string): string {
     '✅ Validation and testing framework'
   ]
   return visualizations[stepIndex] || '📈 Analysis visualization'
-} 
+}

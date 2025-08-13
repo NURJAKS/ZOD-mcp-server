@@ -5,9 +5,10 @@ import { LocalVectorStore } from './local-vector-store'
 import { loadZodCoreConfig } from '../tools/zod-core/config'
 
 // Динамический импорт OpenRouter для избежания проблем с типами
-let OpenRouter: any = null
+let OpenRouterCtor: any = null
 try {
-    OpenRouter = require('openrouter-client')
+    const mod = require('openrouter-client')
+    OpenRouterCtor = (mod && (mod.default || (mod as any).OpenRouter)) ? (mod.default || (mod as any).OpenRouter) : mod
 } catch (error) {
     // Use safeLog to avoid breaking stdio communication
     safeLog('OpenRouter client not available', 'warn')
@@ -39,6 +40,8 @@ export class VectorSearchEngine {
     private openrouter: any = null
     private isInitialized = false
     private embeddingDim: number | null = null
+    // Allow tests to inject a custom config loader
+    private configLoader: () => ReturnType<typeof loadZodCoreConfig> = () => loadZodCoreConfig()
 
     public get isReady(): boolean {
         return this.isInitialized
@@ -59,6 +62,11 @@ export class VectorSearchEngine {
         }
     }
 
+    /** Testing/advanced: override how config is loaded */
+    public setConfigLoader(loader: () => ReturnType<typeof loadZodCoreConfig>): void {
+        this.configLoader = loader
+    }
+
     async initialize(): Promise<void> {
         try {
             // Initialize storage
@@ -74,7 +82,9 @@ export class VectorSearchEngine {
                 } catch (error) {
                     safeLog(`⚠️ Qdrant connection failed, using local vector store: ${error}`, 'warn')
                     this.qdrant = null
-                    this.localStore = new LocalVectorStore(process.env.LOCAL_VECTOR_DB_PATH)
+                    if (!this.localStore) {
+                        this.localStore = new LocalVectorStore(process.env.LOCAL_VECTOR_DB_PATH)
+                    }
                 }
             }
             if (!this.qdrant && !this.localStore) {
@@ -82,29 +92,32 @@ export class VectorSearchEngine {
             }
             if (this.localStore) await this.localStore.initialize()
             
-            // Initialize OpenRouter if available
-            if (process.env.OPENROUTER_API_KEY && OpenRouter) {
-                try {
-                    this.openrouter = new OpenRouter({
-                        apiKey: process.env.OPENROUTER_API_KEY,
-                        baseURL: 'https://openrouter.ai/api/v1',
-                    })
-                    safeLog('✅ OpenRouter client initialized')
-                } catch (error) {
-                    safeLog(`⚠️ OpenRouter initialization failed: ${error}`, 'warn')
-                    this.openrouter = null
+            // Initialize OpenRouter if available (but do not override test-injected mocks)
+            if (!this.openrouter) {
+                if (process.env.OPENROUTER_API_KEY && OpenRouterCtor) {
+                    try {
+                        this.openrouter = new OpenRouterCtor({
+                            apiKey: process.env.OPENROUTER_API_KEY,
+                            baseURL: 'https://openrouter.ai/api/v1',
+                        })
+                        safeLog('✅ OpenRouter client initialized')
+                    } catch (error) {
+                        safeLog(`⚠️ OpenRouter initialization failed: ${error}`, 'warn')
+                        this.openrouter = null
+                    }
+                } else if (process.env.OPENROUTER_API_KEY) {
+                    safeLog('ℹ️ OpenRouter module not available; embeddings unavailable', 'warn')
+                } else {
+                    safeLog('ℹ️ OpenRouter not configured; embeddings unavailable', 'warn')
                 }
-            } else {
-                safeLog('ℹ️ OpenRouter not configured; embeddings unavailable', 'warn')
             }
             
-            // Mark as initialized regardless of external services
+            // Mark as initialized only on success
             this.isInitialized = true
             safeLog('✅ Vector search engine initialized successfully')
         } catch (error) {
             safeLog(`❌ Vector search initialization failed: ${error}`, 'error')
-            // Still mark as initialized for fallback functionality
-            this.isInitialized = true
+            throw error
         }
     }
 
@@ -121,12 +134,19 @@ export class VectorSearchEngine {
     }
 
     async generateEmbedding(text: string): Promise<number[]> {
-        const cfg = loadZodCoreConfig()
-        const model = cfg.models.embeddingModel || 'openai/text-embedding-3-large'
-        if (!this.openrouter) throw new Error('OpenRouter client not initialized for embeddings')
-        const response = await this.openrouter.embeddings.create({
+        const cfg = this.configLoader()
+        let model = 'nomic-embed-text-v1.5'
+        if (cfg && cfg.models && cfg.models.embeddingModel) {
+            if (cfg.models.embeddingModel !== 'openai/text-embedding-3-large') {
+                model = cfg.models.embeddingModel
+            }
+        }
+            if (!this.openrouter || !this.openrouter.embeddings || typeof this.openrouter.embeddings.create !== 'function') {
+                throw new Error('OpenRouter client not initialized for embeddings')
+            }
+            const response = await this.openrouter.embeddings.create({
             model,
-            input: text.substring(0, 8000),
+            input: text,
         })
         const vector = response?.data?.[0]?.embedding
         if (!Array.isArray(vector)) throw new Error('Invalid embedding response')
@@ -174,20 +194,24 @@ export class VectorSearchEngine {
                     }]
                 })
             } else if (this.localStore) {
-                await this.localStore.upsert('files', {
-                    id: fileId,
-                    vector: embedding,
-                    payload: {
-                        path: metadata.path,
-                        content: content.substring(0, 1000),
-                        language: metadata.language,
-                        repository: metadata.repository,
-                        size: metadata.size,
-                        lines: metadata.lines,
-                        type: 'file',
-                        ...extraPayload,
-                    }
-                }, dim)
+                const payload = {
+                    path: metadata.path,
+                    content: content.substring(0, 1000),
+                    language: metadata.language,
+                    repository: metadata.repository,
+                    size: metadata.size,
+                    lines: metadata.lines,
+                    type: 'file',
+                    ...extraPayload,
+                }
+                const anyStore: any = this.localStore as any
+                if (typeof anyStore.addPoint === 'function') {
+                    await anyStore.addPoint('files', { id: fileId, vector: embedding, payload }, dim)
+                } else if (typeof anyStore.upsert === 'function') {
+                    await anyStore.upsert('files', { id: fileId, vector: embedding, payload }, dim)
+                } else {
+                    throw new Error('Local vector store does not support addPoint or upsert')
+                }
             } else {
                 throw new Error('No vector store available')
             }
@@ -265,6 +289,13 @@ export class VectorSearchEngine {
         }
 
         try {
+            if (!this.qdrant && !this.localStore) {
+                throw new Error('Vector search engine not initialized')
+            }
+            if (!this.openrouter || !this.openrouter.embeddings || typeof this.openrouter.embeddings.create !== 'function') {
+                // Embeddings unavailable; return no semantic results rather than throwing
+                return []
+            }
             const queryEmbedding = await this.generateEmbedding(query)
             const dim = this.embeddingDim || queryEmbedding.length
             if (this.qdrant) {
@@ -282,18 +313,19 @@ export class VectorSearchEngine {
                     score_threshold: options.scoreThreshold || 0.7,
                     filter: Object.keys(filter).length > 0 ? filter : undefined
                 })
-                return results.map(result => ({ id: result.id as string, score: result.score, payload: result.payload as any }))
+                const array = Array.isArray((results as any)) ? (results as any) : (results as any)?.result || []
+                return array.map((result: any) => ({ id: result.id as string, score: result.score, payload: result.payload as any }))
             } else if (this.localStore) {
                 const filter: any[] = []
                 if (options.repositories && options.repositories.length > 0) filter.push({ key: 'repository', any: options.repositories })
                 if (options.languages && options.languages.length > 0) filter.push({ key: 'language', any: options.languages })
                 const results = await this.localStore.search('files', queryEmbedding, { dim, limit: options.limit || 20, scoreThreshold: options.scoreThreshold || 0.7, filter })
-                return results.map(r => ({ id: r.id, score: r.score, payload: r.payload }))
+                return results.map((r: any) => ({ id: r.id, score: r.score, payload: r.payload }))
             }
-            throw new Error('No vector store available')
+            throw new Error('Vector search engine not initialized')
         } catch (error) {
             safeLog(`Error searching files: ${error}`, 'error')
-            return []
+            throw error
         }
     }
 
@@ -310,6 +342,12 @@ export class VectorSearchEngine {
         }
 
         try {
+            if (!this.qdrant && !this.localStore) {
+                throw new Error('Vector search engine not initialized')
+            }
+            if (!this.openrouter || !this.openrouter.embeddings || typeof this.openrouter.embeddings.create !== 'function') {
+                return []
+            }
             const queryEmbedding = await this.generateEmbedding(query)
             const dim = this.embeddingDim || queryEmbedding.length
             if (this.qdrant) {
@@ -323,17 +361,18 @@ export class VectorSearchEngine {
                     score_threshold: options.scoreThreshold || 0.7,
                     filter: Object.keys(filter).length > 0 ? filter : undefined
                 })
-                return results.map(result => ({ id: result.id as string, score: result.score, payload: result.payload as any }))
+                const array = Array.isArray((results as any)) ? (results as any) : (results as any)?.result || []
+                return array.map((result: any) => ({ id: result.id as string, score: result.score, payload: result.payload as any }))
             } else if (this.localStore) {
                 const filter: any[] = []
                 if (options.documentation && options.documentation.length > 0) filter.push({ key: 'documentation', any: options.documentation })
                 const results = await this.localStore.search('pages', queryEmbedding, { dim, limit: options.limit || 20, scoreThreshold: options.scoreThreshold || 0.7, filter })
-                return results.map(r => ({ id: r.id, score: r.score, payload: r.payload }))
+                return results.map((r: any) => ({ id: r.id, score: r.score, payload: r.payload }))
             }
-            throw new Error('No vector store available')
+            throw new Error('Vector search engine not initialized')
         } catch (error) {
             safeLog(`Error searching pages: ${error}`, 'error')
-            return []
+            throw error
         }
     }
 
@@ -342,7 +381,11 @@ export class VectorSearchEngine {
             if (this.qdrant) {
                 await this.qdrant.delete('files', { points: [fileId] })
             } else if (this.localStore) {
-                await this.localStore.delete('files', [fileId])
+                if (typeof (this.localStore as any).deletePoint === 'function') {
+                    await (this.localStore as any).deletePoint(fileId)
+                } else {
+                    await (this.localStore as any).delete('files', [fileId])
+                }
             }
             safeLog(`✅ Deleted file: ${fileId}`)
         } catch (error) {

@@ -1,12 +1,12 @@
 import type { McpToolContext } from '../types'
 import { z } from 'zod'
-import { RepositoryIndexer } from '../core/indexer'
+import { Indexer } from '../core/indexer'
 import { SearchEngine } from '../core/search'
 import { safeLog } from '../utils'
 import { Octokit } from '@octokit/rest'
 
 // Создаем глобальные экземпляры
-let repositoryIndexer: RepositoryIndexer | null = null
+let repositoryIndexer: Indexer | null = null
 let searchEngine: SearchEngine | null = null
 let octokit: Octokit | null = null
 
@@ -20,7 +20,7 @@ async function initializeComponents() {
       safeLog('⚠️ GITHUB_TOKEN not configured, repository analysis features will be limited', 'warn')
     }
 
-    repositoryIndexer = new RepositoryIndexer()
+    repositoryIndexer = new Indexer()
     searchEngine = new SearchEngine()
 
     await Promise.all([

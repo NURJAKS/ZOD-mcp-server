@@ -1,6 +1,6 @@
 import type { McpToolContext } from '../types'
 import { z } from 'zod'
-import { RepositoryIndexer } from '../core/indexer'
+import { Indexer } from '../core/indexer'
 import { safeLog } from '../utils'
 import { createServer } from 'http'
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
@@ -9,7 +9,7 @@ import { fileURLToPath } from 'url'
 import { spawn } from 'child_process'
 
 // Global instances
-let repositoryIndexer: RepositoryIndexer | null = null
+let repositoryIndexer: Indexer | null = null
 let visualizationServer: any = null
 let serverPort = 3001
 let currentPort = 3001
@@ -17,7 +17,7 @@ let currentPort = 3001
 // Initialize components
 async function initializeComponents() {
   try {
-    repositoryIndexer = new RepositoryIndexer()
+    repositoryIndexer = new Indexer()
     await repositoryIndexer.initialize()
     safeLog('✅ Visualization components initialized successfully')
   } catch (error) {

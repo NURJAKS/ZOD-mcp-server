@@ -1,0 +1,2935 @@
+{
+  "metadata": {
+    "totalFiles": 98,
+    "totalSize": 1328066,
+    "languages": {
+      "json": 4,
+      "typescript": 70,
+      "markdown": 9,
+      "javascript": 13,
+      "yaml": 1,
+      "unknown": 1
+    },
+    "lastIndexed": 1754722471399,
+    "projectType": "nodejs",
+    "frameworks": []
+  },
+  "structure": {
+    "directories": [
+      {
+        "path": ".",
+        "depth": 0,
+        "fileCount": 37
+      },
+      {
+        "path": "src/tools/zod-core",
+        "depth": 2,
+        "fileCount": 16
+      },
+      {
+        "path": "src/core",
+        "depth": 1,
+        "fileCount": 15
+      },
+      {
+        "path": "public",
+        "depth": 0,
+        "fileCount": 7
+      },
+      {
+        "path": "tests/unit/zod-core",
+        "depth": 2,
+        "fileCount": 7
+      },
+      {
+        "path": "src/tools",
+        "depth": 1,
+        "fileCount": 6
+      },
+      {
+        "path": "tests",
+        "depth": 0,
+        "fileCount": 5
+      },
+      {
+        "path": "src",
+        "depth": 0,
+        "fileCount": 5
+      },
+      {
+        "path": "bin",
+        "depth": 0,
+        "fileCount": 3
+      },
+      {
+        "path": "tests/integration",
+        "depth": 1,
+        "fileCount": 3
+      },
+      {
+        "path": "src/plugins",
+        "depth": 1,
+        "fileCount": 3
+      },
+      {
+        "path": "scripts",
+        "depth": 0,
+        "fileCount": 2
+      },
+      {
+        "path": "data",
+        "depth": 0,
+        "fileCount": 1
+      },
+      {
+        "path": "tests/fixtures",
+        "depth": 1,
+        "fileCount": 1
+      },
+      {
+        "path": "src/shared/types",
+        "depth": 2,
+        "fileCount": 1
+      },
+      {
+        "path": "src/shared/interfaces",
+        "depth": 2,
+        "fileCount": 1
+      },
+      {
+        "path": "src/shared/infrastructure",
+        "depth": 2,
+        "fileCount": 1
+      },
+      {
+        "path": "src/shared/infrastructure/logging",
+        "depth": 3,
+        "fileCount": 1
+      },
+      {
+        "path": "src/shared/infrastructure/error-handling",
+        "depth": 3,
+        "fileCount": 1
+      },
+      {
+        "path": "src/domains/indexing/entities",
+        "depth": 3,
+        "fileCount": 1
+      },
+      {
+        "path": "examples",
+        "depth": 0,
+        "fileCount": 0
+      },
+      {
+        "path": "docs",
+        "depth": 0,
+        "fileCount": 0
+      },
+      {
+        "path": "tests/unit",
+        "depth": 1,
+        "fileCount": 0
+      },
+      {
+        "path": "tests/e2e",
+        "depth": 1,
+        "fileCount": 0
+      },
+      {
+        "path": "src/shared",
+        "depth": 1,
+        "fileCount": 0
+      },
+      {
+        "path": "src/presentation",
+        "depth": 1,
+        "fileCount": 0
+      },
+      {
+        "path": "src/domains",
+        "depth": 1,
+        "fileCount": 0
+      },
+      {
+        "path": "src/application",
+        "depth": 1,
+        "fileCount": 0
+      },
+      {
+        "path": "tests/unit/domains",
+        "depth": 2,
+        "fileCount": 0
+      },
+      {
+        "path": "tests/integration/search",
+        "depth": 2,
+        "fileCount": 0
+      },
+      {
+        "path": "tests/integration/database",
+        "depth": 2,
+        "fileCount": 0
+      },
+      {
+        "path": "tests/integration/api",
+        "depth": 2,
+        "fileCount": 0
+      },
+      {
+        "path": "src/shared/utils",
+        "depth": 2,
+        "fileCount": 0
+      },
+      {
+        "path": "src/presentation/validators",
+        "depth": 2,
+        "fileCount": 0
+      },
+      {
+        "path": "src/presentation/middlewares",
+        "depth": 2,
+        "fileCount": 0
+      },
+      {
+        "path": "src/presentation/controllers",
+        "depth": 2,
+        "fileCount": 0
+      },
+      {
+        "path": "src/domains/visualization",
+        "depth": 2,
+        "fileCount": 0
+      },
+      {
+        "path": "src/domains/search",
+        "depth": 2,
+        "fileCount": 0
+      },
+      {
+        "path": "src/domains/indexing",
+        "depth": 2,
+        "fileCount": 0
+      },
+      {
+        "path": "src/domains/analysis",
+        "depth": 2,
+        "fileCount": 0
+      },
+      {
+        "path": "src/application/use-cases",
+        "depth": 2,
+        "fileCount": 0
+      },
+      {
+        "path": "src/application/queries",
+        "depth": 2,
+        "fileCount": 0
+      },
+      {
+        "path": "src/application/commands",
+        "depth": 2,
+        "fileCount": 0
+      },
+      {
+        "path": "tests/unit/domains/visualization",
+        "depth": 3,
+        "fileCount": 0
+      },
+      {
+        "path": "tests/unit/domains/search",
+        "depth": 3,
+        "fileCount": 0
+      },
+      {
+        "path": "tests/unit/domains/indexing",
+        "depth": 3,
+        "fileCount": 0
+      },
+      {
+        "path": "tests/unit/domains/analysis",
+        "depth": 3,
+        "fileCount": 0
+      },
+      {
+        "path": "src/domains/visualization/value-objects",
+        "depth": 3,
+        "fileCount": 0
+      },
+      {
+        "path": "src/domains/visualization/services",
+        "depth": 3,
+        "fileCount": 0
+      },
+      {
+        "path": "src/domains/visualization/repositories",
+        "depth": 3,
+        "fileCount": 0
+      },
+      {
+        "path": "src/domains/visualization/entities",
+        "depth": 3,
+        "fileCount": 0
+      },
+      {
+        "path": "src/domains/search/value-objects",
+        "depth": 3,
+        "fileCount": 0
+      },
+      {
+        "path": "src/domains/search/services",
+        "depth": 3,
+        "fileCount": 0
+      },
+      {
+        "path": "src/domains/search/repositories",
+        "depth": 3,
+        "fileCount": 0
+      },
+      {
+        "path": "src/domains/search/entities",
+        "depth": 3,
+        "fileCount": 0
+      },
+      {
+        "path": "src/domains/indexing/value-objects",
+        "depth": 3,
+        "fileCount": 0
+      },
+      {
+        "path": "src/domains/indexing/services",
+        "depth": 3,
+        "fileCount": 0
+      },
+      {
+        "path": "src/domains/indexing/repositories",
+        "depth": 3,
+        "fileCount": 0
+      },
+      {
+        "path": "src/domains/analysis/value-objects",
+        "depth": 3,
+        "fileCount": 0
+      },
+      {
+        "path": "src/domains/analysis/services",
+        "depth": 3,
+        "fileCount": 0
+      },
+      {
+        "path": "src/domains/analysis/repositories",
+        "depth": 3,
+        "fileCount": 0
+      },
+      {
+        "path": "src/domains/analysis/entities",
+        "depth": 3,
+        "fileCount": 0
+      }
+    ],
+    "files": [
+      {
+        "path": "package-lock.json",
+        "type": "file",
+        "language": "json",
+        "size": 512245,
+        "lastModified": 1754711539580,
+        "complexity": 13
+      },
+      {
+        "path": "src/tools/visualizer.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 41376,
+        "lastModified": 1754393514719,
+        "complexity": 92
+      },
+      {
+        "path": "src/tools/zod-core/core-index.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 39915,
+        "lastModified": 1754710076506,
+        "complexity": 77
+      },
+      {
+        "path": "src/core/project-analyzer.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 38319,
+        "lastModified": 1754472071066,
+        "complexity": 100
+      },
+      {
+        "path": "src/core/search.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 36587,
+        "lastModified": 1754481984233,
+        "complexity": 100
+      },
+      {
+        "path": "src/core/indexer.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 31997,
+        "lastModified": 1754651403057,
+        "complexity": 94
+      },
+      {
+        "path": "src/tools/multi-agent-tools.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 28287,
+        "lastModified": 1754451414884,
+        "complexity": 100
+      },
+      {
+        "path": "src/tools/zod-core/core-analyze.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 26385,
+        "lastModified": 1754713592471,
+        "complexity": 71
+      },
+      {
+        "path": "src/core/contextual-understanding.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 22270,
+        "lastModified": 1754472095106,
+        "complexity": 100
+      },
+      {
+        "path": "src/tools/unified-search.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 21978,
+        "lastModified": 1754651407169,
+        "complexity": 80
+      },
+      {
+        "path": "tests/integration/core-fix.integration.spec.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 20096,
+        "lastModified": 1754711809394,
+        "complexity": 6
+      },
+      {
+        "path": "src/tools/zod-core/ast-parsers.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 18064,
+        "lastModified": 1754711809386,
+        "complexity": 70
+      },
+      {
+        "path": "src/tools/zod-core/fix-strategies.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 17613,
+        "lastModified": 1754711809386,
+        "complexity": 52
+      },
+      {
+        "path": "src/tools/zod-core/core-fix.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 17404,
+        "lastModified": 1754713588143,
+        "complexity": 59
+      },
+      {
+        "path": "tests/unit/zod-core/core-fix.spec.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 17133,
+        "lastModified": 1754711809390,
+        "complexity": 6
+      },
+      {
+        "path": "src/core/vector-search.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 16722,
+        "lastModified": 1754648350622,
+        "complexity": 86
+      },
+      {
+        "path": "src/core/database.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 16609,
+        "lastModified": 1754638640993,
+        "complexity": 37
+      },
+      {
+        "path": "src/tools/project-init.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 16441,
+        "lastModified": 1754481984233,
+        "complexity": 41
+      },
+      {
+        "path": "src/tools/documentation.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 15602,
+        "lastModified": 1754651407169,
+        "complexity": 49
+      },
+      {
+        "path": "PHASE_1_IMPLEMENTATION.md",
+        "type": "file",
+        "language": "markdown",
+        "size": 15080,
+        "lastModified": 1754654178332,
+        "complexity": 11
+      },
+      {
+        "path": "src/index.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 14908,
+        "lastModified": 1754709391271,
+        "complexity": 60
+      },
+      {
+        "path": "src/tools/repository.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 13415,
+        "lastModified": 1754651407169,
+        "complexity": 41
+      },
+      {
+        "path": "tests/integration/core-analyze.integration.spec.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 12933,
+        "lastModified": 1754711809390,
+        "complexity": 11
+      },
+      {
+        "path": "tests/unit/zod-core/fix-strategies.spec.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 12183,
+        "lastModified": 1754711809390,
+        "complexity": 8
+      },
+      {
+        "path": "src/tools/zod-core/core-search.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 11937,
+        "lastModified": 1754707722941,
+        "complexity": 37
+      },
+      {
+        "path": "tests/unit/zod-core/core-analyze.spec.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 11304,
+        "lastModified": 1754711809390,
+        "complexity": 10
+      },
+      {
+        "path": "src/tools/zod-core/core-status.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 10598,
+        "lastModified": 1754707723281,
+        "complexity": 19
+      },
+      {
+        "path": "src/core/project-database.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 10278,
+        "lastModified": 1754456772433,
+        "complexity": 35
+      },
+      {
+        "path": "src/plugins/project-analysis-plugin.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 10238,
+        "lastModified": 1754447308316,
+        "complexity": 53
+      },
+      {
+        "path": "tests/integration/core-explain.integration.spec.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 9926,
+        "lastModified": 1754709391271,
+        "complexity": 7
+      },
+      {
+        "path": "test-indexing.js",
+        "type": "file",
+        "language": "javascript",
+        "size": 9339,
+        "lastModified": 1754541346992,
+        "complexity": 41
+      },
+      {
+        "path": "tests/unit/zod-core/core-status.spec.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 8980,
+        "lastModified": 1754713590747,
+        "complexity": 7
+      },
+      {
+        "path": "tests/unit/zod-core/ast-parsers.spec.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 8273,
+        "lastModified": 1754711809386,
+        "complexity": 7
+      },
+      {
+        "path": "src/tools/zod-core/cli.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 8203,
+        "lastModified": 1754707723545,
+        "complexity": 22
+      },
+      {
+        "path": "test-direct-indexing.js",
+        "type": "file",
+        "language": "javascript",
+        "size": 7834,
+        "lastModified": 1754541346976,
+        "complexity": 34
+      },
+      {
+        "path": "src/core/env-manager.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 7730,
+        "lastModified": 1754651403057,
+        "complexity": 28
+      },
+      {
+        "path": "FINAL_IMPLEMENTATION_SUMMARY.md",
+        "type": "file",
+        "language": "markdown",
+        "size": 7601,
+        "lastModified": 1754638640989,
+        "complexity": 11
+      },
+      {
+        "path": "src/plugins/agent-plugin.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 7549,
+        "lastModified": 1754447308484,
+        "complexity": 41
+      },
+      {
+        "path": "test-comprehensive-indexing.js",
+        "type": "file",
+        "language": "javascript",
+        "size": 7526,
+        "lastModified": 1754541346992,
+        "complexity": 31
+      },
+      {
+        "path": "src/tools/zod-core/README.md",
+        "type": "file",
+        "language": "markdown",
+        "size": 7453,
+        "lastModified": 1754707723757,
+        "complexity": 13
+      },
+      {
+        "path": "ZOD_CORE_STATUS_REPORT.md",
+        "type": "file",
+        "language": "markdown",
+        "size": 7325,
+        "lastModified": 1754713591319,
+        "complexity": 8
+      },
+      {
+        "path": "tests/unit/zod-core/core-search.spec.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 7056,
+        "lastModified": 1754713590315,
+        "complexity": 6
+      },
+      {
+        "path": "tests/unit/zod-core/core-index.spec.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 7009,
+        "lastModified": 1754713589231,
+        "complexity": 1
+      },
+      {
+        "path": "MIND_CORE_SUMMARY.md",
+        "type": "file",
+        "language": "markdown",
+        "size": 6944,
+        "lastModified": 1754638640989,
+        "complexity": 21
+      },
+      {
+        "path": "REFACTORING_PLAN.md",
+        "type": "file",
+        "language": "markdown",
+        "size": 6507,
+        "lastModified": 1754654178328,
+        "complexity": 4
+      },
+      {
+        "path": "scripts/release.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 5986,
+        "lastModified": 1754204850400,
+        "complexity": 26
+      },
+      {
+        "path": "src/core/storage.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 5960,
+        "lastModified": 1754481984233,
+        "complexity": 30
+      },
+      {
+        "path": "ENVIRONMENT_SETUP.md",
+        "type": "file",
+        "language": "markdown",
+        "size": 5708,
+        "lastModified": 1754651403057,
+        "complexity": 19
+      },
+      {
+        "path": "test-project-tools.js",
+        "type": "file",
+        "language": "javascript",
+        "size": 5649,
+        "lastModified": 1754458597544,
+        "complexity": 25
+      },
+      {
+        "path": "src/core/local-vector-store.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 5005,
+        "lastModified": 1754648272061,
+        "complexity": 10
+      },
+      {
+        "path": "src/tools/zod-core/core.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 4977,
+        "lastModified": 1754709391271,
+        "complexity": 10
+      },
+      {
+        "path": "test-simple-indexing.js",
+        "type": "file",
+        "language": "javascript",
+        "size": 4933,
+        "lastModified": 1754541346976,
+        "complexity": 18
+      },
+      {
+        "path": "src/core/config-manager.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 4866,
+        "lastModified": 1754447456693,
+        "complexity": 8
+      },
+      {
+        "path": "src/tools/zod-core/semantic-memory.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 4674,
+        "lastModified": 1754648272073,
+        "complexity": 12
+      },
+      {
+        "path": "src/tools/zod-core/reflective-layer.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 4644,
+        "lastModified": 1754648272073,
+        "complexity": 18
+      },
+      {
+        "path": "src/tools/zod-core/working-memory.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 4485,
+        "lastModified": 1754638640993,
+        "complexity": 9
+      },
+      {
+        "path": "src/server.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 4419,
+        "lastModified": 1754233333941,
+        "complexity": 11
+      },
+      {
+        "path": "src/index-extensible.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 4413,
+        "lastModified": 1754447456693,
+        "complexity": 8
+      },
+      {
+        "path": "src/core/graph.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 4013,
+        "lastModified": 1754204850400,
+        "complexity": 12
+      },
+      {
+        "path": "src/core/cache.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 3930,
+        "lastModified": 1754481984233,
+        "complexity": 23
+      },
+      {
+        "path": "ZOD_CORE_USAGE_EXAMPLES.md",
+        "type": "file",
+        "language": "markdown",
+        "size": 3924,
+        "lastModified": 1754656579388,
+        "complexity": 7
+      },
+      {
+        "path": "src/plugins/visualization-plugin.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 3901,
+        "lastModified": 1754447308556,
+        "complexity": 21
+      },
+      {
+        "path": "src/core/base-tool.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 3303,
+        "lastModified": 1754447456689,
+        "complexity": 10
+      },
+      {
+        "path": "package.json",
+        "type": "file",
+        "language": "json",
+        "size": 3187,
+        "lastModified": 1754711809366,
+        "complexity": 2
+      },
+      {
+        "path": "src/tools/zod-core/config.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 3173,
+        "lastModified": 1754648272073,
+        "complexity": 5
+      },
+      {
+        "path": "tests/fixtures/test-project-setup.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 2778,
+        "lastModified": 1754709391271,
+        "complexity": 6
+      },
+      {
+        "path": "test-fast-tools.js",
+        "type": "file",
+        "language": "javascript",
+        "size": 2441,
+        "lastModified": 1754543031343,
+        "complexity": 5
+      },
+      {
+        "path": "test-unified-project-analysis.js",
+        "type": "file",
+        "language": "javascript",
+        "size": 2415,
+        "lastModified": 1754471318340,
+        "complexity": 7
+      },
+      {
+        "path": "REFACTORING_README.md",
+        "type": "file",
+        "language": "markdown",
+        "size": 2363,
+        "lastModified": 1754654184859,
+        "complexity": 1
+      },
+      {
+        "path": "test-fast-example.js",
+        "type": "file",
+        "language": "javascript",
+        "size": 2126,
+        "lastModified": 1754543031347,
+        "complexity": 4
+      },
+      {
+        "path": "test-real-project.js",
+        "type": "file",
+        "language": "javascript",
+        "size": 2028,
+        "lastModified": 1754461417874,
+        "complexity": 7
+      },
+      {
+        "path": "src/tools/zod-core/tool-router.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 1990,
+        "lastModified": 1754651403061,
+        "complexity": 11
+      },
+      {
+        "path": "src/shared/infrastructure/logging/logging.service.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 1814,
+        "lastModified": 1754654184843,
+        "complexity": 7
+      },
+      {
+        "path": "src/utils.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 1767,
+        "lastModified": 1754233333945,
+        "complexity": 13
+      },
+      {
+        "path": "src/domains/indexing/entities/repository.entity.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 1696,
+        "lastModified": 1754654184851,
+        "complexity": 1
+      },
+      {
+        "path": "tests/zod-core-structured.spec.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 1548,
+        "lastModified": 1754656579224,
+        "complexity": 1
+      },
+      {
+        "path": "docker-compose.yml",
+        "type": "file",
+        "language": "yaml",
+        "size": 1527,
+        "lastModified": 1754481984245,
+        "complexity": 1
+      },
+      {
+        "path": "src/tools/zod-core/types.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 1299,
+        "lastModified": 1754648272077,
+        "complexity": 1
+      },
+      {
+        "path": "tests/tools.spec.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 1218,
+        "lastModified": 1754651403061,
+        "complexity": 2
+      },
+      {
+        "path": "debug-strategies.js",
+        "type": "file",
+        "language": "javascript",
+        "size": 928,
+        "lastModified": 1754711809410,
+        "complexity": 1
+      },
+      {
+        "path": "src/shared/infrastructure/error-handling/error-types.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 822,
+        "lastModified": 1754654184839,
+        "complexity": 1
+      },
+      {
+        "path": "src/shared/types/api.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 678,
+        "lastModified": 1754654184847,
+        "complexity": 1
+      },
+      {
+        "path": "tests/router-planning.spec.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 656,
+        "lastModified": 1754648272081,
+        "complexity": 1
+      },
+      {
+        "path": "tsconfig.json",
+        "type": "file",
+        "language": "json",
+        "size": 558,
+        "lastModified": 1754204850404,
+        "complexity": 1
+      },
+      {
+        "path": "src/shared/infrastructure/service-container.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 461,
+        "lastModified": 1754654184835,
+        "complexity": 2
+      },
+      {
+        "path": "tests/semantic-memory.spec.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 428,
+        "lastModified": 1754648272077,
+        "complexity": 1
+      },
+      {
+        "path": "tests/zod-core.spec.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 401,
+        "lastModified": 1754638640997,
+        "complexity": 1
+      },
+      {
+        "path": "src/shared/interfaces/base.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 363,
+        "lastModified": 1754654184831,
+        "complexity": 1
+      },
+      {
+        "path": "src/types.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 359,
+        "lastModified": 1754651403061,
+        "complexity": 1
+      },
+      {
+        "path": "build.config.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 325,
+        "lastModified": 1754638640989,
+        "complexity": 1
+      },
+      {
+        "path": "vite.config.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 297,
+        "lastModified": 1754204850404,
+        "complexity": 1
+      },
+      {
+        "path": "eslint.config.js",
+        "type": "file",
+        "language": "javascript",
+        "size": 254,
+        "lastModified": 1754204850392,
+        "complexity": 1
+      },
+      {
+        "path": "test.js",
+        "type": "file",
+        "language": "javascript",
+        "size": 74,
+        "lastModified": 1754712214840,
+        "complexity": 2
+      },
+      {
+        "path": "test.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 52,
+        "lastModified": 1754712214712,
+        "complexity": 1
+      },
+      {
+        "path": "debug_test.js",
+        "type": "file",
+        "language": "javascript",
+        "size": 52,
+        "lastModified": 1754708680706,
+        "complexity": 1
+      },
+      {
+        "path": "config.json",
+        "type": "file",
+        "language": "json",
+        "size": 25,
+        "lastModified": 1754204850404,
+        "complexity": 1
+      },
+      {
+        "path": "src/core/plugin-manager.ts",
+        "type": "file",
+        "language": "typescript",
+        "size": 1,
+        "lastModified": 1754447456209,
+        "complexity": 1
+      },
+      {
+        "path": "Dockerfile",
+        "type": "file",
+        "language": "unknown",
+        "size": 0,
+        "lastModified": 1754204850392,
+        "complexity": 1
+      }
+    ]
+  },
+  "dependencies": [
+    {
+      "from": "vite.config.ts",
+      "to": "vite",
+      "type": "import"
+    },
+    {
+      "from": "test-unified-project-analysis.js",
+      "to": "child_process",
+      "type": "import"
+    },
+    {
+      "from": "test-project-tools.js",
+      "to": "child_process",
+      "type": "import"
+    },
+    {
+      "from": "test-real-project.js",
+      "to": "child_process",
+      "type": "import"
+    },
+    {
+      "from": "test-fast-example.js",
+      "to": "child_process",
+      "type": "require"
+    },
+    {
+      "from": "test-direct-indexing.js",
+      "to": "./dist/index.mjs",
+      "type": "import"
+    },
+    {
+      "from": "test-comprehensive-indexing.js",
+      "to": "./src/core/mind-core.js",
+      "type": "import"
+    },
+    {
+      "from": "eslint.config.js",
+      "to": "@antfu/eslint-config",
+      "type": "import"
+    },
+    {
+      "from": "debug-strategies.js",
+      "to": "./dist/tools/zod-core/fix-strategies.js",
+      "type": "import"
+    },
+    {
+      "from": "build.config.ts",
+      "to": "unbuild",
+      "type": "import"
+    },
+    {
+      "from": "tests/zod-core.spec.ts",
+      "to": "vitest",
+      "type": "import"
+    },
+    {
+      "from": "tests/zod-core-structured.spec.ts",
+      "to": "vitest",
+      "type": "import"
+    },
+    {
+      "from": "tests/tools.spec.ts",
+      "to": "vitest",
+      "type": "import"
+    },
+    {
+      "from": "tests/semantic-memory.spec.ts",
+      "to": "vitest",
+      "type": "import"
+    },
+    {
+      "from": "test-fast-tools.js",
+      "to": "child_process",
+      "type": "require"
+    },
+    {
+      "from": "test-indexing.js",
+      "to": "child_process",
+      "type": "require"
+    },
+    {
+      "from": "test-simple-indexing.js",
+      "to": "./src/core/mind-core.js",
+      "type": "import"
+    },
+    {
+      "from": "test-project-tools.js",
+      "to": "fs",
+      "type": "import"
+    },
+    {
+      "from": "test-real-project.js",
+      "to": "fs",
+      "type": "import"
+    },
+    {
+      "from": "test-direct-indexing.js",
+      "to": "fs",
+      "type": "import"
+    },
+    {
+      "from": "tests/tools.spec.ts",
+      "to": "../src/server",
+      "type": "import"
+    },
+    {
+      "from": "tests/semantic-memory.spec.ts",
+      "to": "../src/tools/zod-core/semantic-memory",
+      "type": "import"
+    },
+    {
+      "from": "test-indexing.js",
+      "to": "fs",
+      "type": "require"
+    },
+    {
+      "from": "test-simple-indexing.js",
+      "to": "fs",
+      "type": "import"
+    },
+    {
+      "from": "test-comprehensive-indexing.js",
+      "to": "fs",
+      "type": "import"
+    },
+    {
+      "from": "tests/zod-core.spec.ts",
+      "to": "../src/tools/zod-core/core",
+      "type": "import"
+    },
+    {
+      "from": "tests/zod-core-structured.spec.ts",
+      "to": "../src/tools/zod-core/core",
+      "type": "import"
+    },
+    {
+      "from": "test-project-tools.js",
+      "to": "path",
+      "type": "import"
+    },
+    {
+      "from": "test-indexing.js",
+      "to": "path",
+      "type": "require"
+    },
+    {
+      "from": "test-simple-indexing.js",
+      "to": "path",
+      "type": "import"
+    },
+    {
+      "from": "test-comprehensive-indexing.js",
+      "to": "path",
+      "type": "import"
+    },
+    {
+      "from": "test-real-project.js",
+      "to": "path",
+      "type": "import"
+    },
+    {
+      "from": "test-direct-indexing.js",
+      "to": "path",
+      "type": "import"
+    },
+    {
+      "from": "tests/tools.spec.ts",
+      "to": "../src/tools/repository",
+      "type": "import"
+    },
+    {
+      "from": "test-indexing.js",
+      "to": "fs",
+      "type": "require"
+    },
+    {
+      "from": "test-simple-indexing.js",
+      "to": "./src/main",
+      "type": "require"
+    },
+    {
+      "from": "test-direct-indexing.js",
+      "to": "fs",
+      "type": "require"
+    },
+    {
+      "from": "tests/tools.spec.ts",
+      "to": "../src/tools/documentation",
+      "type": "import"
+    },
+    {
+      "from": "test-indexing.js",
+      "to": "fs",
+      "type": "require"
+    },
+    {
+      "from": "test-direct-indexing.js",
+      "to": "fs",
+      "type": "require"
+    },
+    {
+      "from": "tests/tools.spec.ts",
+      "to": "../src/tools/unified-search",
+      "type": "import"
+    },
+    {
+      "from": "test-indexing.js",
+      "to": "./src/main",
+      "type": "require"
+    },
+    {
+      "from": "tests/tools.spec.ts",
+      "to": "../src/tools/project-init",
+      "type": "import"
+    },
+    {
+      "from": "test-direct-indexing.js",
+      "to": "./src/main",
+      "type": "require"
+    },
+    {
+      "from": "src/utils.ts",
+      "to": "node:fs",
+      "type": "import"
+    },
+    {
+      "from": "src/server.ts",
+      "to": "node:http",
+      "type": "import"
+    },
+    {
+      "from": "scripts/release.ts",
+      "to": "node:child_process",
+      "type": "import"
+    },
+    {
+      "from": "tests/integration/core-fix.integration.spec.ts",
+      "to": "vitest",
+      "type": "import"
+    },
+    {
+      "from": "tests/integration/core-explain.integration.spec.ts",
+      "to": "vitest",
+      "type": "import"
+    },
+    {
+      "from": "tests/integration/core-analyze.integration.spec.ts",
+      "to": "vitest",
+      "type": "import"
+    },
+    {
+      "from": "tests/fixtures/test-project-setup.ts",
+      "to": "node:fs",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/visualizer.ts",
+      "to": "zod",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/unified-search.ts",
+      "to": "zod",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/repository.ts",
+      "to": "zod",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/project-init.ts",
+      "to": "zod",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/multi-agent-tools.ts",
+      "to": "zod",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/documentation.ts",
+      "to": "zod",
+      "type": "import"
+    },
+    {
+      "from": "src/plugins/visualization-plugin.ts",
+      "to": "zod",
+      "type": "import"
+    },
+    {
+      "from": "src/plugins/project-analysis-plugin.ts",
+      "to": "zod",
+      "type": "import"
+    },
+    {
+      "from": "src/plugins/agent-plugin.ts",
+      "to": "zod",
+      "type": "import"
+    },
+    {
+      "from": "src/index-extensible.ts",
+      "to": "./server",
+      "type": "import"
+    },
+    {
+      "from": "src/index.ts",
+      "to": "./core/env-manager",
+      "type": "import"
+    },
+    {
+      "from": "tests/router-planning.spec.ts",
+      "to": "vitest",
+      "type": "import"
+    },
+    {
+      "from": "src/utils.ts",
+      "to": "node:path",
+      "type": "import"
+    },
+    {
+      "from": "scripts/release.ts",
+      "to": "node:fs",
+      "type": "import"
+    },
+    {
+      "from": "tests/integration/core-analyze.integration.spec.ts",
+      "to": "../../src/server",
+      "type": "import"
+    },
+    {
+      "from": "tests/fixtures/test-project-setup.ts",
+      "to": "node:path",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/visualizer.ts",
+      "to": "../core/indexer",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/unified-search.ts",
+      "to": "../core/search",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/repository.ts",
+      "to": "../core/indexer",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/project-init.ts",
+      "to": "fs",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/multi-agent-tools.ts",
+      "to": "../core/search",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/documentation.ts",
+      "to": "../core/indexer",
+      "type": "import"
+    },
+    {
+      "from": "src/plugins/visualization-plugin.ts",
+      "to": "../utils",
+      "type": "import"
+    },
+    {
+      "from": "src/plugins/project-analysis-plugin.ts",
+      "to": "fs",
+      "type": "import"
+    },
+    {
+      "from": "src/plugins/agent-plugin.ts",
+      "to": "../utils",
+      "type": "import"
+    },
+    {
+      "from": "src/index-extensible.ts",
+      "to": "./core/plugin-manager",
+      "type": "import"
+    },
+    {
+      "from": "src/index.ts",
+      "to": "node:fs",
+      "type": "import"
+    },
+    {
+      "from": "tests/router-planning.spec.ts",
+      "to": "../src/tools/zod-core/core",
+      "type": "import"
+    },
+    {
+      "from": "tests/integration/core-explain.integration.spec.ts",
+      "to": "../../src/server",
+      "type": "import"
+    },
+    {
+      "from": "src/server.ts",
+      "to": "@chatmcp/sdk/server/rest.js",
+      "type": "import"
+    },
+    {
+      "from": "tests/integration/core-fix.integration.spec.ts",
+      "to": "../../src/server",
+      "type": "import"
+    },
+    {
+      "from": "scripts/release.ts",
+      "to": "node:path",
+      "type": "import"
+    },
+    {
+      "from": "tests/integration/core-analyze.integration.spec.ts",
+      "to": "../../src/core/env-manager",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/repository.ts",
+      "to": "../core/search",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/project-init.ts",
+      "to": "path",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/documentation.ts",
+      "to": "../core/search",
+      "type": "import"
+    },
+    {
+      "from": "src/plugins/project-analysis-plugin.ts",
+      "to": "path",
+      "type": "import"
+    },
+    {
+      "from": "src/index-extensible.ts",
+      "to": "./core/base-tool",
+      "type": "import"
+    },
+    {
+      "from": "src/index.ts",
+      "to": "node:os",
+      "type": "import"
+    },
+    {
+      "from": "tests/integration/core-explain.integration.spec.ts",
+      "to": "../../src/core/env-manager",
+      "type": "import"
+    },
+    {
+      "from": "src/server.ts",
+      "to": "@modelcontextprotocol/sdk/server/mcp.js",
+      "type": "import"
+    },
+    {
+      "from": "tests/integration/core-fix.integration.spec.ts",
+      "to": "../../src/core/env-manager",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/visualizer.ts",
+      "to": "../utils",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/unified-search.ts",
+      "to": "../utils",
+      "type": "import"
+    },
+    {
+      "from": "tests/fixtures/test-project-setup.ts",
+      "to": "node:os",
+      "type": "import"
+    },
+    {
+      "from": "src/index.ts",
+      "to": "node:path",
+      "type": "import"
+    },
+    {
+      "from": "tests/integration/core-analyze.integration.spec.ts",
+      "to": "../../src/tools/zod-core/core-analyze",
+      "type": "import"
+    },
+    {
+      "from": "src/index-extensible.ts",
+      "to": "./core/config-manager",
+      "type": "import"
+    },
+    {
+      "from": "tests/integration/core-fix.integration.spec.ts",
+      "to": "../../src/tools/zod-core/core-fix",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/visualizer.ts",
+      "to": "http",
+      "type": "import"
+    },
+    {
+      "from": "src/plugins/project-analysis-plugin.ts",
+      "to": "../utils",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/repository.ts",
+      "to": "../utils",
+      "type": "import"
+    },
+    {
+      "from": "tests/integration/core-explain.integration.spec.ts",
+      "to": "../../src/tools/zod-core/core",
+      "type": "import"
+    },
+    {
+      "from": "src/server.ts",
+      "to": "@modelcontextprotocol/sdk/server/sse.js",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/documentation.ts",
+      "to": "../utils",
+      "type": "import"
+    },
+    {
+      "from": "src/index.ts",
+      "to": "citty",
+      "type": "import"
+    },
+    {
+      "from": "tests/integration/core-analyze.integration.spec.ts",
+      "to": "../fixtures/test-project-setup",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/repository.ts",
+      "to": "@octokit/rest",
+      "type": "import"
+    },
+    {
+      "from": "tests/integration/core-explain.integration.spec.ts",
+      "to": "../fixtures/test-project-setup",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/visualizer.ts",
+      "to": "fs",
+      "type": "import"
+    },
+    {
+      "from": "src/index-extensible.ts",
+      "to": "./tools/repository-v2",
+      "type": "import"
+    },
+    {
+      "from": "tests/integration/core-fix.integration.spec.ts",
+      "to": "../fixtures/test-project-setup",
+      "type": "import"
+    },
+    {
+      "from": "src/server.ts",
+      "to": "@modelcontextprotocol/sdk/server/stdio.js",
+      "type": "import"
+    },
+    {
+      "from": "src/index.ts",
+      "to": "../package.json",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/documentation.ts",
+      "to": "../core/database",
+      "type": "import"
+    },
+    {
+      "from": "tests/integration/core-analyze.integration.spec.ts",
+      "to": "node:path",
+      "type": "import"
+    },
+    {
+      "from": "src/index-extensible.ts",
+      "to": "./tools/repository",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/visualizer.ts",
+      "to": "path",
+      "type": "import"
+    },
+    {
+      "from": "tests/integration/core-explain.integration.spec.ts",
+      "to": "node:path",
+      "type": "import"
+    },
+    {
+      "from": "tests/integration/core-fix.integration.spec.ts",
+      "to": "node:path",
+      "type": "import"
+    },
+    {
+      "from": "src/server.ts",
+      "to": "h3",
+      "type": "import"
+    },
+    {
+      "from": "src/index.ts",
+      "to": "./server",
+      "type": "import"
+    },
+    {
+      "from": "tests/integration/core-analyze.integration.spec.ts",
+      "to": "node:fs",
+      "type": "import"
+    },
+    {
+      "from": "src/index-extensible.ts",
+      "to": "./tools/documentation",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/visualizer.ts",
+      "to": "url",
+      "type": "import"
+    },
+    {
+      "from": "tests/integration/core-explain.integration.spec.ts",
+      "to": "node:fs",
+      "type": "import"
+    },
+    {
+      "from": "tests/integration/core-fix.integration.spec.ts",
+      "to": "node:fs",
+      "type": "import"
+    },
+    {
+      "from": "src/index.ts",
+      "to": "./tools/documentation",
+      "type": "import"
+    },
+    {
+      "from": "src/index-extensible.ts",
+      "to": "./tools/web-search",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/visualizer.ts",
+      "to": "child_process",
+      "type": "import"
+    },
+    {
+      "from": "tests/integration/core-fix.integration.spec.ts",
+      "to": "sqlite",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/integration/core-explain.integration.spec.ts",
+      "to": "react",
+      "type": "import"
+    },
+    {
+      "from": "src/index.ts",
+      "to": "./tools/repository",
+      "type": "import"
+    },
+    {
+      "from": "src/index-extensible.ts",
+      "to": "./tools/project-init",
+      "type": "import"
+    },
+    {
+      "from": "tests/integration/core-fix.integration.spec.ts",
+      "to": "sqlite3",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "src/index.ts",
+      "to": "./tools/unified-search",
+      "type": "import"
+    },
+    {
+      "from": "src/index-extensible.ts",
+      "to": "./tools/deep-search",
+      "type": "import"
+    },
+    {
+      "from": "tests/integration/core-fix.integration.spec.ts",
+      "to": "sqlite",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "src/index.ts",
+      "to": "./tools/project-init",
+      "type": "import"
+    },
+    {
+      "from": "src/index-extensible.ts",
+      "to": "./tools/fleet",
+      "type": "import"
+    },
+    {
+      "from": "src/index.ts",
+      "to": "./tools/multi-agent-tools",
+      "type": "import"
+    },
+    {
+      "from": "tests/integration/core-fix.integration.spec.ts",
+      "to": "sqlite3",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "src/index-extensible.ts",
+      "to": "./tools/smart-ai-analyzer",
+      "type": "import"
+    },
+    {
+      "from": "src/index.ts",
+      "to": "./tools/visualizer",
+      "type": "import"
+    },
+    {
+      "from": "tests/integration/core-fix.integration.spec.ts",
+      "to": "sqlite",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "src/index.ts",
+      "to": "./tools/zod-core/core",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/integration/core-fix.integration.spec.ts",
+      "to": "sqlite3",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "src/index.ts",
+      "to": "./tools/zod-core/core-index",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/integration/core-fix.integration.spec.ts",
+      "to": "sqlite",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "src/index.ts",
+      "to": "./tools/zod-core/core-analyze",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/integration/core-fix.integration.spec.ts",
+      "to": "sqlite3",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "src/index.ts",
+      "to": "./tools/zod-core/core-fix",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/integration/core-fix.integration.spec.ts",
+      "to": "sqlite",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "src/index.ts",
+      "to": "./tools/zod-core/core-search",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/integration/core-fix.integration.spec.ts",
+      "to": "sqlite3",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "src/index.ts",
+      "to": "./tools/zod-core/core-status",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/integration/core-fix.integration.spec.ts",
+      "to": "sqlite",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "src/index.ts",
+      "to": "node:child_process",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/integration/core-fix.integration.spec.ts",
+      "to": "sqlite3",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/integration/core-fix.integration.spec.ts",
+      "to": "sqlite",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/integration/core-fix.integration.spec.ts",
+      "to": "sqlite3",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/integration/core-fix.integration.spec.ts",
+      "to": "sqlite",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/integration/core-fix.integration.spec.ts",
+      "to": "sqlite3",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "src/core/vector-search.ts",
+      "to": "@qdrant/js-client-rest",
+      "type": "import"
+    },
+    {
+      "from": "src/core/storage.ts",
+      "to": "minio",
+      "type": "import"
+    },
+    {
+      "from": "src/core/search.ts",
+      "to": "./database",
+      "type": "import"
+    },
+    {
+      "from": "src/core/indexer.ts",
+      "to": "@octokit/rest",
+      "type": "import"
+    },
+    {
+      "from": "src/core/graph.ts",
+      "to": "../utils",
+      "type": "import"
+    },
+    {
+      "from": "src/core/env-manager.ts",
+      "to": "zod",
+      "type": "import"
+    },
+    {
+      "from": "src/core/database.ts",
+      "to": "sqlite3",
+      "type": "import"
+    },
+    {
+      "from": "src/core/contextual-understanding.ts",
+      "to": "../utils",
+      "type": "import"
+    },
+    {
+      "from": "src/core/config-manager.ts",
+      "to": "zod",
+      "type": "import"
+    },
+    {
+      "from": "src/core/cache.ts",
+      "to": "redis",
+      "type": "import"
+    },
+    {
+      "from": "src/core/base-tool.ts",
+      "to": "zod",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/fix-strategies.spec.ts",
+      "to": "vitest",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-status.spec.ts",
+      "to": "vitest",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-search.spec.ts",
+      "to": "vitest",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-index.spec.ts",
+      "to": "vitest",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-fix.spec.ts",
+      "to": "vitest",
+      "type": "import"
+    },
+    {
+      "from": "src/core/project-analyzer.ts",
+      "to": "glob",
+      "type": "import"
+    },
+    {
+      "from": "src/core/local-vector-store.ts",
+      "to": "sqlite",
+      "type": "import"
+    },
+    {
+      "from": "src/core/project-database.ts",
+      "to": "@qdrant/js-client-rest",
+      "type": "import"
+    },
+    {
+      "from": "src/core/vector-search.ts",
+      "to": "../utils",
+      "type": "import"
+    },
+    {
+      "from": "src/core/storage.ts",
+      "to": "../utils",
+      "type": "import"
+    },
+    {
+      "from": "src/core/database.ts",
+      "to": "sqlite",
+      "type": "import"
+    },
+    {
+      "from": "src/core/contextual-understanding.ts",
+      "to": "./project-database",
+      "type": "import"
+    },
+    {
+      "from": "src/core/cache.ts",
+      "to": "../utils",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/fix-strategies.spec.ts",
+      "to": "../../../src/tools/zod-core/fix-strategies",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-status.spec.ts",
+      "to": "../../../src/tools/zod-core/core-status",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-search.spec.ts",
+      "to": "../../../src/tools/zod-core/core-search",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-index.spec.ts",
+      "to": "../../../src/tools/zod-core/core-index",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-fix.spec.ts",
+      "to": "../../../src/tools/zod-core/core-fix",
+      "type": "import"
+    },
+    {
+      "from": "src/core/search.ts",
+      "to": "./vector-search",
+      "type": "import"
+    },
+    {
+      "from": "src/core/local-vector-store.ts",
+      "to": "sqlite3",
+      "type": "import"
+    },
+    {
+      "from": "src/core/project-database.ts",
+      "to": "neo4j-driver",
+      "type": "import"
+    },
+    {
+      "from": "src/core/project-analyzer.ts",
+      "to": "../utils",
+      "type": "import"
+    },
+    {
+      "from": "src/core/indexer.ts",
+      "to": "./database",
+      "type": "import"
+    },
+    {
+      "from": "src/core/env-manager.ts",
+      "to": "dotenv",
+      "type": "import"
+    },
+    {
+      "from": "src/core/vector-search.ts",
+      "to": "./local-vector-store",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-search.spec.ts",
+      "to": "node:path",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-index.spec.ts",
+      "to": "node:path",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-fix.spec.ts",
+      "to": "node:path",
+      "type": "import"
+    },
+    {
+      "from": "src/core/search.ts",
+      "to": "openrouter-client",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "src/core/local-vector-store.ts",
+      "to": "node:path",
+      "type": "import"
+    },
+    {
+      "from": "src/core/project-database.ts",
+      "to": "redis",
+      "type": "import"
+    },
+    {
+      "from": "src/core/project-analyzer.ts",
+      "to": "./project-database",
+      "type": "import"
+    },
+    {
+      "from": "src/core/indexer.ts",
+      "to": "./vector-search",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/fix-strategies.spec.ts",
+      "to": "node:path",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-status.spec.ts",
+      "to": "node:path",
+      "type": "import"
+    },
+    {
+      "from": "src/core/database.ts",
+      "to": "path",
+      "type": "import"
+    },
+    {
+      "from": "src/core/vector-search.ts",
+      "to": "../tools/zod-core/config",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-search.spec.ts",
+      "to": "node:os",
+      "type": "import"
+    },
+    {
+      "from": "src/core/project-database.ts",
+      "to": "../utils",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-fix.spec.ts",
+      "to": "node:os",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/fix-strategies.spec.ts",
+      "to": "node:os",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-status.spec.ts",
+      "to": "node:os",
+      "type": "import"
+    },
+    {
+      "from": "src/core/local-vector-store.ts",
+      "to": "node:os",
+      "type": "import"
+    },
+    {
+      "from": "src/core/database.ts",
+      "to": "fs",
+      "type": "import"
+    },
+    {
+      "from": "src/core/search.ts",
+      "to": "openrouter-client",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-index.spec.ts",
+      "to": "node:os",
+      "type": "import"
+    },
+    {
+      "from": "src/core/indexer.ts",
+      "to": "cheerio",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "src/core/vector-search.ts",
+      "to": "openrouter-client",
+      "type": "require"
+    },
+    {
+      "from": "tests/unit/zod-core/core-status.spec.ts",
+      "to": "node:fs/promises",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-fix.spec.ts",
+      "to": "node:fs/promises",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-index.spec.ts",
+      "to": "node:fs/promises",
+      "type": "import"
+    },
+    {
+      "from": "src/core/indexer.ts",
+      "to": "cheerio",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-search.spec.ts",
+      "to": "node:fs/promises",
+      "type": "import"
+    },
+    {
+      "from": "src/core/local-vector-store.ts",
+      "to": "../utils",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/fix-strategies.spec.ts",
+      "to": "node:fs/promises",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-status.spec.ts",
+      "to": "../../fixtures/test-project-setup",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-fix.spec.ts",
+      "to": "sqlite",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-index.spec.ts",
+      "to": "../../fixtures/test-project-setup",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-search.spec.ts",
+      "to": "../../fixtures/test-project-setup",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-status.spec.ts",
+      "to": "sqlite",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-fix.spec.ts",
+      "to": "sqlite",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-index.spec.ts",
+      "to": "./utils",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-status.spec.ts",
+      "to": "sqlite3",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-fix.spec.ts",
+      "to": "sqlite3",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-index.spec.ts",
+      "to": "react",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-status.spec.ts",
+      "to": "sqlite",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-fix.spec.ts",
+      "to": "sqlite",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-status.spec.ts",
+      "to": "sqlite3",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-fix.spec.ts",
+      "to": "sqlite",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-status.spec.ts",
+      "to": "sqlite",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-fix.spec.ts",
+      "to": "sqlite3",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-status.spec.ts",
+      "to": "sqlite3",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-fix.spec.ts",
+      "to": "sqlite",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-status.spec.ts",
+      "to": "sqlite",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-fix.spec.ts",
+      "to": "sqlite",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-status.spec.ts",
+      "to": "sqlite3",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-fix.spec.ts",
+      "to": "sqlite3",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-fix.spec.ts",
+      "to": "sqlite",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-fix.spec.ts",
+      "to": "sqlite",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-fix.spec.ts",
+      "to": "sqlite3",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-fix.spec.ts",
+      "to": "sqlite",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-fix.spec.ts",
+      "to": "sqlite",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-fix.spec.ts",
+      "to": "sqlite3",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-fix.spec.ts",
+      "to": "sqlite",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-fix.spec.ts",
+      "to": "sqlite",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-fix.spec.ts",
+      "to": "sqlite3",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-fix.spec.ts",
+      "to": "sqlite",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-fix.spec.ts",
+      "to": "sqlite",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-fix.spec.ts",
+      "to": "sqlite3",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-fix.spec.ts",
+      "to": "sqlite",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-fix.spec.ts",
+      "to": "sqlite",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-fix.spec.ts",
+      "to": "sqlite3",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-analyze.spec.ts",
+      "to": "vitest",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/ast-parsers.spec.ts",
+      "to": "vitest",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/reflective-layer.ts",
+      "to": "../../utils",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/fix-strategies.ts",
+      "to": "node:path",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core.ts",
+      "to": "zod",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-status.ts",
+      "to": "zod",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-search.ts",
+      "to": "zod",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-index.ts",
+      "to": "zod",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-fix.ts",
+      "to": "zod",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-analyze.ts",
+      "to": "zod",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/config.ts",
+      "to": "node:fs",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/cli.ts",
+      "to": "citty",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/ast-parsers.ts",
+      "to": "eslint",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/working-memory.ts",
+      "to": "redis",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/tool-router.ts",
+      "to": "zod",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/semantic-memory.ts",
+      "to": "../../core/vector-search",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/ast-parsers.spec.ts",
+      "to": "../../../src/tools/zod-core/ast-parsers",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-analyze.spec.ts",
+      "to": "../../../src/tools/zod-core/core-analyze",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-status.ts",
+      "to": "../../utils",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-search.ts",
+      "to": "../../utils",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-fix.ts",
+      "to": "../../utils",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-analyze.ts",
+      "to": "../../utils",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-index.ts",
+      "to": "../../utils",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/config.ts",
+      "to": "node:path",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/cli.ts",
+      "to": "./core",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/ast-parsers.ts",
+      "to": "node:path",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/working-memory.ts",
+      "to": "sqlite",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/tool-router.ts",
+      "to": "./config",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/semantic-memory.ts",
+      "to": "../../core/project-analyzer",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/reflective-layer.ts",
+      "to": "openrouter-client",
+      "type": "require"
+    },
+    {
+      "from": "src/tools/zod-core/fix-strategies.ts",
+      "to": "node:fs/promises",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core.ts",
+      "to": "../../utils",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-analyze.spec.ts",
+      "to": "node:path",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-fix.ts",
+      "to": "sqlite",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-analyze.ts",
+      "to": "../../core/project-analyzer",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-index.ts",
+      "to": "../../core/project-analyzer",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/cli.ts",
+      "to": "./core-index",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/ast-parsers.ts",
+      "to": "node:fs/promises",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/working-memory.ts",
+      "to": "sqlite3",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/semantic-memory.ts",
+      "to": "./config",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/fix-strategies.ts",
+      "to": "node:child_process",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-status.ts",
+      "to": "sqlite",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-search.ts",
+      "to": "sqlite",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/ast-parsers.spec.ts",
+      "to": "node:path",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-analyze.spec.ts",
+      "to": "node:os",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/cli.ts",
+      "to": "./core-analyze",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/working-memory.ts",
+      "to": "sqlite",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/semantic-memory.ts",
+      "to": "../../utils",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/fix-strategies.ts",
+      "to": "node:util",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-status.ts",
+      "to": "sqlite3",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-search.ts",
+      "to": "sqlite3",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/ast-parsers.spec.ts",
+      "to": "node:os",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-fix.ts",
+      "to": "sqlite3",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-analyze.ts",
+      "to": "sqlite",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-index.ts",
+      "to": "../../core/database",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/core-analyze.spec.ts",
+      "to": "node:fs/promises",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/cli.ts",
+      "to": "./core-fix",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/working-memory.ts",
+      "to": "node:os",
+      "type": "import"
+    },
+    {
+      "from": "tests/unit/zod-core/ast-parsers.spec.ts",
+      "to": "node:fs/promises",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-fix.ts",
+      "to": "sqlite",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-analyze.ts",
+      "to": "sqlite3",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-index.ts",
+      "to": "../../core/vector-search",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/semantic-memory.ts",
+      "to": "node:crypto",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-status.ts",
+      "to": "sqlite",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-search.ts",
+      "to": "sqlite",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/cli.ts",
+      "to": "./core-search",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/working-memory.ts",
+      "to": "node:path",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/semantic-memory.ts",
+      "to": "node:path",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-status.ts",
+      "to": "node:path",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-search.ts",
+      "to": "node:path",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-fix.ts",
+      "to": "node:path",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-analyze.ts",
+      "to": "sqlite",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-index.ts",
+      "to": "sqlite",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/cli.ts",
+      "to": "./core-status",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-search.ts",
+      "to": "node:os",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-fix.ts",
+      "to": "node:os",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-analyze.ts",
+      "to": "node:path",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-index.ts",
+      "to": "sqlite3",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/semantic-memory.ts",
+      "to": "node:fs/promises",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-status.ts",
+      "to": "node:os",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/working-memory.ts",
+      "to": "./config",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-search.ts",
+      "to": "node:fs/promises",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-status.ts",
+      "to": "node:fs/promises",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-analyze.ts",
+      "to": "node:os",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-index.ts",
+      "to": "sqlite",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-fix.ts",
+      "to": "node:fs/promises",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-analyze.ts",
+      "to": "node:fs/promises",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-index.ts",
+      "to": "node:path",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-fix.ts",
+      "to": "./fix-strategies",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-index.ts",
+      "to": "node:os",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-analyze.ts",
+      "to": "./ast-parsers",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-index.ts",
+      "to": "node:fs/promises",
+      "type": "import"
+    },
+    {
+      "from": "src/tools/zod-core/core-analyze.ts",
+      "to": "glob",
+      "type": "dynamic_import"
+    },
+    {
+      "from": "src/tools/zod-core/core-index.ts",
+      "to": "glob",
+      "type": "import"
+    },
+    {
+      "from": "src/domains/indexing/entities/repository.entity.ts",
+      "to": "../../../shared/interfaces/base",
+      "type": "import"
+    }
+  ],
+  "qualityMetrics": {
+    "codeQuality": 55.673469387755105,
+    "maintainability": 35.30612244897959,
+    "testCoverage": 15.306122448979592,
+    "documentation": 22.244897959183675
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "files": [],
+  "directories": [],
+  "metadata": {
+    "totalFiles": 0,
+    "totalSize": 0,
+    "languages": {},
+    "lastIndexed": 1754801781862,
+    "projectType": "nodejs",
+    "frameworks": []
+  },
+  "dependencies": [],
+  "qualityMetrics": {
+    "codeQuality": null,
+    "maintainability": null,
+    "testCoverage": null,
+    "documentation": null
+  }
+}

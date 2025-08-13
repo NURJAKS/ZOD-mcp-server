@@ -14,6 +14,7 @@ import { registerUnifiedSearchTools as registerWebDeepResearchTools } from './to
 import { registerProjectInitTools } from './tools/project-init'
 import { registerMultiAgentTools } from './tools/multi-agent-tools'
 import { registerVisualizerTools } from './tools/visualizer'
+import { registerFocusFlowTools } from './tools/focusflow'
 
 
 const cli = defineCommand({
@@ -124,9 +125,14 @@ async function registerToolsSafely(mcp: any, debug: boolean = false) {
     { name: 'ProjectInitTools', register: registerProjectInitTools },
     { name: 'MultiAgentTools', register: registerMultiAgentTools },
     { name: 'VisualizerTools', register: registerVisualizerTools },
-    // ZOD Core tool registration
-    { name: 'ZodCore', register: (ctx: any) => import('./tools/zod-core/core').then(m => m.registerZodCoreTool(ctx)) },
-
+    { name: 'FocusFlowTools', register: registerFocusFlowTools },
+    // ZOD Core tools registration
+    { name: 'CoreExplain', register: (ctx: any) => import('./tools/zod-core/core').then(m => m.registerZodCoreTool(ctx)) },
+    { name: 'CoreIndex', register: (ctx: any) => import('./tools/zod-core/core-index').then(m => m.registerCoreIndexTool(ctx)) },
+    { name: 'CoreAnalyze', register: (ctx: any) => import('./tools/zod-core/core-analyze').then(m => m.registerCoreAnalyzeTool(ctx)) },
+    { name: 'CoreFix', register: (ctx: any) => import('./tools/zod-core/core-fix').then(m => m.registerCoreFixTool(ctx)) },
+    { name: 'CoreSearch', register: (ctx: any) => import('./tools/zod-core/core-search').then(m => m.registerCoreSearchTool(ctx)) },
+    { name: 'CoreStatus', register: (ctx: any) => import('./tools/zod-core/core-status').then(m => m.registerCoreStatusTool(ctx)) },
   ]
 
   for (const tool of tools) {
@@ -416,7 +422,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 }
 
 // Export classes for direct use
-export { RepositoryIndexer } from './core/indexer'
+export { Indexer } from './core/indexer'
 export { DocumentationIndexer } from './core/indexer'
 export { SearchEngine } from './core/search'
 export { DatabaseManager } from './core/database'
