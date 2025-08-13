@@ -40,6 +40,7 @@ if 'initialized' not in st.session_state:
     st.session_state.running = False
     st.session_state.end_time = 0.0
     st.session_state.initialized = True
+    st.session_state.notify_enabled = True
 
 def apply_theme(theme: str):
     if theme == 'light':
@@ -76,6 +77,9 @@ with col3:
         st.session_state.theme = theme_choice
         apply_theme(theme_choice)
 
+# Дополнительные настройки
+st.session_state.notify_enabled = st.checkbox('Системные уведомления и голосовые подсказки', value=st.session_state.get('notify_enabled', True))
+
 # Persist settings
 save_config({
     'work_minutes': int(st.session_state.work_minutes),
@@ -87,6 +91,48 @@ def start_timer():
     minutes = st.session_state.work_minutes if st.session_state.phase == 'work' else st.session_state.break_minutes
     st.session_state.end_time = time.time() + minutes * 60
     st.session_state.running = True
+    # Мотивационные уведомления при старте фазы
+    if st.session_state.notify_enabled:
+        title = 'Фокус' if st.session_state.phase == 'work' else 'Отдых'
+        if st.session_state.phase == 'work':
+            msg = 'Можете приступать к работе! Будьте сфокусированы и не отвлекайтесь.'
+        else:
+            msg = 'Отличная работа! Сделайте короткий перерыв и восстановите силы.'
+        def _notify_block():
+            st.markdown(f'''
+            <script>
+              (async function() {{
+                try {{
+                  // Notifications permission
+                  if (typeof Notification !== 'undefined' && Notification.permission !== 'granted') {{
+                    await Notification.requestPermission();
+                  }}
+                  if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {{
+                    try {{ new Notification('{title}', {{ body: '{msg}' }}); }} catch(e) {{}}
+                  }}
+                  // Beep
+                  try {{
+                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    const o = ctx.createOscillator();
+                    const g = ctx.createGain();
+                    o.type = 'sine'; o.connect(g); g.connect(ctx.destination);
+                    o.frequency.setValueAtTime(660, ctx.currentTime);
+                    g.gain.setValueAtTime(0.001, ctx.currentTime);
+                    g.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.01);
+                    o.start(); setTimeout(()=>{{ g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.25); o.stop(ctx.currentTime + 0.3); }}, 250);
+                  }} catch(e) {{}}
+                  // Speech
+                  try {{
+                    const u = new SpeechSynthesisUtterance('{title}: {msg}'.replace(/\s+/g,' '));
+                    u.lang = 'ru-RU'; u.rate = 1.0; u.pitch = 1.0; u.volume = 1.0;
+                    window.speechSynthesis.cancel();
+                    window.speechSynthesis.speak(u);
+                  }} catch(e) {{}}
+                }} catch(e) {{}}
+              }})();
+            </script>
+            ''', unsafe_allow_html=True)
+        _notify_block()
 
 def pause_timer():
     st.session_state.running = False
@@ -115,7 +161,7 @@ def format_mmss(seconds_left: int) -> str:
 placeholder = st.empty()
 
 def beep():
-    # Use WebAudio to generate a short beep without assets
+    # Вспомогательный короткий звуковой сигнал
     st.markdown('''
     <script>
       try {
@@ -144,6 +190,26 @@ while True:
 
     if st.session_state.running and remaining <= 0:
         # Phase complete
+        if st.session_state.notify_enabled:
+            # Системное уведомление о завершении
+            done_title = 'Этап завершён'
+            done_msg = 'Отличная работа! Переходим к следующему этапу.'
+            st.markdown(f'''
+            <script>
+              (async function() {{
+                try {{
+                  if (typeof Notification !== 'undefined' && Notification.permission !== 'granted') {{ await Notification.requestPermission(); }}
+                  if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {{
+                    try {{ new Notification('{done_title}', {{ body: '{done_msg}' }}); }} catch(e) {{}}
+                  }}
+                  try {{
+                    const u = new SpeechSynthesisUtterance('{done_title}: {done_msg}'.replace(/\s+/g,' '));
+                    u.lang = 'ru-RU'; window.speechSynthesis.cancel(); window.speechSynthesis.speak(u);
+                  }} catch(e) {{}}
+                }} catch(e) {{}}
+              }})();
+            </script>
+            ''', unsafe_allow_html=True)
         beep()
         if st.session_state.phase == 'work':
             st.session_state.phase = 'break'
