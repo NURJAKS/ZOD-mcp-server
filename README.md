@@ -1,6 +1,6 @@
-# 🚀 ZOD MCP Server
+# 🚀 ZOD MCP Server + FocusFlow
 
-**Intelligent Code Indexing, Search, and Research Platform**
+Интеллектуальный MCP‑сервер с индексированием кода, семантическим поиском и набором инструментов, включая FocusFlow — минималистичный Pomodoro‑таймер на Python + Streamlit.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
@@ -8,7 +8,7 @@
 
 ## 📖 Overview
 
-ZOD MCP Server is a powerful Model Context Protocol (MCP) server that provides intelligent code indexing, semantic search, and research capabilities. It combines traditional database indexing with advanced vector search to deliver comprehensive code understanding and analysis.
+ZOD MCP Server — сервер по спецификации MCP (Model Context Protocol) с возможностями индексирования проектов, гибридного поиска (текст + векторы) и расширяемыми инструментами. FocusFlow добавляет локальный таймер Pomodoro с веб‑интерфейсом.
 
 ## 🏗️ Architecture
 
@@ -81,18 +81,16 @@ Project Input → Indexer → Database + Vector Store → Search Engine → Resu
 ### Quick Start
 
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd MCP-server-copy
+# Clone
+git clone https://github.com/NURJAKS/ai-detector-mcp.git
+cd ai-detector-mcp
 
-# Install dependencies
+# Install JS deps and build
 npm install
-
-# Build the project
 npm run build
 
-# Start the server
-npm start
+# Link CLI binaries (zod-mcp, focusflow)
+npm link
 ```
 
 ### Environment Configuration
@@ -116,25 +114,22 @@ CONCURRENCY_LIMIT=5
 
 ## 📚 Usage
 
-### Command Line Interface
+### Command Line Interface (MCP server)
 
 ```bash
-# Start with stdio transport (default)
-npm run run-cli
+# stdio (для MCP‑клиентов, например Cursor)
+zod-mcp --stdio
 
-# Start with HTTP transport
-npm run dev-http
+# HTTP транспорт
+zod-mcp --http --port 3000 --endpoint /mcp
 
-# Start with SSE transport
-npm run dev-sse
-
-# Check status
-npm run status
+# SSE транспорт
+zod-mcp --sse --port 3001
 ```
 
 ### MCP Tools
 
-The server provides several MCP tools:
+The server provides several MCP tools (включая FocusFlow):
 
 #### Core Tools
 - **`core-index`** - Project indexing and analysis
@@ -148,6 +143,41 @@ The server provides several MCP tools:
 - **`repository`** - Repository management
 - **`unified-search`** - Web and deep research
 - **`visualizer`** - Code visualization
+  
+#### Productivity
+- **`focusflow`** — Pomodoro‑таймер (действия: start, stop, status, set_config)
+
+### FocusFlow — Pomodoro (Python + Streamlit)
+
+Установка зависимостей (локально в проекте):
+```bash
+python3 -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+pip install --upgrade pip
+pip install streamlit
+```
+
+Запуск:
+```bash
+# Глобально, если streamlit в PATH
+focusflow --port 8590
+
+# Через конкретный Python из venv
+FOCUSFLOW_PYTHON="$(pwd)/.venv/bin/python" focusflow --port 8590
+
+# Прямой запуск Streamlit-приложения
+.venv/bin/streamlit run bin/focusflow_app.py --server.port 8590 --server.headless true
+```
+
+Откройте `http://localhost:8590`. Настройки сохраняются в `~/.focusflow/config.json`.
+
+Вызовы как MCP‑инструмента (например, из Cursor):
+```text
+focusflow(action="start", work_minutes=25, break_minutes=5, theme="dark", open=true)
+focusflow(action="status")
+focusflow(action="stop")
+focusflow(action="set_config", work_minutes=30, break_minutes=5, theme="light")
+```
 
 ### Example Usage
 
