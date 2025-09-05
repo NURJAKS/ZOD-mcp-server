@@ -14,7 +14,6 @@ import { registerUnifiedSearchTools as registerWebDeepResearchTools } from './to
 import { registerProjectInitTools } from './tools/project-init'
 import { registerMultiAgentTools } from './tools/multi-agent-tools'
 import { registerVisualizerTools } from './tools/visualizer'
-import { registerFocusFlowTools } from './tools/focusflow'
 
 
 const cli = defineCommand({
@@ -125,7 +124,6 @@ async function registerToolsSafely(mcp: any, debug: boolean = false) {
     { name: 'ProjectInitTools', register: registerProjectInitTools },
     { name: 'MultiAgentTools', register: registerMultiAgentTools },
     { name: 'VisualizerTools', register: registerVisualizerTools },
-    { name: 'FocusFlowTools', register: registerFocusFlowTools },
     // ZOD Core tools registration
     { name: 'CoreExplain', register: (ctx: any) => import('./tools/zod-core/core').then(m => m.registerZodCoreTool(ctx)) },
     { name: 'CoreIndex', register: (ctx: any) => import('./tools/zod-core/core-index').then(m => m.registerCoreIndexTool(ctx)) },

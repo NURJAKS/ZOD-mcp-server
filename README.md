@@ -1,6 +1,6 @@
-# 🚀 ZOD MCP Server + FocusFlow
+# 🚀 ZOD MCP Server
 
-Интеллектуальный MCP‑сервер с индексированием кода, семантическим поиском и набором инструментов, включая FocusFlow — минималистичный Pomodoro‑таймер на Python + Streamlit.
+Интеллектуальный MCP‑сервер с индексированием кода, семантическим поиском и набором инструментов.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
@@ -8,7 +8,7 @@
 
 ## 📖 Overview
 
-ZOD MCP Server — сервер по спецификации MCP (Model Context Protocol) с возможностями индексирования проектов, гибридного поиска (текст + векторы) и расширяемыми инструментами. FocusFlow добавляет локальный таймер Pomodoro с веб‑интерфейсом.
+ZOD MCP Server — сервер по спецификации MCP (Model Context Protocol) с возможностями индексирования проектов, гибридного поиска (текст + векторы) и расширяемыми инструментами.
 
 ## 🏗️ Architecture
 
@@ -82,14 +82,14 @@ Project Input → Indexer → Database + Vector Store → Search Engine → Resu
 
 ```bash
 # Clone
-git clone https://github.com/NURJAKS/ai-detector-mcp.git
-cd ai-detector-mcp
+ git clone https://github.com/NURJAKS/ZOD-mcp-server.git
+ cd ZOD-mcp-server
 
 # Install JS deps and build
 npm install
 npm run build
 
-# Link CLI binaries (zod-mcp, focusflow)
+# Link CLI binaries (zod-mcp)
 npm link
 ```
 
@@ -129,7 +129,7 @@ zod-mcp --sse --port 3001
 
 ### MCP Tools
 
-The server provides several MCP tools (включая FocusFlow):
+The server provides several MCP tools:
 
 #### Core Tools
 - **`core-index`** - Project indexing and analysis
@@ -143,61 +143,6 @@ The server provides several MCP tools (включая FocusFlow):
 - **`repository`** - Repository management
 - **`unified-search`** - Web and deep research
 - **`visualizer`** - Code visualization
-  
-#### Productivity
-- **`focusflow`** — Pomodoro‑таймер (действия: start, stop, status, set_config)
-
-### FocusFlow — Pomodoro (Python + Streamlit)
-
-Установка зависимостей (локально в проекте):
-```bash
-python3 -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install --upgrade pip
-pip install streamlit
-```
-
-Запуск:
-```bash
-# Глобально, если streamlit в PATH
-focusflow --port 8590
-
-# Через конкретный Python из venv
-FOCUSFLOW_PYTHON="$(pwd)/.venv/bin/python" focusflow --port 8590
-
-# Прямой запуск Streamlit-приложения
-.venv/bin/streamlit run bin/focusflow_app.py --server.port 8590 --server.headless true
-```
-
-Откройте `http://localhost:8590`. Настройки сохраняются в `~/.focusflow/config.json`.
-
-Вызовы как MCP‑инструмента (например, из Cursor):
-```text
-focusflow(action="start", work_minutes=25, break_minutes=5, theme="dark", open=true)
-focusflow(action="status")
-focusflow(action="stop")
-focusflow(action="set_config", work_minutes=30, break_minutes=5, theme="light")
-```
-
-### FocusFlow Tray‑виджет (Linux)
-Иконка в системном трее с таймером и управлением.
-
-Зависимости ОС (Ubuntu/Debian):
-```bash
-sudo apt update
-sudo apt install -y libappindicator3-1 gir1.2-appindicator3-0.1 gir1.2-gtk-3.0 python3-gi libnotify-bin pulseaudio-utils alsa-utils
-```
-
-Запуск:
-```bash
-focusflow-tray
-```
-
-Функции:
-- Показ оставшегося времени в трей‑лейбле
-- Меню Start/Pause/Reset/Quit
-- Системные уведомления (notify-send)
-- Реальные звуковые сигналы (paplay/aplay/терминальный bell)
 
 ### Example Usage
 

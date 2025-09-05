@@ -178,9 +178,6 @@ out/
 ../data/
 # MCP server specific build artifacts
 bin/cli.mjs
-# Keep FocusFlow CLI tracked
-!bin/focusflow.mjs
-!bin/focusflow-tray.mjs
 # Configuration files that might contain secrets
 config.json
 # Docker volumes
