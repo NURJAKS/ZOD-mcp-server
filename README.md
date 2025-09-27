@@ -6,6 +6,8 @@
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8+-blue.svg)](https://www.typescriptlang.org/)
 
+---
+
 ## 📖 Overview
 
 ZOD MCP Server — сервер по спецификации MCP (Model Context Protocol) с возможностями индексирования проектов, гибридного поиска (текст + векторы) и расширяемыми инструментами.
@@ -13,7 +15,6 @@ ZOD MCP Server — сервер по спецификации MCP (Model Context
 ## 🏗️ Architecture
 
 ### Core Components
-
 ```
 src/
 ├── core/                    # Core business logic
@@ -35,7 +36,6 @@ src/
 ```
 
 ### Data Flow
-
 ```
 Project Input → Indexer → Database + Vector Store → Search Engine → Results
      ↓              ↓              ↓                    ↓
@@ -46,242 +46,116 @@ Project Input → Indexer → Database + Vector Store → Search Engine → Resu
 ```
 
 ## 🚀 Features
+### 🔍 Intelligent Indexing
+- Multi-language support (TypeScript, JavaScript, Python, etc.)
+- Smart file filtering (excludes build artifacts, dependencies)
+- Incremental updates with change detection
+- Parallel processing for large projects
 
-### 🔍 **Intelligent Indexing**
-- **Multi-language support** (TypeScript, JavaScript, Python, etc.)
-- **Smart file filtering** (excludes build artifacts, dependencies)
-- **Incremental updates** with change detection
-- **Parallel processing** for large projects
+### 🧠 Vector Search
+- Semantic code search using embeddings
+- Multiple embedding models (OpenAI, local alternatives)
+- Hybrid search combining vector and text search
+- Context-aware results with relevance scoring
 
-### 🧠 **Vector Search**
-- **Semantic code search** using embeddings
-- **Multiple embedding models** (OpenAI, local alternatives)
-- **Hybrid search** combining vector and text search
-- **Context-aware results** with relevance scoring
+### 📊 Code Analysis
+- Quality metrics calculation
+- Maintainability scoring
+- Test coverage analysis
+- Performance profiling
 
-### 📊 **Code Analysis**
-- **Quality metrics** calculation
-- **Maintainability scoring**
-- **Test coverage analysis**
-- **Performance profiling**
-
-### 🔧 **MCP Integration**
-- **Standard MCP protocol** compliance
-- **Multiple transport modes** (HTTP, SSE, stdio)
-- **Extensible tool system**
-- **Plugin architecture**
-
-## 🛠️ Installation
-
-### Prerequisites
-- Node.js 18+ 
-- npm or yarn
-- Git
-
-### Quick Start
-
-```bash
-# Clone
- git clone https://github.com/NURJAKS/ZOD-mcp-server.git
- cd ZOD-mcp-server
-
-# Install JS deps and build
-npm install
-npm run build
-
-# Link CLI binaries (zod-mcp)
-npm link
-```
-
-### Environment Configuration
-
-Create a `.env` file in the project root:
-
-```env
-# API Keys
-OPENROUTER_API_KEY=your_openrouter_key
-QDRANT_URL=your_qdrant_url
-QDRANT_API_KEY=your_qdrant_key
-
-# Vector Search
-EMBEDDING_MODEL=openai/text-embedding-3-large
-EMBEDDING_MODEL_HINT=openai/text-embedding-3-large
-
-# Performance
-MAX_FILE_SIZE=1048576
-CONCURRENCY_LIMIT=5
-```
-
-## 📚 Usage
-
-### Command Line Interface (MCP server)
-
-```bash
-# stdio (для MCP‑клиентов, например Cursor)
-zod-mcp --stdio
-
-# HTTP транспорт
-zod-mcp --http --port 3000 --endpoint /mcp
-
-# SSE транспорт
-zod-mcp --sse --port 3001
-```
-
-### MCP Tools
-
-The server provides several MCP tools:
-
-#### Core Tools
-- **`core-index`** - Project indexing and analysis
-- **`core-search`** - Code search and exploration
-- **`core-analyze`** - Code quality analysis
-- **`core-fix`** - Automated code fixes
-- **`core-status`** - System status and metrics
-
-#### Research Tools
-- **`documentation`** - Documentation indexing and search
-- **`repository`** - Repository management
-- **`unified-search`** - Web and deep research
-- **`visualizer`** - Code visualization
-
-### Example Usage
-
-```typescript
-// Index a project
-const result = await mcp.tools['core-index'].index({
-  path: '/path/to/project',
-  options: {
-    enableVectorSearch: true,
-    maxFileSize: 1024 * 1024,
-    includeExtensions: ['.ts', '.js', '.py']
-  }
-})
-
-// Search for code
-const searchResults = await mcp.tools['core-search'].search({
-  query: 'function authentication',
-  type: 'semantic',
-  limit: 10
-})
-```
-
-## 🔧 Development
-
-### Project Structure
-
-```
-├── src/                    # Source code
-│   ├── core/              # Core business logic
-│   ├── tools/             # MCP tool implementations
-│   ├── domains/           # Domain-specific logic
-│   ├── application/       # Application services
-│   ├── presentation/      # API and interface layers
-│   └── shared/            # Shared utilities
-├── tests/                 # Test files
-├── scripts/               # Build and utility scripts
-├── docs/                  # Documentation
-└── examples/              # Usage examples
-```
-
-### Development Commands
-
-```bash
-# Development mode with hot reload
-npm run dev
-
-# Type checking
-npm run typecheck
-
-# Linting
-npm run lint
-npm run lint:fix
-
-# Testing
-npm run test
-npm run test:coverage
-npm run test:watch
-
-# Build
-npm run build
-```
-
-### Testing Strategy
-
-- **Unit tests** for individual components
-- **Integration tests** for MCP tools
-- **Performance tests** for large projects
-- **Coverage target**: 90%+
-
-## 📊 Performance
-
-### Benchmarks
-
-- **Indexing speed**: ~1000 files/minute
-- **Search response**: <100ms for typical queries
-- **Memory usage**: ~50MB base + 10MB per 1000 files
-- **Vector search**: <200ms for semantic queries
-
-### Optimization Features
-
-- **Parallel processing** for large projects
-- **Incremental updates** to avoid re-indexing
-- **Smart caching** for frequently accessed data
-- **Connection pooling** for database operations
-
-## 🔒 Security
-
-### Security Features
-
-- **Environment variable** configuration
-- **API key management** with secure storage
-- **Input validation** and sanitization
-- **Rate limiting** for external APIs
-- **Secure defaults** for all configurations
-
-### Best Practices
-
-- Never commit API keys to version control
-- Use environment variables for sensitive data
-- Regularly rotate API keys
-- Monitor API usage and rate limits
-
-## 🤝 Contributing
-
-### Development Setup
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Ensure all tests pass
-6. Submit a pull request
-
-### Code Standards
-
-- **TypeScript strict mode** enabled
-- **ESLint** configuration enforced
-- **Prettier** formatting
-- **JSDoc** documentation required
-- **Test coverage** minimum 80%
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- **Model Context Protocol** team for the MCP specification
-- **OpenAI** for embedding models
-- **Qdrant** for vector database
-- **OpenRouter** for API access
-
-## 📞 Support
-
-- **Documentation**: [Project Wiki](link-to-wiki)
-- **Issues**: [GitHub Issues](link-to-issues)
-- **Discussions**: [GitHub Discussions](link-to-discussions)
-- **Email**: support@instructa.ai
+### 🔧 MCP Integration
+- Standard MCP protocol compliance
+- Multiple transport modes (HTTP, SSE, stdio)
+- Extensible tool system
+- Plugin architecture
 
 ---
 
-**Made with ❤️ by the ZOD Team** 
+## Project Overview
+
+ZOD MCP Server provides advanced codebase indexing, semantic search, and research tools for developers and teams. It integrates with vector databases, graph databases, and cloud storage for scalable, intelligent code analysis.
+
+**GitHub Origin:** [NURJAKS/ZOD-mcp-server](https://github.com/NURJAKS/ZOD-mcp-server)
+
+---
+
+## Prerequisites
+- **Node.js** v18 or higher
+- **npm** (comes with Node.js)
+- (Optional) Docker for running dependencies like Qdrant, Redis, Neo4j, MinIO
+
+---
+
+## Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/NURJAKS/ZOD-mcp-server.git
+   cd ZOD-mcp-server
+   ```
+
+2. **Run the setup script:**
+   ```bash
+   ./setup.sh
+   ```
+   This will:
+   - Check Node.js version
+   - Install dependencies
+   - Build the project
+   - Create a `.env` file from `env.example` if not present
+
+---
+
+## Environment Setup
+
+- Edit the `.env` file with your API keys and service endpoints. See `env.example` for all required variables:
+  - GitHub, OpenRouter, Qdrant, Redis, Neo4j, MinIO, and more
+- Example:
+  ```env
+  GITHUB_TOKEN=your_github_token
+  OPENROUTER_API_KEY=your_openrouter_api_key
+  QDRANT_URL=http://localhost:6333
+  ...
+  ```
+
+---
+
+## Running the Server
+
+- **Development (with hot reload):**
+  ```bash
+  npm run dev
+  ```
+- **Production build:**
+  ```bash
+  npm run build
+  npm start
+  ```
+- **CLI usage:**
+  ```bash
+  node bin/cli.mjs --help
+  ```
+
+---
+
+## Useful Commands
+- `npm run dev-stdio` — Run with stdio transport
+- `npm run dev-http` — Run with HTTP transport
+- `npm run lint` — Lint the codebase
+- `npm run test` — Run tests
+- `npm run build` — Build the project
+
+---
+
+## Contribution
+Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
+
+---
+
+## License
+MIT
+
+---
+
+**Made with ❤️ by the ZOD Team**
